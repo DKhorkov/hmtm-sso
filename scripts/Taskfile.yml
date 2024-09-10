@@ -1,0 +1,58 @@
+version: '3'
+
+tasks:
+  docker_prod:
+    desc: "Docker aggregation"
+    aliases:
+      - prod
+    cmds:
+      - task: docker_build
+      - task: docker_run
+
+  docker_build:
+    desc: "Builds docker container."
+    aliases:
+      - build
+    cmd: sudo docker compose -f ../build/package/docker-compose.yml build
+
+  docker_run:
+    desc: "Launches docker container."
+    aliases:
+      - run
+    cmd: sudo docker compose -f ../build/package/docker-compose.yml up
+
+  docker_clean:
+    desc: "Cleans docker containers, images and volumes."
+    aliases:
+      - clean
+    cmd: sudo docker system prune -a --volumes
+
+  setup_proto:
+    desc: "Install all go-proto requirements."
+    aliases:
+      - setup
+    cmds:
+      - sudo snap install protobuf --classic
+      - go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+      - go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+      - export PATH="$PATH:$(go env GOPATH)/bin"
+      - task: create_protobuf_folders
+
+  create_protobuf_folders:
+    desc: "Creates folders structure for protobuf usage."
+    internal: true
+    dir: ../
+    cmds:
+      - mkdir -p protobuf/protofiles
+      - mkdir -p protobuf/generated/go
+
+  grpc_generate:
+    desc: "Generates code from .proto files."
+    aliases:
+      - gen
+      - generate
+      - grpc
+    dir: ../
+    cmds:
+      - protoc --proto_path=protobuf/protofiles ./protobuf/protofiles/sso/auth.proto --go_out=./protobuf/generated/go --go_opt=paths=source_relative --go-grpc_out=./protobuf/generated/go --go-grpc_opt=paths=source_relative
+      - protoc --proto_path=protobuf/protofiles ./protobuf/protofiles/sso/users.proto --go_out=./protobuf/generated/go --go_opt=paths=source_relative --go-grpc_out=./protobuf/generated/go --go-grpc_opt=paths=source_relative
