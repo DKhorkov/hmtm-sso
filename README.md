@@ -16,13 +16,13 @@ go run ./cmd/hmtmsso/main.go
 
 ## gRPC:
 
-To setup protobuf use next command:
+To setup protobuf, use next command:
 ```shell
 task -d scripts setup_proto -v
 ```
 
 
-### Base files generation:
+To generate files from .proto, use next command:
 ```shell
 task -d scripts grpc_generate -v
 ```
@@ -30,11 +30,11 @@ task -d scripts grpc_generate -v
 ## Linters
 
 ```shell
-golangci-lint run -v --fix
+task -d scripts linters -v
 ```
 
 ## Tests
 
 ```shell
-go test -v ./test...
+task -d scripts tests -v
 ```

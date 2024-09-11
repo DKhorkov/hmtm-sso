@@ -56,3 +56,13 @@ tasks:
     cmds:
       - protoc --proto_path=protobuf/protofiles ./protobuf/protofiles/sso/auth.proto --go_out=./protobuf/generated/go --go_opt=paths=source_relative --go-grpc_out=./protobuf/generated/go --go-grpc_opt=paths=source_relative
       - protoc --proto_path=protobuf/protofiles ./protobuf/protofiles/sso/users.proto --go_out=./protobuf/generated/go --go_opt=paths=source_relative --go-grpc_out=./protobuf/generated/go --go-grpc_opt=paths=source_relative
+
+  tests:
+    desc: "Run tests."
+    dir: ../
+    cmd: go test ./tests... -v
+
+  linters:
+    desc: "Run linters."
+    dir: ../
+    cmd: golangci-lint run -v --fix

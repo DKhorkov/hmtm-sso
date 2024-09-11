@@ -341,6 +341,12 @@ issues:
       linters: [ godot ]
     - source: "//noinspection"
       linters: [ gocritic ]
+    - path: "internal/grpc*"
+      linters:
+        - revive
+    - path: "pkg/logging*"
+      linters:
+        - gochecknoglobals
     - path: "_test\\.go"
       linters:
         - bodyclose
