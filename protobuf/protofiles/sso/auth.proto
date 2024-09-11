@@ -1,12 +1,11 @@
 syntax = "proto3";
 
-
 package auth;
 
 option go_package = "github.com/DKhorkov/hmtm-sso/protobuf/sso;sso";
 
 
-service SSOService {
+service AuthService {
   rpc Register(RegisterRequest) returns (RegisterResponse) {}
   rpc Login(LoginRequest) returns (LoginResponse) {}
 }
