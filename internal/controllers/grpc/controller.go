@@ -1,17 +1,18 @@
-package grpcapp
+package grpccontroller
 
 import (
 	"fmt"
 	"log/slog"
 	"net"
 
-	authgrpc "github.com/DKhorkov/hmtm-sso/internal/grpc/auth"
-	usersgrpc "github.com/DKhorkov/hmtm-sso/internal/grpc/users"
+	"github.com/DKhorkov/hmtm-sso/internal/controllers/grpc/auth"
+	"github.com/DKhorkov/hmtm-sso/internal/controllers/grpc/users"
+
 	"github.com/DKhorkov/hmtm-sso/pkg/logging"
 	"google.golang.org/grpc"
 )
 
-type GrpcApp struct {
+type Controller struct {
 	grpcServer *grpc.Server
 	host       string
 	port       int
@@ -19,16 +20,16 @@ type GrpcApp struct {
 }
 
 // Run gRPC server.
-func (grpcApp *GrpcApp) Run() {
-	grpcApp.logger.Info(
-		fmt.Sprintf("Starting gRPC Server at %s:%d", grpcApp.host, grpcApp.port),
+func (controller *Controller) Run() {
+	controller.logger.Info(
+		fmt.Sprintf("Starting gRPC Server at %s:%d", controller.host, controller.port),
 		"Traceback",
 		logging.GetLogTraceback(),
 	)
 
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", grpcApp.host, grpcApp.port))
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", controller.host, controller.port))
 	if err != nil {
-		grpcApp.logger.Error(
+		controller.logger.Error(
 			"Failed to start gRPC Server",
 			"Traceback",
 			logging.GetLogTraceback(),
@@ -38,8 +39,8 @@ func (grpcApp *GrpcApp) Run() {
 		panic(err)
 	}
 
-	if err = grpcApp.grpcServer.Serve(listener); err != nil {
-		grpcApp.logger.Error(
+	if err = controller.grpcServer.Serve(listener); err != nil {
+		controller.logger.Error(
 			"Error occurred while listening to gRPC server",
 			"Traceback",
 			logging.GetLogTraceback(),
@@ -51,20 +52,20 @@ func (grpcApp *GrpcApp) Run() {
 }
 
 // Stop gRPC server gracefully (graceful shutdown).
-func (grpcApp *GrpcApp) Stop() {
+func (controller *Controller) Stop() {
 	// Stops accepting new requests and processes already received requests:
-	grpcApp.grpcServer.GracefulStop()
+	controller.grpcServer.GracefulStop()
 }
 
 // New creates an instance of GrpcApp like a constructor.
-func New(host string, port int) *GrpcApp {
+func New(host string, port int) *Controller {
 	grpcServer := grpc.NewServer()
 
 	// Connects our gRPC services to grpcServer:
-	authgrpc.Register(grpcServer)
-	usersgrpc.Register(grpcServer)
+	auth.Register(grpcServer)
+	users.Register(grpcServer)
 
-	return &GrpcApp{
+	return &Controller{
 		grpcServer: grpcServer,
 		port:       port,
 		host:       host,

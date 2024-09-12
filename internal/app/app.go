@@ -1,14 +1,35 @@
 package app
 
-import grpcapp "github.com/DKhorkov/hmtm-sso/internal/app/grpc"
+import (
+	"os"
+	"os/signal"
+	"syscall"
+)
 
-type App struct {
-	GRPC *grpcapp.GrpcApp
+type Controller interface {
+	Run()
+	Stop()
 }
 
-func New(grpcHost string, grpcPort int) *App {
-	grpcApp := grpcapp.New(grpcHost, grpcPort)
+type App struct {
+	controller Controller
+}
+
+func (application *App) Run() {
+	// Launch asynchronous for graceful shutdown purpose:
+	go application.controller.Run()
+
+	// Graceful shutdown. When system signal will be received, signal.Notify function will write it to channel.
+	// After this event, main goroutine will be unblocked (<-stopChannel blocks it) and application will be
+	// gracefully stopped:
+	stopChannel := make(chan os.Signal, 1)
+	signal.Notify(stopChannel, syscall.SIGINT, syscall.SIGTERM)
+	<-stopChannel
+	application.controller.Stop()
+}
+
+func New(controller Controller) *App {
 	return &App{
-		GRPC: grpcApp,
+		controller: controller,
 	}
 }

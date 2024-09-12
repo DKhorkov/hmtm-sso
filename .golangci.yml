@@ -341,7 +341,7 @@ issues:
       linters: [ godot ]
     - source: "//noinspection"
       linters: [ gocritic ]
-    - path: "internal/grpc*"
+    - path: "internal/controllers/grpc*"
       linters:
         - revive
     - path: "pkg/logging*"
