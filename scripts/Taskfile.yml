@@ -2,7 +2,7 @@ version: '3'
 
 tasks:
   docker_prod:
-    desc: "Docker aggregation"
+    desc: "Docker build and run."
     aliases:
       - prod
     cmds:
@@ -10,19 +10,19 @@ tasks:
       - task: docker_run
 
   docker_build:
-    desc: "Builds docker container."
+    desc: "Build docker container."
     aliases:
       - build
     cmd: sudo docker compose -f ../build/package/docker-compose.yml build
 
   docker_run:
-    desc: "Launches docker container."
+    desc: "Launch docker container."
     aliases:
       - run
     cmd: sudo docker compose -f ../build/package/docker-compose.yml up
 
   docker_clean:
-    desc: "Cleans docker containers, images and volumes."
+    desc: "Clean docker containers, images and volumes."
     aliases:
       - clean
     cmd: sudo docker system prune -a --volumes
@@ -39,7 +39,7 @@ tasks:
       - task: create_protobuf_folders
 
   create_protobuf_folders:
-    desc: "Creates folders structure for protobuf usage."
+    desc: "Create folders structure for protobuf usage."
     internal: true
     dir: ../
     cmds:
@@ -47,7 +47,7 @@ tasks:
       - mkdir -p protobuf/generated/go
 
   grpc_generate:
-    desc: "Generates code from .proto files."
+    desc: "Generate code from .proto files."
     aliases:
       - gen
       - generate
@@ -56,3 +56,13 @@ tasks:
     cmds:
       - protoc --proto_path=protobuf/protofiles ./protobuf/protofiles/sso/auth.proto --go_out=./protobuf/generated/go --go_opt=paths=source_relative --go-grpc_out=./protobuf/generated/go --go-grpc_opt=paths=source_relative
       - protoc --proto_path=protobuf/protofiles ./protobuf/protofiles/sso/users.proto --go_out=./protobuf/generated/go --go_opt=paths=source_relative --go-grpc_out=./protobuf/generated/go --go-grpc_opt=paths=source_relative
+
+  tests:
+    desc: "Run tests."
+    dir: ../
+    cmd: go test ./tests... -v
+
+  linters:
+    desc: "Run linters."
+    dir: ../
+    cmd: golangci-lint run -v --fix

@@ -1,14 +1,16 @@
 package main
 
 import (
-	"fmt"
+	"github.com/DKhorkov/hmtm-sso/internal/app"
+	grpccontroller "github.com/DKhorkov/hmtm-sso/internal/controllers/grpc"
 
 	"github.com/DKhorkov/hmtm-sso/internal/config"
-	"github.com/DKhorkov/hmtm-sso/protobuf/generated/go/sso"
 )
 
 func main() {
+	// logger := logging.GetInstance(logging.LogLevels.DEBUG)
 	settings := config.GetConfig()
-	fmt.Println(settings)
-	fmt.Println(sso.GetUserRequest{})
+	controller := grpccontroller.New(settings.GRPC.Host, settings.GRPC.Port)
+	application := app.New(controller)
+	application.Run()
 }
