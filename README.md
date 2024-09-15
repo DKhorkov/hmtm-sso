@@ -30,11 +30,13 @@ task -d scripts grpc_generate -v
 ## Linters
 
 ```shell
-task -d scripts linters -v
+ task -d scripts linters -v
 ```
 
 ## Tests
 
+To run test use next commands. Coverage info will be
+recorded to ```tests/coverage``` folder:
 ```shell
 task -d scripts tests -v
 ```

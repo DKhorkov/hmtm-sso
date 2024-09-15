@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"net"
 
+	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
+
 	"github.com/DKhorkov/hmtm-sso/internal/controllers/grpc/auth"
 	"github.com/DKhorkov/hmtm-sso/internal/controllers/grpc/users"
 
@@ -22,7 +24,7 @@ type Controller struct {
 // Run gRPC server.
 func (controller *Controller) Run() {
 	controller.logger.Info(
-		fmt.Sprintf("Starting gRPC Server at %s:%d", controller.host, controller.port),
+		fmt.Sprintf("Starting gRPC Server at http://%s:%d", controller.host, controller.port),
 		"Traceback",
 		logging.GetLogTraceback(),
 	)
@@ -49,21 +51,24 @@ func (controller *Controller) Run() {
 		)
 		panic(err)
 	}
+
+	controller.logger.Info("Stopped serving new connections.")
 }
 
 // Stop gRPC server gracefully (graceful shutdown).
 func (controller *Controller) Stop() {
 	// Stops accepting new requests and processes already received requests:
 	controller.grpcServer.GracefulStop()
+	controller.logger.Info("Graceful shutdown completed.")
 }
 
 // New creates an instance of GrpcApp like a constructor.
-func New(host string, port int) *Controller {
+func New(host string, port int, useCases interfaces.UseCases) *Controller {
 	grpcServer := grpc.NewServer()
 
 	// Connects our gRPC services to grpcServer:
-	auth.Register(grpcServer)
-	users.Register(grpcServer)
+	auth.Register(grpcServer, useCases)
+	users.Register(grpcServer, useCases)
 
 	return &Controller{
 		grpcServer: grpcServer,
