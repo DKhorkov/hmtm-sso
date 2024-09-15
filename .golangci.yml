@@ -347,6 +347,9 @@ issues:
     - path: "pkg/logging*"
       linters:
         - gochecknoglobals
+    - path: "internal/repositories*"
+      linters:
+        - revive
     - path: "_test\\.go"
       linters:
         - bodyclose

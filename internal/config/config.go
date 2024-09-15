@@ -2,20 +2,20 @@ package config
 
 import "github.com/DKhorkov/hmtm-bff/pkg/loadenv"
 
-func GetConfig() *Config {
+func New() *Config {
 	return &Config{
-		GRPC: GRPCConfigs{
-			Host: loadenv.GetEnv("GRPC_HOST", "0.0.0.0"),
-			Port: loadenv.GetEnvAsInt("GRPC_PORT", 8070),
+		HTTP: HTTPConfigs{
+			Host: loadenv.GetEnv("HOST", "0.0.0.0"),
+			Port: loadenv.GetEnvAsInt("PORT", 8070),
 		},
 	}
 }
 
-type GRPCConfigs struct {
+type HTTPConfigs struct {
 	Host string
 	Port int
 }
 
 type Config struct {
-	GRPC GRPCConfigs
+	HTTP HTTPConfigs
 }

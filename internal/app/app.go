@@ -4,15 +4,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 )
 
-type Controller interface {
-	Run()
-	Stop()
-}
-
 type App struct {
-	controller Controller
+	controller interfaces.Controller
 }
 
 func (application *App) Run() {
@@ -28,7 +25,7 @@ func (application *App) Run() {
 	application.controller.Stop()
 }
 
-func New(controller Controller) *App {
+func New(controller interfaces.Controller) *App {
 	return &App{
 		controller: controller,
 	}
