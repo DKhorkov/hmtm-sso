@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"github.com/DKhorkov/hmtm-sso/internal/entities"
+	"github.com/DKhorkov/hmtm-sso/entities"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 )
 

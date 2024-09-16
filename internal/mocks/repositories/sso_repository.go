@@ -1,9 +1,9 @@
 package mocks
 
 import (
+	"github.com/DKhorkov/hmtm-sso/entities"
 	"time"
 
-	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 )
 

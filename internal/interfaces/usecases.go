@@ -1,6 +1,8 @@
 package interfaces
 
-import "github.com/DKhorkov/hmtm-sso/internal/entities"
+import (
+	"github.com/DKhorkov/hmtm-sso/entities"
+)
 
 type UseCases interface {
 	GetUserByID(id int) (*entities.User, error)

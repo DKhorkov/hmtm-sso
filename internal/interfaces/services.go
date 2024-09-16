@@ -1,7 +1,7 @@
 package interfaces
 
 import (
-	"github.com/DKhorkov/hmtm-sso/internal/entities"
+	"github.com/DKhorkov/hmtm-sso/entities"
 )
 
 type UsersService interface {
