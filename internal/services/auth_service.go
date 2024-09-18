@@ -4,6 +4,7 @@ import (
 	"github.com/DKhorkov/hmtm-sso/entities"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
+	"github.com/DKhorkov/hmtm-sso/internal/security"
 )
 
 type CommonAuthService struct {
@@ -17,7 +18,7 @@ func (service *CommonAuthService) LoginUser(userData entities.LoginUserDTO) (str
 		return "", err
 	}
 
-	if user.Password != userData.Password {
+	if !security.ValidateHashedPassword(userData.Password, user.Password) {
 		return "", &customerrors.InvalidPasswordError{}
 	}
 

@@ -1,9 +1,9 @@
 version: '3'
 
 services:
-  hmtmsso:
-    container_name: hmtmsso
-    image: hmtmsso
+  hmtm_sso:
+    container_name: hmtm_sso
+    image: hmtm_sso
     build:
       context: ../..
       dockerfile: ./build/package/Dockerfile
