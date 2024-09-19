@@ -63,6 +63,8 @@ tasks:
       - test
     dir: ../
     cmds:
+      - sudo chmod -R 777 postgres_data
+      - sudo chmod -R 777 postgres_backups
       - mkdir -p ./tests/coverage
       - go test -v -coverprofile ./tests/coverage/coverage.out -coverpkg=./... ./tests...
       - go tool cover -html ./tests/coverage/coverage.out -o ./tests/coverage/coverage.html
@@ -72,4 +74,83 @@ tasks:
     aliases:
       - lint
     dir: ../
-    cmd: golangci-lint run -v --fix
+    cmds:
+      - sudo chmod -R 777 postgres_data
+      - sudo chmod -R 777 postgres_backups
+      - golangci-lint run -v --fix
+
+  makemigrations:
+    desc: "Create migration file with provided name."
+    requires: # Make sure these variables are set before running
+      vars: [ NAME ]
+    vars:
+      DIR: ./internal/database/migrations
+    dir: ../
+    cmds:
+      - go install github.com/pressly/goose/v3/cmd/goose@latest
+      - goose -dir {{.DIR}} create {{.NAME}} sql
+
+  migrate:
+    desc: "Apply all available migrations."
+    aliases:
+      - create_database
+    vars:
+      DIR: ./internal/database/migrations
+      DRIVER: postgres
+      DATABASE_URL: "postgresql://hmtm_sso:hmtm_sso@0.0.0.0:5432/hmtm_sso"
+    dir: ../
+    cmds:
+      - go install github.com/pressly/goose/v3/cmd/goose@latest
+      - goose -dir {{.DIR}} {{.DRIVER}} {{.DATABASE_URL}} up
+
+  migrate_to:
+    desc: "Migrate up to a specific version."
+    requires:
+      vars: [ VERSION ]
+    vars:
+      DIR: ./internal/database/migrations
+      DRIVER: postgres
+      DATABASE_URL: "postgresql://hmtm_sso:hmtm_sso@0.0.0.0:5432/hmtm_sso"
+    dir: ../
+    cmds:
+      - go install github.com/pressly/goose/v3/cmd/goose@latest
+      - goose -dir {{.DIR}} {{.DRIVER}} {{.DATABASE_URL}} up-to {{.VERSION}}
+
+  downgrade_to:
+    desc: "Rollback migrations to a specific version."
+    requires:
+      vars: [ VERSION ]
+    vars:
+      DIR: ./internal/database/migrations
+      DRIVER: postgres
+      DATABASE_URL: "postgresql://hmtm_sso:hmtm_sso@0.0.0.0:5432/hmtm_sso"
+    dir: ../
+    cmds:
+      - go install github.com/pressly/goose/v3/cmd/goose@latest
+      - goose -dir {{.DIR}} {{.DRIVER}} {{.DATABASE_URL}} down-to {{.VERSION}}
+
+  downgrade_to_base:
+    desc: "Rollback all migrations (careful!)."
+    aliases:
+      - drop_tables
+    vars:
+      DIR: ./internal/database/migrations
+      DRIVER: postgres
+      DATABASE_URL: "postgresql://hmtm_sso:hmtm_sso@0.0.0.0:5432/hmtm_sso"
+    dir: ../
+    cmds:
+      - go install github.com/pressly/goose/v3/cmd/goose@latest
+      - goose -dir {{.DIR}} {{.DRIVER}} {{.DATABASE_URL}} down-to 0
+
+  migrations_status:
+    desc: "Print the status of all migrations."
+    aliases:
+      - status
+    vars:
+      DIR: ./internal/database/migrations
+      DRIVER: postgres
+      DATABASE_URL: "postgresql://hmtm_sso:hmtm_sso@0.0.0.0:5432/hmtm_sso"
+    dir: ../
+    cmds:
+      - go install github.com/pressly/goose/v3/cmd/goose@latest
+      - goose -dir {{.DIR}} {{.DRIVER}} {{.DATABASE_URL}} status

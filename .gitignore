@@ -37,3 +37,7 @@ venv.bak/
 
 # IDE:
 .idea/
+
+# Backups:
+postgres_backups
+postgres_data

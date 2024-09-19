@@ -9,3 +9,17 @@ services:
       dockerfile: ./build/package/Dockerfile
     ports:
       - "8070:8070"
+
+  hmtm_sso_database:
+    container_name: hmtm_sso_database
+    hostname: hmtm_sso_database
+    image: postgres
+    restart: always
+    env_file:
+      - ../../.env
+    volumes:
+      - ../../postgres_data:/var/lib/postgresql/data
+      - ../../postgres_backups:/backups
+      - ../../scripts/postgres:/scripts
+    ports:
+      - "5432:5432"

@@ -43,14 +43,14 @@ func TestGenerateJWT(t *testing.T) {
 			token, err := security.GenerateJWT(user, tc.secretKey, tc.ttl, tc.algorithm)
 
 			if tc.errorExpected {
-				require.Error(t, err)
+				require.Error(t, err, tc.message)
 				assert.Equal(
 					t,
 					"",
 					token,
 					"\n%s - actual: '%v', expected: '%v'", tc.message, token, "")
 			} else {
-				require.NoError(t, err)
+				require.NoError(t, err, tc.message)
 				assert.NotEqual(
 					t,
 					"",
@@ -115,7 +115,7 @@ func TestParseJWT(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			token, err := security.GenerateJWT(user, secretKey, tc.ttl, tc.algorithm)
-			require.NoError(t, err)
+			require.NoError(t, err, tc.message)
 
 			userID, err := security.ParseJWT(token, tc.secretKey)
 			assert.Equal(
@@ -125,7 +125,7 @@ func TestParseJWT(t *testing.T) {
 				"\n%s - actual: '%v', expected: '%v'", tc.message, userID, tc.expected)
 
 			if tc.errorExpected {
-				require.Error(t, err)
+				require.Error(t, err, tc.message)
 				assert.IsType(t, tc.errorType, err)
 			}
 		})
