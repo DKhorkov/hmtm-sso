@@ -37,14 +37,14 @@ func TestHashPassword(t *testing.T) {
 			hashedPassword, err := security.HashPassword(tc.password, tc.hashLength)
 
 			if tc.errorExpected {
-				require.Error(t, err)
+				require.Error(t, err, tc.message)
 				assert.Equal(
 					t,
 					"",
 					hashedPassword,
 					"\n%s - actual: '%v', expected: '%v'", tc.message, hashedPassword, "")
 			} else {
-				require.NoError(t, err)
+				require.NoError(t, err, tc.message)
 				assert.NotEqual(
 					t,
 					"",
