@@ -4,7 +4,7 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/app"
 	"github.com/DKhorkov/hmtm-sso/internal/config"
 	grpccontroller "github.com/DKhorkov/hmtm-sso/internal/controllers/grpc"
-	postgresgorm "github.com/DKhorkov/hmtm-sso/internal/database"
+	"github.com/DKhorkov/hmtm-sso/internal/database"
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
 	"github.com/DKhorkov/hmtm-sso/internal/services"
 	"github.com/DKhorkov/hmtm-sso/internal/usecases"
@@ -15,7 +15,7 @@ func main() {
 	logger := logging.GetInstance(logging.LogLevels.DEBUG)
 	settings := config.New()
 
-	dbConnector, err := postgresgorm.New(
+	dbConnector, err := database.New(
 		settings.Databases.PostgreSQL,
 		logger,
 	)

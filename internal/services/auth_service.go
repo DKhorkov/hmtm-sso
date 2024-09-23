@@ -33,5 +33,10 @@ func (service *CommonAuthService) LoginUser(userData entities.LoginUserDTO) (str
 }
 
 func (service *CommonAuthService) RegisterUser(userData entities.RegisterUserDTO) (int, error) {
+	user, _ := service.UsersRepository.GetUserByEmail(userData.Credentials.Email)
+	if user != nil {
+		return 0, &customerrors.UserAlreadyExistsError{}
+	}
+
 	return service.AuthRepository.RegisterUser(userData)
 }
