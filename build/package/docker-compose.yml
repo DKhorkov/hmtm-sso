@@ -9,6 +9,8 @@ services:
       dockerfile: ./build/package/Dockerfile
     ports:
       - "8070:8070"
+    depends_on:
+      - hmtm_sso_database
 
   hmtm_sso_database:
     container_name: hmtm_sso_database
