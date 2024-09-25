@@ -41,9 +41,9 @@ func TestRegisterUser(t *testing.T) {
 		var usersCount int
 		err = connection.QueryRow(
 			`
-			SELECT COUNT(*)
-			FROM users
-		`,
+				SELECT COUNT(*)
+				FROM users
+			`,
 		).Scan(&usersCount)
 		require.NoError(t, err)
 		assert.Equal(t, 1, usersCount)
