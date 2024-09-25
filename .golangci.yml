@@ -362,3 +362,6 @@ issues:
         - gosec
         - noctx
         - wrapcheck
+    - path: "tests/internal/repositories/lifespan/lifespan.go"
+      linters:
+        - gochecknoglobals

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
+
 	"github.com/DKhorkov/hmtm-sso/internal/config"
 	"github.com/DKhorkov/hmtm-sso/pkg/logging"
 
@@ -12,41 +14,51 @@ import (
 )
 
 type CommonDBConnector struct {
-	connection *sql.DB
-	driver     string
-	dsn        string
-	logger     *slog.Logger
+	Connection *sql.DB
+	Driver     string
+	DSN        string
+	Logger     *slog.Logger
 }
 
 func (connector *CommonDBConnector) Connect() error {
-	if connector.connection == nil {
-		connection, err := sql.Open(connector.driver, connector.dsn)
+	if connector.Connection == nil {
+		connection, err := sql.Open(connector.Driver, connector.DSN)
 
 		if err != nil {
 			return err
 		}
 
-		connector.connection = connection
+		connector.Connection = connection
 	}
 
 	return nil
 }
 
 func (connector *CommonDBConnector) GetConnection() *sql.DB {
-	return connector.connection
+	if connector.Connection == nil {
+		if err := connector.Connect(); err != nil {
+			return nil
+		}
+	}
+
+	return connector.Connection
 }
 
 func (connector *CommonDBConnector) GetTransaction() (*sql.Tx, error) {
-	return connector.connection.Begin()
+	if connector.Connection == nil {
+		return nil, &customerrors.NilDBConnectionError{}
+	}
+
+	return connector.Connection.Begin()
 }
 
 func (connector *CommonDBConnector) CloseConnection() {
-	if connector.connection == nil {
+	if connector.Connection == nil {
 		return
 	}
 
-	if err := connector.connection.Close(); err != nil {
-		connector.logger.Error(
+	if err := connector.Connection.Close(); err != nil {
+		connector.Logger.Error(
 			"Failed to close database connection",
 			"Traceback",
 			logging.GetLogTraceback(),
@@ -68,9 +80,9 @@ func New(dbConfig config.DatabaseConfig, logger *slog.Logger) (*CommonDBConnecto
 	)
 
 	dbConnector := &CommonDBConnector{
-		driver: dbConfig.Driver,
-		dsn:    dsn,
-		logger: logger,
+		Driver: dbConfig.Driver,
+		DSN:    dsn,
+		Logger: logger,
 	}
 
 	if err := dbConnector.Connect(); err != nil {
