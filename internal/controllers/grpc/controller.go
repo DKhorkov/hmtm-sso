@@ -62,8 +62,8 @@ func (controller *Controller) Stop() {
 	controller.logger.Info("Graceful shutdown completed.")
 }
 
-// New creates an instance of GrpcApp like a constructor.
-func New(host string, port int, useCases interfaces.UseCases) *Controller {
+// New creates an instance of gRPC Controller.
+func New(host string, port int, useCases interfaces.UseCases, logger *slog.Logger) *Controller {
 	grpcServer := grpc.NewServer()
 
 	// Connects our gRPC services to grpcServer:
@@ -74,6 +74,6 @@ func New(host string, port int, useCases interfaces.UseCases) *Controller {
 		grpcServer: grpcServer,
 		port:       port,
 		host:       host,
-		logger:     logging.GetInstance(logging.LogLevels.DEBUG),
+		logger:     logger,
 	}
 }

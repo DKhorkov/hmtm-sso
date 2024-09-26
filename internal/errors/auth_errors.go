@@ -12,18 +12,6 @@ func (e *UserNotFoundError) Error() string {
 	return "user not found"
 }
 
-type UserAlreadyExistsError struct {
-	message string
-}
-
-func (e *UserAlreadyExistsError) Error() string {
-	if e.message != "" {
-		return e.message
-	}
-
-	return "user with this email already exists"
-}
-
 type InvalidPasswordError struct {
 	message string
 }
@@ -34,4 +22,16 @@ func (e *InvalidPasswordError) Error() string {
 	}
 
 	return "wrong password"
+}
+
+type UserAlreadyExistsError struct {
+	message string
+}
+
+func (e *UserAlreadyExistsError) Error() string {
+	if e.message != "" {
+		return e.message
+	}
+
+	return "user with provided email already exists"
 }

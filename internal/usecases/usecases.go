@@ -3,14 +3,22 @@ package usecases
 import (
 	"github.com/DKhorkov/hmtm-sso/entities"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
+	"github.com/DKhorkov/hmtm-sso/internal/security"
 )
 
 type CommonUseCases struct {
 	AuthService  interfaces.AuthService
 	UsersService interfaces.UsersService
+	HashCost     int
 }
 
 func (useCases *CommonUseCases) RegisterUser(userData entities.RegisterUserDTO) (int, error) {
+	hashedPassword, err := security.HashPassword(userData.Credentials.Password, useCases.HashCost)
+	if err != nil {
+		return 0, err
+	}
+
+	userData.Credentials.Password = hashedPassword
 	return useCases.AuthService.RegisterUser(userData)
 }
 

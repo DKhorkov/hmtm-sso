@@ -2,6 +2,7 @@ package logging
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"runtime"
@@ -23,11 +24,24 @@ var (
 )
 
 // GetInstance implemented as singleton pattern to get Logger instance, created once for whole app:.
-func GetInstance(logLevel slog.Level) *slog.Logger {
+func GetInstance(logLevel slog.Level, logFilePath string) *slog.Logger {
+	var logWriter io.Writer
+
+	if logFile, err := os.OpenFile(
+		logFilePath,
+		os.O_RDWR|os.O_CREATE|os.O_APPEND,
+		0666,
+	); err != nil {
+		fmt.Printf("Failed to open log file %s: %s\n", logFilePath, err)
+		logWriter = os.Stdout
+	} else {
+		logWriter = io.MultiWriter(os.Stdout, logFile)
+	}
+
 	once.Do(func() {
 		instance = slog.New(
 			slog.NewJSONHandler(
-				os.Stdout,
+				logWriter,
 				&slog.HandlerOptions{
 					Level: logLevel,
 				},
