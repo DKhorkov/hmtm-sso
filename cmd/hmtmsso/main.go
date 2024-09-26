@@ -12,8 +12,11 @@ import (
 )
 
 func main() {
-	logger := logging.GetInstance(logging.LogLevels.DEBUG)
 	settings := config.New()
+	logger := logging.GetInstance(
+		settings.Logging.Level,
+		settings.Logging.LogFilePath,
+	)
 
 	dbConnector, err := database.New(
 		settings.Databases.PostgreSQL,
@@ -44,7 +47,12 @@ func main() {
 		HashCost:     settings.Security.HashCost,
 	}
 
-	controller := grpccontroller.New(settings.HTTP.Host, settings.HTTP.Port, useCases)
+	controller := grpccontroller.New(
+		settings.HTTP.Host,
+		settings.HTTP.Port,
+		useCases,
+		logger,
+	)
 
 	application := app.New(controller)
 	application.Run()

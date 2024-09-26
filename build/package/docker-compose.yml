@@ -11,6 +11,8 @@ services:
       - "8070:8070"
     depends_on:
       - hmtm_sso_database
+    volumes:
+      - ../../logs/:/app/logs/
 
   hmtm_sso_database:
     container_name: hmtm_sso_database

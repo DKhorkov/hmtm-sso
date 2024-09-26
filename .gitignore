@@ -27,6 +27,7 @@ go.work.sum
 
 # Local files^
 *.log
+logs/
 *.db
 
 # Environments

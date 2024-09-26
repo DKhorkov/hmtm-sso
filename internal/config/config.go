@@ -1,9 +1,12 @@
 package config
 
 import (
+	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/DKhorkov/hmtm-bff/pkg/loadenv"
+	"github.com/DKhorkov/hmtm-sso/pkg/logging"
 )
 
 func New() *Config {
@@ -32,6 +35,10 @@ func New() *Config {
 				SSLMode:      loadenv.GetEnv("POSTGRES_SSL_MODE", "disable"),
 				Driver:       loadenv.GetEnv("POSTGRES_DRIVER", "postgres"),
 			},
+		},
+		Logging: LoggingConfig{
+			Level:       logging.LogLevels.DEBUG,
+			LogFilePath: fmt.Sprintf("logs/%s.log", time.Now().Format("02-01-2006")),
 		},
 	}
 }
@@ -68,8 +75,14 @@ type DatabasesConfig struct {
 	SQLite     DatabaseConfig
 }
 
+type LoggingConfig struct {
+	Level       slog.Level
+	LogFilePath string
+}
+
 type Config struct {
 	HTTP      HTTPConfig
 	Security  SecurityConfig
 	Databases DatabasesConfig
+	Logging   LoggingConfig
 }
