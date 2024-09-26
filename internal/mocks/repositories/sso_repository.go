@@ -13,12 +13,19 @@ type MockedSsoRepository struct {
 }
 
 func (repo *MockedSsoRepository) RegisterUser(userData entities.RegisterUserDTO) (int, error) {
-	var user entities.User
-	user.Email = userData.Credentials.Email
-	user.ID = len(repo.UsersStorage) + 1
-	user.CreatedAt = time.Now()
-	user.UpdatedAt = time.Now()
+	for _, user := range repo.UsersStorage {
+		if user.Email == userData.Credentials.Email {
+			return 0, &customerrors.UserAlreadyExistsError{}
+		}
+	}
 
+	user := entities.User{
+		Email:     userData.Credentials.Email,
+		Password:  userData.Credentials.Password,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	user.ID = len(repo.UsersStorage) + 1
 	repo.UsersStorage[user.ID] = &user
 	return user.ID, nil
 }

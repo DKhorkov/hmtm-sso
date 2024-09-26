@@ -4,9 +4,7 @@ go 1.23.1
 
 require (
 	github.com/DKhorkov/hmtm-bff v0.0.1
-	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/crypto v0.24.0
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
 )
