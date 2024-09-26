@@ -6,8 +6,16 @@ tasks:
     aliases:
       - prod
     cmds:
+      - task: create_logs_folder
       - task: docker_build
       - task: docker_run
+
+  create_logs_folder:
+    desc: "Create logs folder for docker volume purposes."
+    internal: true
+    dir: ../
+    cmds:
+      - mkdir -p logs
 
   docker_build:
     desc: "Build docker container."
