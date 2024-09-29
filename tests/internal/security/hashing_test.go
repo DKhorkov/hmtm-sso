@@ -11,21 +11,21 @@ import (
 func TestHashPassword(t *testing.T) {
 	testCases := []struct {
 		name          string
-		hashLength    int
+		hashCost      int
 		password      string
 		message       string
 		errorExpected bool
 	}{
 		{
 			name:          "password successfully hashed",
-			hashLength:    14,
+			hashCost:      14,
 			password:      "password",
 			message:       "should return hash for password",
 			errorExpected: false,
 		},
 		{
 			name:          "too long password > 72 bytes",
-			hashLength:    14,
+			hashCost:      14,
 			password:      "tooLongPasswordThatCanNotBeLessThanSeventyTwoBytesForSureAndThereCouldAlsoBeSomeStory",
 			message:       "should return error",
 			errorExpected: true,
@@ -34,7 +34,7 @@ func TestHashPassword(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			hashedPassword, err := security.HashPassword(tc.password, tc.hashLength)
+			hashedPassword, err := security.HashPassword(tc.password, tc.hashCost)
 
 			if tc.errorExpected {
 				require.Error(t, err, tc.message)

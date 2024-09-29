@@ -151,7 +151,7 @@ tasks:
       - goose -dir {{.DIR}} {{.DRIVER}} {{.DATABASE_URL}} down-to 0
 
   migrations_status:
-    desc: "Print the status of all migrations."
+    desc: "Print status of all migrations."
     aliases:
       - status
     vars:
