@@ -49,7 +49,7 @@ func TestRegisterUser(t *testing.T) {
 		assert.Equal(t, 1, usersCount)
 	})
 
-	t.Run("registration failure due to existence of user with dame email", func(t *testing.T) {
+	t.Run("registration failure due to existence of user with same email", func(t *testing.T) {
 		connection := testlifespan.StartUp(t)
 		defer testlifespan.TearDown(t, connection)
 
