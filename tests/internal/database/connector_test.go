@@ -2,8 +2,9 @@ package database__test
 
 import (
 	"database/sql"
-	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
 	"testing"
+
+	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
 
 	"github.com/DKhorkov/hmtm-sso/internal/database"
 	testconfig "github.com/DKhorkov/hmtm-sso/tests/config"

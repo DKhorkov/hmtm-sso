@@ -1,9 +1,10 @@
 package security
 
 import (
+	"time"
+
 	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
-	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )

@@ -1,10 +1,11 @@
 package security__test
 
 import (
-	"github.com/DKhorkov/hmtm-sso/pkg/entities"
-	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
 	"testing"
 	"time"
+
+	"github.com/DKhorkov/hmtm-sso/pkg/entities"
+	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
 
 	"github.com/DKhorkov/hmtm-sso/internal/security"
 	"github.com/stretchr/testify/assert"

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+
 	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"

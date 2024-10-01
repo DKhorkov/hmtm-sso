@@ -3,8 +3,9 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
 	"log/slog"
+
+	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
 
 	"github.com/DKhorkov/hmtm-sso/internal/config"
 	"github.com/DKhorkov/hmtm-sso/pkg/logging"
