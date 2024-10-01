@@ -1,7 +1,7 @@
 package interfaces
 
 import (
-	"github.com/DKhorkov/hmtm-sso/entities"
+	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 )
 
 type UsersRepository interface {

@@ -1,9 +1,9 @@
 package usecases
 
 import (
-	"github.com/DKhorkov/hmtm-sso/entities"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 	"github.com/DKhorkov/hmtm-sso/internal/security"
+	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 )
 
 type CommonUseCases struct {

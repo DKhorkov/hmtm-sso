@@ -1,11 +1,11 @@
 package services
 
 import (
-	"github.com/DKhorkov/hmtm-sso/entities"
 	"github.com/DKhorkov/hmtm-sso/internal/config"
-	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 	"github.com/DKhorkov/hmtm-sso/internal/security"
+	"github.com/DKhorkov/hmtm-sso/pkg/entities"
+	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
 )
 
 type CommonAuthService struct {

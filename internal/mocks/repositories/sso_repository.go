@@ -1,11 +1,9 @@
 package mocks
 
 import (
+	"github.com/DKhorkov/hmtm-sso/pkg/entities"
+	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
 	"time"
-
-	"github.com/DKhorkov/hmtm-sso/entities"
-
-	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 )
 
 type MockedSsoRepository struct {

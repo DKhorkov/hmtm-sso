@@ -1,9 +1,9 @@
 package repositories__test
 
 import (
+	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 	"testing"
 
-	"github.com/DKhorkov/hmtm-sso/entities"
 	"github.com/DKhorkov/hmtm-sso/internal/database"
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
 	testlifespan "github.com/DKhorkov/hmtm-sso/tests/internal/repositories/lifespan"

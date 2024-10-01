@@ -2,10 +2,10 @@ package database__test
 
 import (
 	"database/sql"
+	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
 	"testing"
 
 	"github.com/DKhorkov/hmtm-sso/internal/database"
-	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	testconfig "github.com/DKhorkov/hmtm-sso/tests/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -1,11 +1,11 @@
 package repositories__test
 
 import (
+	"github.com/DKhorkov/hmtm-sso/pkg/entities"
+	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
 	"testing"
 
-	"github.com/DKhorkov/hmtm-sso/entities"
 	"github.com/DKhorkov/hmtm-sso/internal/database"
-	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
 	testlifespan "github.com/DKhorkov/hmtm-sso/tests/internal/repositories/lifespan"
 	"github.com/stretchr/testify/assert"

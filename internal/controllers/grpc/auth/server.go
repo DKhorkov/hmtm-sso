@@ -2,8 +2,8 @@ package auth
 
 import (
 	"context"
+	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 
-	"github.com/DKhorkov/hmtm-sso/entities"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 	"google.golang.org/grpc"
 
