@@ -29,6 +29,12 @@ tasks:
       - run
     cmd: sudo docker compose -f ../build/package/docker-compose.yml up
 
+  docker_stop:
+    desc: "Stop all docker containers."
+    aliases:
+      - stop
+    cmd:  sudo docker stop $(sudo docker ps -a -q)
+
   docker_clean:
     desc: "Clean docker containers, images and volumes."
     aliases:
