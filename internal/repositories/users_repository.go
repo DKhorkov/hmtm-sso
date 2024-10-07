@@ -4,7 +4,6 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/database"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 	"github.com/DKhorkov/hmtm-sso/pkg/entities"
-	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
 )
 
 type CommonUsersRepository struct {
@@ -25,7 +24,7 @@ func (repo *CommonUsersRepository) GetUserByID(id int) (*entities.User, error) {
 	).Scan(columns...)
 
 	if err != nil {
-		return nil, &customerrors.UserNotFoundError{}
+		return nil, err
 	}
 
 	return user, nil
@@ -45,7 +44,7 @@ func (repo *CommonUsersRepository) GetUserByEmail(email string) (*entities.User,
 	).Scan(columns...)
 
 	if err != nil {
-		return nil, &customerrors.UserNotFoundError{}
+		return nil, err
 	}
 
 	return user, nil

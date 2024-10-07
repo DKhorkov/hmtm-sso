@@ -17,7 +17,7 @@ type CommonAuthService struct {
 func (service *CommonAuthService) LoginUser(userData entities.LoginUserDTO) (string, error) {
 	user, err := service.UsersRepository.GetUserByEmail(userData.Email)
 	if err != nil {
-		return "", err
+		return "", &customerrors.UserNotFoundError{}
 	}
 
 	if !security.ValidateHashedPassword(userData.Password, user.Password) {

@@ -2,6 +2,10 @@ package auth
 
 import (
 	"context"
+	"errors"
+
+	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
+	"google.golang.org/grpc/codes"
 
 	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 
@@ -28,7 +32,12 @@ func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest
 
 	userID, err := api.UseCases.RegisterUser(userData)
 	if err != nil {
-		return nil, err
+		var userAlreadyExists *customerrors.UserAlreadyExistsError
+		if errors.As(err, &userAlreadyExists) {
+			return nil, &customerrors.GRPCError{Status: codes.AlreadyExists, Message: err.Error()}
+		}
+
+		return nil, &customerrors.GRPCError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	return &sso.RegisterResponse{UserID: int64(userID)}, nil
@@ -43,7 +52,17 @@ func (api *ServerAPI) Login(ctx context.Context, request *sso.LoginRequest) (*ss
 
 	token, err := api.UseCases.LoginUser(userData)
 	if err != nil {
-		return &sso.LoginResponse{Token: ""}, err
+		var userNotFoundError *customerrors.UserNotFoundError
+		if errors.As(err, &userNotFoundError) {
+			return nil, &customerrors.GRPCError{Status: codes.NotFound, Message: err.Error()}
+		}
+
+		var invalidPasswordError *customerrors.InvalidPasswordError
+		if errors.As(err, &invalidPasswordError) {
+			return nil, &customerrors.GRPCError{Status: codes.Unauthenticated, Message: err.Error()}
+		}
+
+		return nil, &customerrors.GRPCError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	return &sso.LoginResponse{Token: token}, nil

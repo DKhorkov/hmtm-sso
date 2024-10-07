@@ -4,7 +4,7 @@ type InvalidJWTError struct {
 	Message string
 }
 
-func (e *InvalidJWTError) Error() string {
+func (e InvalidJWTError) Error() string {
 	if e.Message != "" {
 		return e.Message
 	}
@@ -16,7 +16,7 @@ type JWTClaimsError struct {
 	Message string
 }
 
-func (e *JWTClaimsError) Error() string {
+func (e JWTClaimsError) Error() string {
 	if e.Message != "" {
 		return e.Message
 	}

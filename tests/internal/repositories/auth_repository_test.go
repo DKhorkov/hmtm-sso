@@ -14,7 +14,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func TestRegisterUser(t *testing.T) {
+func TestRepositoriesRegisterUser(t *testing.T) {
 	const testUserEmail = "user@example.com"
 	testUserDTO := entities.RegisterUserDTO{
 		Credentials: entities.LoginUserDTO{

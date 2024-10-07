@@ -4,7 +4,7 @@ type UserNotFoundError struct {
 	Message string
 }
 
-func (e *UserNotFoundError) Error() string {
+func (e UserNotFoundError) Error() string {
 	if e.Message != "" {
 		return e.Message
 	}
@@ -16,7 +16,7 @@ type InvalidPasswordError struct {
 	Message string
 }
 
-func (e *InvalidPasswordError) Error() string {
+func (e InvalidPasswordError) Error() string {
 	if e.Message != "" {
 		return e.Message
 	}
@@ -28,7 +28,7 @@ type UserAlreadyExistsError struct {
 	Message string
 }
 
-func (e *UserAlreadyExistsError) Error() string {
+func (e UserAlreadyExistsError) Error() string {
 	if e.Message != "" {
 		return e.Message
 	}

@@ -3,11 +3,9 @@ package repositories__test
 import (
 	"testing"
 
-	"github.com/DKhorkov/hmtm-sso/pkg/entities"
-	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
-
 	"github.com/DKhorkov/hmtm-sso/internal/database"
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
+	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 	testlifespan "github.com/DKhorkov/hmtm-sso/tests/internal/repositories/lifespan"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,7 +13,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func TestGetUserByID(t *testing.T) {
+func TestRepositoriesGetUserByID(t *testing.T) {
 	const (
 		testUserID    = 1
 		testUserEmail = "user@example.com"
@@ -69,12 +67,11 @@ func TestGetUserByID(t *testing.T) {
 
 		user, err := usersRepository.GetUserByID(testUserID)
 		require.Error(t, err)
-		assert.IsType(t, &customerrors.UserNotFoundError{}, err)
 		assert.Nil(t, user)
 	})
 }
 
-func TestGetUserByEmail(t *testing.T) {
+func TestRepositoriesGetUserByEmail(t *testing.T) {
 	const (
 		testUserID    = 1
 		testUserEmail = "user@example.com"
@@ -128,12 +125,11 @@ func TestGetUserByEmail(t *testing.T) {
 
 		user, err := usersRepository.GetUserByEmail(testUserEmail)
 		require.Error(t, err)
-		assert.IsType(t, &customerrors.UserNotFoundError{}, err)
 		assert.Nil(t, user)
 	})
 }
 
-func TestGetAllUsers(t *testing.T) {
+func TestRepositoriesGetAllUsers(t *testing.T) {
 	t.Run("get users with existing users", func(t *testing.T) {
 		connection := testlifespan.StartUp(t)
 		defer testlifespan.TearDown(t, connection)

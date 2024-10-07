@@ -2,9 +2,12 @@ package users
 
 import (
 	"context"
+	"errors"
 
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
+	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -21,7 +24,12 @@ type ServerAPI struct {
 func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) (*sso.GetUserResponse, error) {
 	user, err := api.UseCases.GetUserByID(int(request.GetUserID()))
 	if err != nil {
-		return nil, err
+		var userNotFoundError *customerrors.UserNotFoundError
+		if errors.As(err, &userNotFoundError) {
+			return nil, &customerrors.GRPCError{Status: codes.NotFound, Message: err.Error()}
+		}
+
+		return nil, &customerrors.GRPCError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	response := &sso.GetUserResponse{
@@ -38,7 +46,7 @@ func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) 
 func (api *ServerAPI) GetUsers(ctx context.Context, request *emptypb.Empty) (*sso.GetUsersResponse, error) {
 	users, err := api.UseCases.GetAllUsers()
 	if err != nil {
-		return nil, err
+		return nil, &customerrors.GRPCError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	usersForResponse := make([]*sso.GetUserResponse, len(users))

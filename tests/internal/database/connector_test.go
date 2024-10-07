@@ -14,7 +14,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func TestConnect(t *testing.T) {
+func TestDatabaseConnect(t *testing.T) {
 	testsConfig := testconfig.New()
 
 	t.Run("should connect to database", func(t *testing.T) {
@@ -38,7 +38,7 @@ func TestConnect(t *testing.T) {
 	})
 }
 
-func TestGetTransaction(t *testing.T) {
+func TestDatabaseGetTransaction(t *testing.T) {
 	testsConfig := testconfig.New()
 
 	t.Run("should return transaction", func(t *testing.T) {
@@ -77,7 +77,7 @@ func TestGetTransaction(t *testing.T) {
 	})
 }
 
-func TestGetConnection(t *testing.T) {
+func TestDatabaseGetConnection(t *testing.T) {
 	testsConfig := testconfig.New()
 
 	t.Run("should return connection", func(t *testing.T) {
