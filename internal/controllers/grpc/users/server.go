@@ -3,6 +3,9 @@ package users
 import (
 	"context"
 	"errors"
+	"log/slog"
+
+	"github.com/DKhorkov/hmtm-sso/pkg/logging"
 
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
@@ -18,12 +21,33 @@ type ServerAPI struct {
 	// Helps to test single endpoints, if others is not implemented yet
 	sso.UnimplementedUsersServiceServer
 	UseCases interfaces.UseCases
+	Logger   *slog.Logger
 }
 
 // GetUser handler return user with provided data for UsersServer.
 func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) (*sso.GetUserResponse, error) {
+	api.Logger.InfoContext(
+		ctx,
+		"Received new request",
+		"Request",
+		request,
+		"Context",
+		ctx,
+		"Traceback",
+		logging.GetLogTraceback(),
+	)
+
 	user, err := api.UseCases.GetUserByID(int(request.GetUserID()))
 	if err != nil {
+		api.Logger.ErrorContext(
+			ctx,
+			"Error occurred while trying to get user",
+			"Traceback",
+			logging.GetLogTraceback(),
+			"Error",
+			err,
+		)
+
 		var userNotFoundError *customerrors.UserNotFoundError
 		if errors.As(err, &userNotFoundError) {
 			return nil, &customerrors.GRPCError{Status: codes.NotFound, Message: err.Error()}
@@ -44,8 +68,28 @@ func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) 
 
 // GetUsers user handler return all users for UsersServer.
 func (api *ServerAPI) GetUsers(ctx context.Context, request *emptypb.Empty) (*sso.GetUsersResponse, error) {
+	api.Logger.InfoContext(
+		ctx,
+		"Received new request",
+		"Request",
+		request,
+		"Context",
+		ctx,
+		"Traceback",
+		logging.GetLogTraceback(),
+	)
+
 	users, err := api.UseCases.GetAllUsers()
 	if err != nil {
+		api.Logger.ErrorContext(
+			ctx,
+			"Error occurred while trying to get all users",
+			"Traceback",
+			logging.GetLogTraceback(),
+			"Error",
+			err,
+		)
+
 		return nil, &customerrors.GRPCError{Status: codes.Internal, Message: err.Error()}
 	}
 
@@ -67,6 +111,6 @@ func (api *ServerAPI) GetUsers(ctx context.Context, request *emptypb.Empty) (*ss
 }
 
 // Register handler (serverAPI) for AuthServer  to gRPC server:.
-func Register(gRPCServer *grpc.Server, useCases interfaces.UseCases) {
-	sso.RegisterUsersServiceServer(gRPCServer, &ServerAPI{UseCases: useCases})
+func Register(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger *slog.Logger) {
+	sso.RegisterUsersServiceServer(gRPCServer, &ServerAPI{UseCases: useCases, Logger: logger})
 }
