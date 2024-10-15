@@ -18,8 +18,11 @@ func New() *Config {
 		Security: SecurityConfig{
 			HashCost: loadenv.GetEnvAsInt("HASH_COST", 8), // Auth speed sensitive if large
 			JWT: JWTConfig{
-				TTL: time.Hour * time.Duration(
-					loadenv.GetEnvAsInt("JWT_TTL", 24),
+				RefreshTokenTTL: time.Hour * time.Duration(
+					loadenv.GetEnvAsInt("JWT_TTL", 168),
+				),
+				AccessTokenTTL: time.Minute * time.Duration(
+					loadenv.GetEnvAsInt("JWT_TTL", 15),
 				),
 				Algorithm: loadenv.GetEnv("JWT_ALGORITHM", "HS256"),
 				SecretKey: loadenv.GetEnv("JWT_SECRET", "defaultSecret"),
@@ -49,9 +52,10 @@ type HTTPConfig struct {
 }
 
 type JWTConfig struct {
-	SecretKey string
-	Algorithm string
-	TTL       time.Duration
+	SecretKey       string
+	Algorithm       string
+	RefreshTokenTTL time.Duration
+	AccessTokenTTL  time.Duration
 }
 
 type SecurityConfig struct {

@@ -365,3 +365,9 @@ issues:
     - path: "tests/internal/repositories/lifespan/lifespan.go"
       linters:
         - gochecknoglobals
+    - path: "internal/usecases/usecases.go"
+      linters:
+        - govet
+    - path: "tests/internal/security/encoding_test.go"
+      linters:
+        - testifylint

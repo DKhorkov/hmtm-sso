@@ -11,6 +11,11 @@ option go_package = "github.com/DKhorkov/hmtm-sso/protobuf/sso;sso";
 service UsersService {
   rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
   rpc GetUsers(google.protobuf.Empty) returns (GetUsersResponse) {}
+  rpc GetMe(GetMeRequest) returns (GetUserResponse) {}
+}
+
+message GetMeRequest {
+  string AccessToken = 1;
 }
 
 message GetUserRequest {

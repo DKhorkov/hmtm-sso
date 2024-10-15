@@ -23,3 +23,12 @@ func (service *CommonUsersService) GetUserByID(id int) (*entities.User, error) {
 
 	return user, nil
 }
+
+func (service *CommonUsersService) GetUserByEmail(email string) (*entities.User, error) {
+	user, err := service.UsersRepository.GetUserByEmail(email)
+	if err != nil {
+		return nil, &customerrors.UserNotFoundError{}
+	}
+
+	return user, nil
+}

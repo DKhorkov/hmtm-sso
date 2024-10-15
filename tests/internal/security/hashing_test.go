@@ -8,25 +8,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSecurityHashPassword(t *testing.T) {
+func TestSecurityHash(t *testing.T) {
 	testCases := []struct {
 		name          string
 		hashCost      int
-		password      string
+		value         string
 		message       string
 		errorExpected bool
 	}{
 		{
-			name:          "password successfully hashed",
+			name:          "value successfully hashed",
 			hashCost:      14,
-			password:      "password",
-			message:       "should return hash for password",
+			value:         "value",
+			message:       "should return hash for value",
 			errorExpected: false,
 		},
 		{
-			name:          "too long password > 72 bytes",
+			name:          "too long value > 72 bytes",
 			hashCost:      14,
-			password:      "tooLongPasswordThatCanNotBeLessThanSeventyTwoBytesForSureAndThereCouldAlsoBeSomeStory",
+			value:         "tooLongValueThatCanNotBeLessThanSeventyTwoBytesForSureAndThereCouldAlsoBeSomeStory",
 			message:       "should return error",
 			errorExpected: true,
 		},
@@ -34,44 +34,44 @@ func TestSecurityHashPassword(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			hashedPassword, err := security.HashPassword(tc.password, tc.hashCost)
+			hashedValue, err := security.Hash(tc.value, tc.hashCost)
 
 			if tc.errorExpected {
 				require.Error(t, err, tc.message)
 				assert.Equal(
 					t,
 					"",
-					hashedPassword,
-					"\n%s - actual: '%v', expected: '%v'", tc.message, hashedPassword, "")
+					hashedValue,
+					"\n%s - actual: '%v', expected: '%v'", tc.message, hashedValue, "")
 			} else {
 				require.NoError(t, err, tc.message)
 				assert.NotEqual(
 					t,
 					"",
-					hashedPassword,
-					"\n%s - actual: '%v', expected: '%v'", tc.message, hashedPassword, "SomeHashedValue")
+					hashedValue,
+					"\n%s - actual: '%v', expected: '%v'", tc.message, hashedValue, "SomeHashedValue")
 			}
 		})
 	}
 }
 
-func TestSecurityValidateHashedPassword(t *testing.T) {
-	passwordToHash := "password"
+func TestSecurityValidateHash(t *testing.T) {
+	valueToHash := "value"
 	testCases := []struct {
 		name     string
 		expected bool
-		password string
+		value    string
 		message  string
 	}{
 		{
-			name:     "hashed password was created based on provided password",
-			password: passwordToHash,
+			name:     "hashed value was created based on provided value",
+			value:    valueToHash,
 			expected: true,
 			message:  "should return true",
 		},
 		{
-			name:     "hash password was not created based on provided password\"",
-			password: "IncorrectPassword",
+			name:     "hash value was not created based on provided value\"",
+			value:    "Incorrectvalue",
 			expected: false,
 			message:  "should return false",
 		},
@@ -79,14 +79,14 @@ func TestSecurityValidateHashedPassword(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			hashedPassword, _ := security.HashPassword(passwordToHash, 0)
-			passwordIsValid := security.ValidateHashedPassword(tc.password, hashedPassword)
+			hashedValue, _ := security.Hash(valueToHash, 0)
+			isValid := security.ValidateHash(tc.value, hashedValue)
 
 			assert.Equal(
 				t,
 				tc.expected,
-				passwordIsValid,
-				"\n%s - actual: '%v', expected: '%v'", tc.message, passwordIsValid, tc.expected)
+				isValid,
+				"\n%s - actual: '%v', expected: '%v'", tc.message, isValid, tc.expected)
 		})
 	}
 }

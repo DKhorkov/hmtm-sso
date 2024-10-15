@@ -34,7 +34,6 @@ func main() {
 	authService := &services.CommonAuthService{
 		AuthRepository:  authRepository,
 		UsersRepository: usersRepository,
-		JWTConfig:       settings.Security.JWT,
 	}
 
 	usersService := &services.CommonUsersService{
@@ -45,6 +44,7 @@ func main() {
 		AuthService:  authService,
 		UsersService: usersService,
 		HashCost:     settings.Security.HashCost,
+		JWTConfig:    settings.Security.JWT,
 	}
 
 	controller := grpccontroller.New(

@@ -23,3 +23,15 @@ func (e JWTClaimsError) Error() string {
 
 	return "JWT claims error"
 }
+
+type AccessTokenDoesNotBelongToRefreshTokenError struct {
+	Message string
+}
+
+func (e AccessTokenDoesNotBelongToRefreshTokenError) Error() string {
+	if e.Message != "" {
+		return e.Message
+	}
+
+	return "Access token does not belong to refresh token"
+}

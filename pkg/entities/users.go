@@ -9,12 +9,3 @@ type User struct {
 	CreatedAt time.Time `json:"createdAt" gorm:"not null"`
 	UpdatedAt time.Time `json:"updatedAt" gorm:"not null"`
 }
-
-type LoginUserDTO struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type RegisterUserDTO struct {
-	Credentials LoginUserDTO
-}
