@@ -24,7 +24,7 @@ type ServerAPI struct {
 	Logger   *slog.Logger
 }
 
-// GetUser handler return user with provided data for UsersServer.
+// GetUser handler returns User according provided data.
 func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) (*sso.GetUserResponse, error) {
 	api.Logger.InfoContext(
 		ctx,
@@ -56,17 +56,15 @@ func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) 
 		return nil, &customerrors.GRPCError{Status: codes.Internal, Message: err.Error()}
 	}
 
-	response := &sso.GetUserResponse{
+	return &sso.GetUserResponse{
 		UserID:    int64(user.ID),
 		Email:     user.Email,
 		CreatedAt: timestamppb.New(user.CreatedAt),
 		UpdatedAt: timestamppb.New(user.UpdatedAt),
-	}
-
-	return response, nil
+	}, nil
 }
 
-// GetUsers user handler return all users for UsersServer.
+// GetUsers handler returns all Users.
 func (api *ServerAPI) GetUsers(ctx context.Context, request *emptypb.Empty) (*sso.GetUsersResponse, error) {
 	api.Logger.InfoContext(
 		ctx,
@@ -103,14 +101,55 @@ func (api *ServerAPI) GetUsers(ctx context.Context, request *emptypb.Empty) (*ss
 		}
 	}
 
-	response := &sso.GetUsersResponse{
-		Users: usersForResponse,
-	}
-
-	return response, nil
+	return &sso.GetUsersResponse{Users: usersForResponse}, nil
 }
 
-// Register handler (serverAPI) for AuthServer  to gRPC server:.
-func Register(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger *slog.Logger) {
+// GetMe handler returns User according to provided Access Token.
+func (api *ServerAPI) GetMe(ctx context.Context, request *sso.GetMeRequest) (*sso.GetUserResponse, error) {
+	api.Logger.InfoContext(
+		ctx,
+		"Received new request",
+		"Request",
+		request,
+		"Context",
+		ctx,
+		"Traceback",
+		logging.GetLogTraceback(),
+	)
+
+	user, err := api.UseCases.GetMe(request.GetAccessToken())
+	if err != nil {
+		api.Logger.ErrorContext(
+			ctx,
+			"Error occurred while trying to get user",
+			"Traceback",
+			logging.GetLogTraceback(),
+			"Error",
+			err,
+		)
+
+		var invalidJWTError *customerrors.InvalidJWTError
+		if errors.As(err, &invalidJWTError) {
+			return nil, &customerrors.GRPCError{Status: codes.Unauthenticated, Message: err.Error()}
+		}
+
+		var userNotFoundError *customerrors.UserNotFoundError
+		if errors.As(err, &userNotFoundError) {
+			return nil, &customerrors.GRPCError{Status: codes.NotFound, Message: err.Error()}
+		}
+
+		return nil, &customerrors.GRPCError{Status: codes.Internal, Message: err.Error()}
+	}
+
+	return &sso.GetUserResponse{
+		UserID:    int64(user.ID),
+		Email:     user.Email,
+		CreatedAt: timestamppb.New(user.CreatedAt),
+		UpdatedAt: timestamppb.New(user.UpdatedAt),
+	}, nil
+}
+
+// RegisterServer handler (serverAPI) for AuthServer  to gRPC server:.
+func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger *slog.Logger) {
 	sso.RegisterUsersServiceServer(gRPCServer, &ServerAPI{UseCases: useCases, Logger: logger})
 }

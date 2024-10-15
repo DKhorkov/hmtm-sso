@@ -67,8 +67,8 @@ func New(host string, port int, useCases interfaces.UseCases, logger *slog.Logge
 	grpcServer := grpc.NewServer()
 
 	// Connects our gRPC services to grpcServer:
-	auth.Register(grpcServer, useCases, logger)
-	users.Register(grpcServer, useCases, logger)
+	auth.RegisterServer(grpcServer, useCases, logger)
+	users.RegisterServer(grpcServer, useCases, logger)
 
 	return &Controller{
 		grpcServer: grpcServer,

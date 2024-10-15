@@ -8,6 +8,12 @@ option go_package = "github.com/DKhorkov/hmtm-sso/protobuf/sso;sso";
 service AuthService {
   rpc Login(LoginRequest) returns (LoginResponse) {}
   rpc Register(RegisterRequest) returns (RegisterResponse) {}
+  rpc RefreshTokens(RefreshTokensRequest) returns (LoginResponse) {}
+}
+
+message RefreshTokensRequest {
+  string AccessToken = 1;
+  string RefreshToken = 2;
 }
 
 message LoginRequest {
@@ -16,7 +22,8 @@ message LoginRequest {
 }
 
 message LoginResponse {
-  string token = 1;
+  string AccessToken = 1;
+  string RefreshToken = 2;
 }
 
 message RegisterRequest {

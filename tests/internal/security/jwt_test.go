@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
 
 	"github.com/DKhorkov/hmtm-sso/internal/security"
@@ -17,6 +16,7 @@ func TestSecurityGenerateJWT(t *testing.T) {
 		name          string
 		secretKey     string
 		algorithm     string
+		value         any
 		ttl           time.Duration
 		message       string
 		errorExpected bool
@@ -26,21 +26,15 @@ func TestSecurityGenerateJWT(t *testing.T) {
 			secretKey:     "testSecret",
 			algorithm:     "HS256",
 			ttl:           time.Hour,
+			value:         1,
 			message:       "should return valid JWT token",
 			errorExpected: false,
 		},
 	}
 
-	user := &entities.User{
-		ID:        1,
-		Email:     "test@example.com",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			token, err := security.GenerateJWT(user, tc.secretKey, tc.ttl, tc.algorithm)
+			token, err := security.GenerateJWT(tc.value, tc.secretKey, tc.ttl, tc.algorithm)
 
 			if tc.errorExpected {
 				require.Error(t, err, tc.message)
@@ -62,7 +56,11 @@ func TestSecurityGenerateJWT(t *testing.T) {
 }
 
 func TestSecurityParseJWT(t *testing.T) {
-	secretKey := "testSecret"
+	const (
+		userID    = 1
+		secretKey = "testSecret"
+	)
+
 	testCases := []struct {
 		name          string
 		secretKey     string
@@ -71,7 +69,7 @@ func TestSecurityParseJWT(t *testing.T) {
 		message       string
 		errorExpected bool
 		errorType     error
-		expected      int
+		expected      any
 	}{
 		{
 			name:          "correct JWT",
@@ -81,7 +79,7 @@ func TestSecurityParseJWT(t *testing.T) {
 			message:       "should return valid JWT token",
 			errorExpected: false,
 			errorType:     nil,
-			expected:      1,
+			expected:      userID,
 		},
 		{
 			name:          "invalid secret key",
@@ -91,7 +89,7 @@ func TestSecurityParseJWT(t *testing.T) {
 			message:       "should raise an error due to invalid secret key",
 			errorExpected: true,
 			errorType:     &customerrors.InvalidJWTError{},
-			expected:      0,
+			expected:      nil,
 		},
 		{
 			name:          "expired JWT",
@@ -101,33 +99,28 @@ func TestSecurityParseJWT(t *testing.T) {
 			message:       "should raise an error due to expired JWT",
 			errorExpected: true,
 			errorType:     &customerrors.InvalidJWTError{},
-			expected:      0,
+			expected:      nil,
 		},
-	}
-
-	user := &entities.User{
-		ID:        1,
-		Email:     "test@example.com",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			token, err := security.GenerateJWT(user, secretKey, tc.ttl, tc.algorithm)
+			token, err := security.GenerateJWT(userID, secretKey, tc.ttl, tc.algorithm)
 			require.NoError(t, err, tc.message)
 
-			userID, err := security.ParseJWT(token, tc.secretKey)
-			assert.Equal(
-				t,
-				tc.expected,
-				userID,
-				"\n%s - actual: '%v', expected: '%v'", tc.message, userID, tc.expected)
-
+			value, err := security.ParseJWT(token, tc.secretKey)
 			if tc.errorExpected {
 				require.Error(t, err, tc.message)
 				assert.IsType(t, tc.errorType, err)
+			} else {
+				value = int(value.(float64))
 			}
+
+			assert.Equal(
+				t,
+				tc.expected,
+				value,
+				"\n%s - actual: '%v', expected: '%v'", tc.message, value, tc.expected)
 		})
 	}
 }

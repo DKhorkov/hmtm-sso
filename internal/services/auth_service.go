@@ -1,9 +1,9 @@
 package services
 
 import (
-	"github.com/DKhorkov/hmtm-sso/internal/config"
+	"time"
+
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
-	"github.com/DKhorkov/hmtm-sso/internal/security"
 	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
 )
@@ -11,25 +11,6 @@ import (
 type CommonAuthService struct {
 	AuthRepository  interfaces.AuthRepository
 	UsersRepository interfaces.UsersRepository
-	JWTConfig       config.JWTConfig
-}
-
-func (service *CommonAuthService) LoginUser(userData entities.LoginUserDTO) (string, error) {
-	user, err := service.UsersRepository.GetUserByEmail(userData.Email)
-	if err != nil {
-		return "", &customerrors.UserNotFoundError{}
-	}
-
-	if !security.ValidateHashedPassword(userData.Password, user.Password) {
-		return "", &customerrors.InvalidPasswordError{}
-	}
-
-	return security.GenerateJWT(
-		user,
-		service.JWTConfig.SecretKey,
-		service.JWTConfig.TTL,
-		service.JWTConfig.Algorithm,
-	)
 }
 
 func (service *CommonAuthService) RegisterUser(userData entities.RegisterUserDTO) (int, error) {
@@ -39,4 +20,20 @@ func (service *CommonAuthService) RegisterUser(userData entities.RegisterUserDTO
 	}
 
 	return service.AuthRepository.RegisterUser(userData)
+}
+
+func (service *CommonAuthService) CreateRefreshToken(
+	userID int,
+	refreshToken string,
+	ttl time.Duration,
+) (int, error) {
+	return service.AuthRepository.CreateRefreshToken(userID, refreshToken, ttl)
+}
+
+func (service *CommonAuthService) GetRefreshTokenByUserID(userID int) (*entities.RefreshToken, error) {
+	return service.AuthRepository.GetRefreshTokenByUserID(userID)
+}
+
+func (service *CommonAuthService) ExpireRefreshToken(refreshToken string) error {
+	return service.AuthRepository.ExpireRefreshToken(refreshToken)
 }
