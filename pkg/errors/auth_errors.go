@@ -35,3 +35,27 @@ func (e UserAlreadyExistsError) Error() string {
 
 	return "user with provided email already exists"
 }
+
+type RefreshTokenAlreadyExistsError struct {
+	Message string
+}
+
+func (e RefreshTokenAlreadyExistsError) Error() string {
+	if e.Message != "" {
+		return e.Message
+	}
+
+	return "Refresh token already exists"
+}
+
+type RefreshTokenNotFoundError struct {
+	Message string
+}
+
+func (e RefreshTokenNotFoundError) Error() string {
+	if e.Message != "" {
+		return e.Message
+	}
+
+	return "Refresh token not found"
+}
