@@ -1,18 +1,17 @@
 package repositories
 
 import (
-	"github.com/DKhorkov/hmtm-sso/internal/database"
-	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 	"github.com/DKhorkov/hmtm-sso/pkg/entities"
+	"github.com/DKhorkov/libs/db"
 )
 
 type CommonUsersRepository struct {
-	DBConnector interfaces.DBConnector
+	DBConnector db.Connector
 }
 
 func (repo *CommonUsersRepository) GetUserByID(id int) (*entities.User, error) {
 	user := &entities.User{}
-	columns := database.GetEntityColumns(user)
+	columns := db.GetEntityColumns(user)
 	connection := repo.DBConnector.GetConnection()
 	err := connection.QueryRow(
 		`
@@ -32,7 +31,7 @@ func (repo *CommonUsersRepository) GetUserByID(id int) (*entities.User, error) {
 
 func (repo *CommonUsersRepository) GetUserByEmail(email string) (*entities.User, error) {
 	user := &entities.User{}
-	columns := database.GetEntityColumns(user)
+	columns := db.GetEntityColumns(user)
 	connection := repo.DBConnector.GetConnection()
 	err := connection.QueryRow(
 		`
@@ -66,7 +65,7 @@ func (repo *CommonUsersRepository) GetAllUsers() ([]*entities.User, error) {
 	var users []*entities.User
 	for rows.Next() {
 		user := &entities.User{}
-		columns := database.GetEntityColumns(user)
+		columns := db.GetEntityColumns(user)
 		err = rows.Scan(columns...)
 		if err != nil {
 			return nil, err

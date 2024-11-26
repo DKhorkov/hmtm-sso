@@ -5,16 +5,17 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/DKhorkov/hmtm-sso/pkg/logging"
+	"github.com/DKhorkov/libs/security"
 
+	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
-	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
+	"github.com/DKhorkov/hmtm-sso/protobuf/generated/go/sso"
+	customgrpc "github.com/DKhorkov/libs/grpc"
+	"github.com/DKhorkov/libs/logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-
-	"github.com/DKhorkov/hmtm-sso/protobuf/generated/go/sso"
 )
 
 type ServerAPI struct {
@@ -50,10 +51,10 @@ func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) 
 
 		var userNotFoundError *customerrors.UserNotFoundError
 		if errors.As(err, &userNotFoundError) {
-			return nil, &customerrors.GRPCError{Status: codes.NotFound, Message: err.Error()}
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		}
 
-		return nil, &customerrors.GRPCError{Status: codes.Internal, Message: err.Error()}
+		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	return &sso.GetUserResponse{
@@ -88,7 +89,7 @@ func (api *ServerAPI) GetUsers(ctx context.Context, request *emptypb.Empty) (*ss
 			err,
 		)
 
-		return nil, &customerrors.GRPCError{Status: codes.Internal, Message: err.Error()}
+		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	usersForResponse := make([]*sso.GetUserResponse, len(users))
@@ -128,17 +129,17 @@ func (api *ServerAPI) GetMe(ctx context.Context, request *sso.GetMeRequest) (*ss
 			err,
 		)
 
-		var invalidJWTError *customerrors.InvalidJWTError
+		var invalidJWTError *security.InvalidJWTError
 		if errors.As(err, &invalidJWTError) {
-			return nil, &customerrors.GRPCError{Status: codes.Unauthenticated, Message: err.Error()}
+			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
 		}
 
 		var userNotFoundError *customerrors.UserNotFoundError
 		if errors.As(err, &userNotFoundError) {
-			return nil, &customerrors.GRPCError{Status: codes.NotFound, Message: err.Error()}
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		}
 
-		return nil, &customerrors.GRPCError{Status: codes.Internal, Message: err.Error()}
+		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	return &sso.GetUserResponse{

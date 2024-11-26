@@ -3,10 +3,10 @@ package repositories__test
 import (
 	"testing"
 
-	"github.com/DKhorkov/hmtm-sso/internal/database"
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
 	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 	testlifespan "github.com/DKhorkov/hmtm-sso/tests/internal/repositories/lifespan"
+	"github.com/DKhorkov/libs/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -44,7 +44,7 @@ func TestRepositoriesGetUserByID(t *testing.T) {
 		}
 
 		usersRepository := repositories.CommonUsersRepository{
-			DBConnector: &database.CommonDBConnector{
+			DBConnector: &db.CommonDBConnector{
 				Connection: connection,
 			},
 		}
@@ -60,7 +60,7 @@ func TestRepositoriesGetUserByID(t *testing.T) {
 		defer testlifespan.TearDown(t, connection)
 
 		usersRepository := repositories.CommonUsersRepository{
-			DBConnector: &database.CommonDBConnector{
+			DBConnector: &db.CommonDBConnector{
 				Connection: connection,
 			},
 		}
@@ -102,7 +102,7 @@ func TestRepositoriesGetUserByEmail(t *testing.T) {
 		}
 
 		usersRepository := repositories.CommonUsersRepository{
-			DBConnector: &database.CommonDBConnector{
+			DBConnector: &db.CommonDBConnector{
 				Connection: connection,
 			},
 		}
@@ -118,7 +118,7 @@ func TestRepositoriesGetUserByEmail(t *testing.T) {
 		defer testlifespan.TearDown(t, connection)
 
 		usersRepository := repositories.CommonUsersRepository{
-			DBConnector: &database.CommonDBConnector{
+			DBConnector: &db.CommonDBConnector{
 				Connection: connection,
 			},
 		}
@@ -155,7 +155,7 @@ func TestRepositoriesGetAllUsers(t *testing.T) {
 		}
 
 		usersRepository := repositories.CommonUsersRepository{
-			DBConnector: &database.CommonDBConnector{
+			DBConnector: &db.CommonDBConnector{
 				Connection: connection,
 			},
 		}
@@ -172,7 +172,7 @@ func TestRepositoriesGetAllUsers(t *testing.T) {
 		defer testlifespan.TearDown(t, connection)
 
 		usersRepository := repositories.CommonUsersRepository{
-			DBConnector: &database.CommonDBConnector{
+			DBConnector: &db.CommonDBConnector{
 				Connection: connection,
 			},
 		}

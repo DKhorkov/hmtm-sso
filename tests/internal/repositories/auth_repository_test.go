@@ -5,9 +5,9 @@ import (
 
 	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 
-	"github.com/DKhorkov/hmtm-sso/internal/database"
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
 	testlifespan "github.com/DKhorkov/hmtm-sso/tests/internal/repositories/lifespan"
+	"github.com/DKhorkov/libs/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -28,7 +28,7 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 		defer testlifespan.TearDown(t, connection)
 
 		authRepository := repositories.CommonAuthRepository{
-			DBConnector: &database.CommonDBConnector{
+			DBConnector: &db.CommonDBConnector{
 				Connection: connection,
 			},
 		}
@@ -69,7 +69,7 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 		}
 
 		authRepository := repositories.CommonAuthRepository{
-			DBConnector: &database.CommonDBConnector{
+			DBConnector: &db.CommonDBConnector{
 				Connection: connection,
 			},
 		}

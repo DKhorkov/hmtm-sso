@@ -371,3 +371,6 @@ issues:
     - path: "tests/internal/security/encoding_test.go"
       linters:
         - testifylint
+    - path: "internal/usecases/usecases.go"
+      linters:
+        - errcheck

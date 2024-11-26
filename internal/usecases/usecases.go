@@ -1,18 +1,17 @@
 package usecases
 
 import (
-	"github.com/DKhorkov/hmtm-sso/internal/config"
+	"github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
-	"github.com/DKhorkov/hmtm-sso/internal/security"
 	"github.com/DKhorkov/hmtm-sso/pkg/entities"
-	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
+	"github.com/DKhorkov/libs/security"
 )
 
 type CommonUseCases struct {
 	AuthService  interfaces.AuthService
 	UsersService interfaces.UsersService
 	HashCost     int
-	JWTConfig    config.JWTConfig
+	JWTConfig    security.JWTConfig
 }
 
 func (useCases *CommonUseCases) RegisterUser(userData entities.RegisterUserDTO) (int, error) {
@@ -33,7 +32,7 @@ func (useCases *CommonUseCases) LoginUser(userData entities.LoginUserDTO) (*enti
 	}
 
 	if !security.ValidateHash(userData.Password, user.Password) {
-		return nil, &customerrors.InvalidPasswordError{}
+		return nil, &errors.InvalidPasswordError{}
 	}
 
 	if dbRefreshToken, err := useCases.AuthService.GetRefreshTokenByUserID(user.ID); err == nil {
@@ -93,7 +92,7 @@ func (useCases *CommonUseCases) GetAllUsers() ([]*entities.User, error) {
 func (useCases *CommonUseCases) GetMe(accessToken string) (*entities.User, error) {
 	accessTokenPayload, err := security.ParseJWT(accessToken, useCases.JWTConfig.SecretKey)
 	if err != nil {
-		return nil, &customerrors.InvalidJWTError{}
+		return nil, &security.InvalidJWTError{}
 	}
 
 	userID := int(accessTokenPayload.(float64))
@@ -104,45 +103,45 @@ func (useCases *CommonUseCases) RefreshTokens(refreshTokensData entities.TokensD
 	// Retrieving access token payload to get user ID:
 	accessTokenPayload, err := security.ParseJWT(refreshTokensData.AccessToken, useCases.JWTConfig.SecretKey)
 	if err != nil {
-		return nil, &customerrors.InvalidJWTError{}
+		return nil, &security.InvalidJWTError{}
 	}
 
 	// Selecting refresh token model from Database, if refresh token has not expired yet:
 	userID := int(accessTokenPayload.(float64))
 	dbRefreshToken, err := useCases.AuthService.GetRefreshTokenByUserID(userID)
 	if err != nil {
-		return nil, &customerrors.InvalidJWTError{}
+		return nil, &security.InvalidJWTError{}
 	}
 
 	// Decoding refresh token to get original JWT and compare its value with value in Database:
 	oldRefreshTokenBytes, err := security.Decode(refreshTokensData.RefreshToken)
 	if err != nil {
-		return nil, &customerrors.InvalidJWTError{}
+		return nil, &security.InvalidJWTError{}
 	}
 
 	oldRefreshToken := string(oldRefreshTokenBytes)
 	if oldRefreshToken != dbRefreshToken.Value {
-		return nil, &customerrors.InvalidJWTError{}
+		return nil, &security.InvalidJWTError{}
 	}
 
 	// Retrieving refresh token payload to check, if access token belongs to refresh token:
 	refreshTokenPayload, err := security.ParseJWT(oldRefreshToken, useCases.JWTConfig.SecretKey)
 	if err != nil {
-		return nil, &customerrors.InvalidJWTError{}
+		return nil, &security.InvalidJWTError{}
 	}
 
 	oldAccessToken, ok := refreshTokenPayload.(string)
 	if !ok {
-		return nil, &customerrors.InvalidJWTError{}
+		return nil, &security.InvalidJWTError{}
 	}
 
 	if refreshTokensData.AccessToken != oldAccessToken {
-		return nil, &customerrors.AccessTokenDoesNotBelongToRefreshTokenError{}
+		return nil, &errors.AccessTokenDoesNotBelongToRefreshTokenError{}
 	}
 
 	// Expiring old refresh token in Database to have only one valid refresh token instance:
 	if err = useCases.AuthService.ExpireRefreshToken(dbRefreshToken.Value); err != nil {
-		return nil, &customerrors.InvalidJWTError{}
+		return nil, &security.InvalidJWTError{}
 	}
 
 	// Create tokens:

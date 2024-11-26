@@ -3,13 +3,12 @@ package repositories
 import (
 	"time"
 
-	"github.com/DKhorkov/hmtm-sso/internal/database"
-	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 	"github.com/DKhorkov/hmtm-sso/pkg/entities"
+	"github.com/DKhorkov/libs/db"
 )
 
 type CommonAuthRepository struct {
-	DBConnector interfaces.DBConnector
+	DBConnector db.Connector
 }
 
 func (repo *CommonAuthRepository) RegisterUser(userData entities.RegisterUserDTO) (int, error) {
@@ -59,7 +58,7 @@ func (repo *CommonAuthRepository) CreateRefreshToken(
 
 func (repo *CommonAuthRepository) GetRefreshTokenByUserID(userID int) (*entities.RefreshToken, error) {
 	refreshToken := &entities.RefreshToken{}
-	columns := database.GetEntityColumns(refreshToken)
+	columns := db.GetEntityColumns(refreshToken)
 	connection := repo.DBConnector.GetConnection()
 	err := connection.QueryRow(
 		`

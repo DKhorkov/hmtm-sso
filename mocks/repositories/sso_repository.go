@@ -3,8 +3,9 @@ package mocks
 import (
 	"time"
 
+	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
+
 	"github.com/DKhorkov/hmtm-sso/pkg/entities"
-	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
 )
 
 type MockedSsoRepository struct {

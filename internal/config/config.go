@@ -2,11 +2,13 @@ package config
 
 import (
 	"fmt"
-	"log/slog"
 	"time"
 
-	"github.com/DKhorkov/hmtm-bff/pkg/loadenv"
-	"github.com/DKhorkov/hmtm-sso/pkg/logging"
+	"github.com/DKhorkov/libs/db"
+	"github.com/DKhorkov/libs/security"
+
+	"github.com/DKhorkov/libs/loadenv"
+	"github.com/DKhorkov/libs/logging"
 )
 
 func New() *Config {
@@ -15,9 +17,9 @@ func New() *Config {
 			Host: loadenv.GetEnv("HOST", "0.0.0.0"),
 			Port: loadenv.GetEnvAsInt("PORT", 8070),
 		},
-		Security: SecurityConfig{
+		Security: security.Config{
 			HashCost: loadenv.GetEnvAsInt("HASH_COST", 8), // Auth speed sensitive if large
-			JWT: JWTConfig{
+			JWT: security.JWTConfig{
 				RefreshTokenTTL: time.Hour * time.Duration(
 					loadenv.GetEnvAsInt("JWT_TTL", 168),
 				),
@@ -28,18 +30,16 @@ func New() *Config {
 				SecretKey: loadenv.GetEnv("JWT_SECRET", "defaultSecret"),
 			},
 		},
-		Databases: DatabasesConfig{
-			PostgreSQL: DatabaseConfig{
-				Host:         loadenv.GetEnv("POSTGRES_HOST", "0.0.0.0"),
-				Port:         loadenv.GetEnvAsInt("POSTGRES_PORT", 5432),
-				User:         loadenv.GetEnv("POSTGRES_USER", "postgres"),
-				Password:     loadenv.GetEnv("POSTGRES_PASSWORD", "postgres"),
-				DatabaseName: loadenv.GetEnv("POSTGRES_DB", "postgres"),
-				SSLMode:      loadenv.GetEnv("POSTGRES_SSL_MODE", "disable"),
-				Driver:       loadenv.GetEnv("POSTGRES_DRIVER", "postgres"),
-			},
+		Database: db.Config{
+			Host:         loadenv.GetEnv("POSTGRES_HOST", "0.0.0.0"),
+			Port:         loadenv.GetEnvAsInt("POSTGRES_PORT", 5432),
+			User:         loadenv.GetEnv("POSTGRES_USER", "postgres"),
+			Password:     loadenv.GetEnv("POSTGRES_PASSWORD", "postgres"),
+			DatabaseName: loadenv.GetEnv("POSTGRES_DB", "postgres"),
+			SSLMode:      loadenv.GetEnv("POSTGRES_SSL_MODE", "disable"),
+			Driver:       loadenv.GetEnv("POSTGRES_DRIVER", "postgres"),
 		},
-		Logging: LoggingConfig{
+		Logging: logging.Config{
 			Level:       logging.LogLevels.DEBUG,
 			LogFilePath: fmt.Sprintf("logs/%s.log", time.Now().Format("02-01-2006")),
 		},
@@ -51,42 +51,9 @@ type HTTPConfig struct {
 	Port int
 }
 
-type JWTConfig struct {
-	SecretKey       string
-	Algorithm       string
-	RefreshTokenTTL time.Duration
-	AccessTokenTTL  time.Duration
-}
-
-type SecurityConfig struct {
-	HashCost int
-	JWT      JWTConfig
-}
-
-type DatabaseConfig struct {
-	Host         string
-	Port         int
-	User         string
-	Password     string
-	DatabaseName string
-	SSLMode      string
-	Driver       string
-}
-
-type DatabasesConfig struct {
-	PostgreSQL DatabaseConfig
-	MySQL      DatabaseConfig
-	SQLite     DatabaseConfig
-}
-
-type LoggingConfig struct {
-	Level       slog.Level
-	LogFilePath string
-}
-
 type Config struct {
-	HTTP      HTTPConfig
-	Security  SecurityConfig
-	Databases DatabasesConfig
-	Logging   LoggingConfig
+	HTTP     HTTPConfig
+	Security security.Config
+	Database db.Config
+	Logging  logging.Config
 }

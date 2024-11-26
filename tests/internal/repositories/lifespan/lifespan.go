@@ -6,19 +6,19 @@ import (
 	"path"
 	"testing"
 
-	testconfig "github.com/DKhorkov/hmtm-sso/tests/config"
+	"github.com/DKhorkov/libs/db"
 	"github.com/pressly/goose/v3"
 )
 
-var testsConfig = testconfig.New()
+var testsConfig = db.NewTestConfig()
 
 func StartUp(t *testing.T) *sql.DB {
-	connection, err := sql.Open(testsConfig.Database.Driver, testsConfig.Database.DSN)
+	connection, err := sql.Open(testsConfig.Driver, testsConfig.DSN)
 	if err != nil {
 		t.Fatalf("failed to connect to database: %v", err)
 	}
 
-	if err = goose.SetDialect(testsConfig.Database.Driver); err != nil {
+	if err = goose.SetDialect(testsConfig.Driver); err != nil {
 		panic(err)
 	}
 
@@ -33,7 +33,7 @@ func StartUp(t *testing.T) *sql.DB {
 			path.Dir(
 				path.Dir(cwd),
 			),
-		)+testsConfig.Database.MigrationsDir,
+		)+testsConfig.MigrationsDir,
 	)
 
 	if err != nil {
@@ -55,7 +55,7 @@ func TearDown(t *testing.T, connection *sql.DB) {
 			path.Dir(
 				path.Dir(cwd),
 			),
-		)+testsConfig.Database.MigrationsDir,
+		)+testsConfig.MigrationsDir,
 	)
 
 	if err != nil {

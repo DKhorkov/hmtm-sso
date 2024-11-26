@@ -5,17 +5,15 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/DKhorkov/hmtm-sso/pkg/logging"
-
-	customerrors "github.com/DKhorkov/hmtm-sso/pkg/errors"
-	"google.golang.org/grpc/codes"
-
-	"github.com/DKhorkov/hmtm-sso/pkg/entities"
-
+	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
-	"google.golang.org/grpc"
-
+	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 	"github.com/DKhorkov/hmtm-sso/protobuf/generated/go/sso"
+	customgrpc "github.com/DKhorkov/libs/grpc"
+	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/security"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 )
 
 type ServerAPI struct {
@@ -58,10 +56,10 @@ func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest
 
 		var userAlreadyExists *customerrors.UserAlreadyExistsError
 		if errors.As(err, &userAlreadyExists) {
-			return nil, &customerrors.GRPCError{Status: codes.AlreadyExists, Message: err.Error()}
+			return nil, &customgrpc.BaseError{Status: codes.AlreadyExists, Message: err.Error()}
 		}
 
-		return nil, &customerrors.GRPCError{Status: codes.Internal, Message: err.Error()}
+		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	return &sso.RegisterResponse{UserID: int64(userID)}, nil
@@ -98,15 +96,15 @@ func (api *ServerAPI) Login(ctx context.Context, request *sso.LoginRequest) (*ss
 
 		var userNotFoundError *customerrors.UserNotFoundError
 		if errors.As(err, &userNotFoundError) {
-			return nil, &customerrors.GRPCError{Status: codes.NotFound, Message: err.Error()}
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		}
 
 		var invalidPasswordError *customerrors.InvalidPasswordError
 		if errors.As(err, &invalidPasswordError) {
-			return nil, &customerrors.GRPCError{Status: codes.Unauthenticated, Message: err.Error()}
+			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
 		}
 
-		return nil, &customerrors.GRPCError{Status: codes.Internal, Message: err.Error()}
+		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	return &sso.LoginResponse{
@@ -147,18 +145,18 @@ func (api *ServerAPI) RefreshTokens(
 			err,
 		)
 
-		var invalidJWTError *customerrors.InvalidJWTError
+		var invalidJWTError *security.InvalidJWTError
 		var accessTokenDoesNotBelongToRefreshTokenError *customerrors.AccessTokenDoesNotBelongToRefreshTokenError
 		if errors.As(err, &invalidJWTError) || errors.As(err, &accessTokenDoesNotBelongToRefreshTokenError) {
-			return nil, &customerrors.GRPCError{Status: codes.Unauthenticated, Message: err.Error()}
+			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
 		}
 
 		var userNotFoundError *customerrors.UserNotFoundError
 		if errors.As(err, &userNotFoundError) {
-			return nil, &customerrors.GRPCError{Status: codes.NotFound, Message: err.Error()}
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		}
 
-		return nil, &customerrors.GRPCError{Status: codes.Internal, Message: err.Error()}
+		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	return &sso.LoginResponse{

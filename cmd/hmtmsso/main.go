@@ -4,11 +4,11 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/app"
 	"github.com/DKhorkov/hmtm-sso/internal/config"
 	grpccontroller "github.com/DKhorkov/hmtm-sso/internal/controllers/grpc"
-	"github.com/DKhorkov/hmtm-sso/internal/database"
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
 	"github.com/DKhorkov/hmtm-sso/internal/services"
 	"github.com/DKhorkov/hmtm-sso/internal/usecases"
-	"github.com/DKhorkov/hmtm-sso/pkg/logging"
+	"github.com/DKhorkov/libs/db"
+	"github.com/DKhorkov/libs/logging"
 )
 
 func main() {
@@ -18,8 +18,8 @@ func main() {
 		settings.Logging.LogFilePath,
 	)
 
-	dbConnector, err := database.New(
-		settings.Databases.PostgreSQL,
+	dbConnector, err := db.New(
+		settings.Database,
 		logger,
 	)
 

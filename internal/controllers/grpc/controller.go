@@ -5,12 +5,10 @@ import (
 	"log/slog"
 	"net"
 
-	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
-
 	"github.com/DKhorkov/hmtm-sso/internal/controllers/grpc/auth"
 	"github.com/DKhorkov/hmtm-sso/internal/controllers/grpc/users"
-
-	"github.com/DKhorkov/hmtm-sso/pkg/logging"
+	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
+	"github.com/DKhorkov/libs/logging"
 	"google.golang.org/grpc"
 )
 

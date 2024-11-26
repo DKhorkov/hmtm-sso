@@ -15,7 +15,7 @@ service UsersService {
 }
 
 message GetMeRequest {
-  string AccessToken = 1;
+  string accessToken = 1;
 }
 
 message GetUserRequest {
