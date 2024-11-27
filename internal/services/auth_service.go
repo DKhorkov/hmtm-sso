@@ -9,17 +9,17 @@ import (
 )
 
 type CommonAuthService struct {
-	AuthRepository  interfaces.AuthRepository
-	UsersRepository interfaces.UsersRepository
+	authRepository  interfaces.AuthRepository
+	usersRepository interfaces.UsersRepository
 }
 
 func (service *CommonAuthService) RegisterUser(userData entities.RegisterUserDTO) (int, error) {
-	user, _ := service.UsersRepository.GetUserByEmail(userData.Credentials.Email)
+	user, _ := service.usersRepository.GetUserByEmail(userData.Credentials.Email)
 	if user != nil {
 		return 0, &customerrors.UserAlreadyExistsError{}
 	}
 
-	return service.AuthRepository.RegisterUser(userData)
+	return service.authRepository.RegisterUser(userData)
 }
 
 func (service *CommonAuthService) CreateRefreshToken(
@@ -27,13 +27,23 @@ func (service *CommonAuthService) CreateRefreshToken(
 	refreshToken string,
 	ttl time.Duration,
 ) (int, error) {
-	return service.AuthRepository.CreateRefreshToken(userID, refreshToken, ttl)
+	return service.authRepository.CreateRefreshToken(userID, refreshToken, ttl)
 }
 
 func (service *CommonAuthService) GetRefreshTokenByUserID(userID int) (*entities.RefreshToken, error) {
-	return service.AuthRepository.GetRefreshTokenByUserID(userID)
+	return service.authRepository.GetRefreshTokenByUserID(userID)
 }
 
 func (service *CommonAuthService) ExpireRefreshToken(refreshToken string) error {
-	return service.AuthRepository.ExpireRefreshToken(refreshToken)
+	return service.authRepository.ExpireRefreshToken(refreshToken)
+}
+
+func NewCommonAuthService(
+	authRepository interfaces.AuthRepository,
+	usersRepository interfaces.UsersRepository,
+) *CommonAuthService {
+	return &CommonAuthService{
+		authRepository:  authRepository,
+		usersRepository: usersRepository,
+	}
 }

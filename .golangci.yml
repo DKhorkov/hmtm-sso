@@ -344,12 +344,6 @@ issues:
     - path: "internal/controllers/grpc*"
       linters:
         - revive
-    - path: "pkg/logging*"
-      linters:
-        - gochecknoglobals
-    - path: "internal/security/jwt.go"
-      linters:
-        - revive
     - path: "internal/repositories*"
       linters:
         - revive
@@ -362,15 +356,12 @@ issues:
         - gosec
         - noctx
         - wrapcheck
-    - path: "tests/internal/repositories/lifespan/lifespan.go"
+    - path: "internal/repositories/lifespan_test.go"
       linters:
         - gochecknoglobals
     - path: "internal/usecases/usecases.go"
       linters:
         - govet
-    - path: "tests/internal/security/encoding_test.go"
-      linters:
-        - testifylint
     - path: "internal/usecases/usecases.go"
       linters:
         - errcheck

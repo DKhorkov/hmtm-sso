@@ -29,23 +29,16 @@ func main() {
 
 	defer dbConnector.CloseConnection()
 
-	usersRepository := &repositories.CommonUsersRepository{DBConnector: dbConnector}
-	authRepository := &repositories.CommonAuthRepository{DBConnector: dbConnector}
-	authService := &services.CommonAuthService{
-		AuthRepository:  authRepository,
-		UsersRepository: usersRepository,
-	}
-
-	usersService := &services.CommonUsersService{
-		UsersRepository: usersRepository,
-	}
-
-	useCases := &usecases.CommonUseCases{
-		AuthService:  authService,
-		UsersService: usersService,
-		HashCost:     settings.Security.HashCost,
-		JWTConfig:    settings.Security.JWT,
-	}
+	usersRepository := repositories.NewCommonUsersRepository(dbConnector)
+	authRepository := repositories.NewCommonAuthRepository(dbConnector)
+	authService := services.NewCommonAuthService(authRepository, usersRepository)
+	usersService := services.NewCommonUsersService(usersRepository)
+	useCases := usecases.NewCommonUseCases(
+		authService,
+		usersService,
+		settings.Security.HashCost,
+		settings.Security.JWT,
+	)
 
 	controller := grpccontroller.New(
 		settings.HTTP.Host,

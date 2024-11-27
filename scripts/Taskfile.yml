@@ -88,9 +88,9 @@ tasks:
       - task: create_postgres_folders
       - sudo chmod -R 777 postgres_data
       - sudo chmod -R 777 postgres_backups
-      - mkdir -p ./tests/coverage
-      - go test -v -coverprofile ./tests/coverage/coverage.out -coverpkg=./... ./tests...
-      - go tool cover -html ./tests/coverage/coverage.out -o ./tests/coverage/coverage.html
+      - mkdir -p ./coverage
+      - go test -v -coverprofile ./coverage/coverage.out -coverpkg=./... ./...
+      - go tool cover -html ./coverage/coverage.out -o ./coverage/coverage.html
 
   linters:
     desc: "Run linters."
@@ -178,3 +178,13 @@ tasks:
     cmds:
       - go install github.com/pressly/goose/v3/cmd/goose@latest
       - goose -dir {{.DIR}} {{.DRIVER}} {{.DATABASE_URL}} status
+
+  upload_docker_image:
+    desc: "Uploads docker image to dockerhub."
+    aliases:
+      - upload
+    dir: ../
+    cmds:
+      - task: docker_build
+      - sudo docker tag hmtm_sso d3m0s/hmtm_sso
+      - sudo docker push d3m0s/hmtm_sso

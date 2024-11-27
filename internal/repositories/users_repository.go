@@ -6,13 +6,13 @@ import (
 )
 
 type CommonUsersRepository struct {
-	DBConnector db.Connector
+	dbConnector db.Connector
 }
 
 func (repo *CommonUsersRepository) GetUserByID(id int) (*entities.User, error) {
 	user := &entities.User{}
 	columns := db.GetEntityColumns(user)
-	connection := repo.DBConnector.GetConnection()
+	connection := repo.dbConnector.GetConnection()
 	err := connection.QueryRow(
 		`
 			SELECT * 
@@ -32,7 +32,7 @@ func (repo *CommonUsersRepository) GetUserByID(id int) (*entities.User, error) {
 func (repo *CommonUsersRepository) GetUserByEmail(email string) (*entities.User, error) {
 	user := &entities.User{}
 	columns := db.GetEntityColumns(user)
-	connection := repo.DBConnector.GetConnection()
+	connection := repo.dbConnector.GetConnection()
 	err := connection.QueryRow(
 		`
 			SELECT * 
@@ -50,7 +50,7 @@ func (repo *CommonUsersRepository) GetUserByEmail(email string) (*entities.User,
 }
 
 func (repo *CommonUsersRepository) GetAllUsers() ([]*entities.User, error) {
-	connection := repo.DBConnector.GetConnection()
+	connection := repo.dbConnector.GetConnection()
 	rows, err := connection.Query(
 		`
 			SELECT * 
@@ -79,4 +79,8 @@ func (repo *CommonUsersRepository) GetAllUsers() ([]*entities.User, error) {
 	}
 
 	return users, nil
+}
+
+func NewCommonUsersRepository(dbConnector db.Connector) *CommonUsersRepository {
+	return &CommonUsersRepository{dbConnector: dbConnector}
 }

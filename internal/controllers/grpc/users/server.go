@@ -21,13 +21,13 @@ import (
 type ServerAPI struct {
 	// Helps to test single endpoints, if others is not implemented yet
 	sso.UnimplementedUsersServiceServer
-	UseCases interfaces.UseCases
-	Logger   *slog.Logger
+	useCases interfaces.UseCases
+	logger   *slog.Logger
 }
 
 // GetUser handler returns User according provided data.
 func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) (*sso.GetUserResponse, error) {
-	api.Logger.InfoContext(
+	api.logger.InfoContext(
 		ctx,
 		"Received new request",
 		"Request",
@@ -38,9 +38,9 @@ func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) 
 		logging.GetLogTraceback(),
 	)
 
-	user, err := api.UseCases.GetUserByID(int(request.GetUserID()))
+	user, err := api.useCases.GetUserByID(int(request.GetUserID()))
 	if err != nil {
-		api.Logger.ErrorContext(
+		api.logger.ErrorContext(
 			ctx,
 			"Error occurred while trying to get user",
 			"Traceback",
@@ -67,7 +67,7 @@ func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) 
 
 // GetUsers handler returns all Users.
 func (api *ServerAPI) GetUsers(ctx context.Context, request *emptypb.Empty) (*sso.GetUsersResponse, error) {
-	api.Logger.InfoContext(
+	api.logger.InfoContext(
 		ctx,
 		"Received new request",
 		"Request",
@@ -78,9 +78,9 @@ func (api *ServerAPI) GetUsers(ctx context.Context, request *emptypb.Empty) (*ss
 		logging.GetLogTraceback(),
 	)
 
-	users, err := api.UseCases.GetAllUsers()
+	users, err := api.useCases.GetAllUsers()
 	if err != nil {
-		api.Logger.ErrorContext(
+		api.logger.ErrorContext(
 			ctx,
 			"Error occurred while trying to get all users",
 			"Traceback",
@@ -107,7 +107,7 @@ func (api *ServerAPI) GetUsers(ctx context.Context, request *emptypb.Empty) (*ss
 
 // GetMe handler returns User according to provided Access Token.
 func (api *ServerAPI) GetMe(ctx context.Context, request *sso.GetMeRequest) (*sso.GetUserResponse, error) {
-	api.Logger.InfoContext(
+	api.logger.InfoContext(
 		ctx,
 		"Received new request",
 		"Request",
@@ -118,9 +118,9 @@ func (api *ServerAPI) GetMe(ctx context.Context, request *sso.GetMeRequest) (*ss
 		logging.GetLogTraceback(),
 	)
 
-	user, err := api.UseCases.GetMe(request.GetAccessToken())
+	user, err := api.useCases.GetMe(request.GetAccessToken())
 	if err != nil {
-		api.Logger.ErrorContext(
+		api.logger.ErrorContext(
 			ctx,
 			"Error occurred while trying to get user",
 			"Traceback",
@@ -152,5 +152,5 @@ func (api *ServerAPI) GetMe(ctx context.Context, request *sso.GetMeRequest) (*ss
 
 // RegisterServer handler (serverAPI) for AuthServer  to gRPC server:.
 func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger *slog.Logger) {
-	sso.RegisterUsersServiceServer(gRPCServer, &ServerAPI{UseCases: useCases, Logger: logger})
+	sso.RegisterUsersServiceServer(gRPCServer, &ServerAPI{useCases: useCases, logger: logger})
 }

@@ -8,12 +8,12 @@ import (
 )
 
 type CommonAuthRepository struct {
-	DBConnector db.Connector
+	dbConnector db.Connector
 }
 
 func (repo *CommonAuthRepository) RegisterUser(userData entities.RegisterUserDTO) (int, error) {
 	var userID int
-	connection := repo.DBConnector.GetConnection()
+	connection := repo.dbConnector.GetConnection()
 	err := connection.QueryRow(
 		`
 			INSERT INTO users (email, password) 
@@ -37,7 +37,7 @@ func (repo *CommonAuthRepository) CreateRefreshToken(
 	ttl time.Duration,
 ) (int, error) {
 	var refreshTokenID int
-	connection := repo.DBConnector.GetConnection()
+	connection := repo.dbConnector.GetConnection()
 	err := connection.QueryRow(
 		`
 			INSERT INTO refresh_tokens (user_id, value, ttl) 
@@ -59,7 +59,7 @@ func (repo *CommonAuthRepository) CreateRefreshToken(
 func (repo *CommonAuthRepository) GetRefreshTokenByUserID(userID int) (*entities.RefreshToken, error) {
 	refreshToken := &entities.RefreshToken{}
 	columns := db.GetEntityColumns(refreshToken)
-	connection := repo.DBConnector.GetConnection()
+	connection := repo.dbConnector.GetConnection()
 	err := connection.QueryRow(
 		`
 			SELECT * 
@@ -78,7 +78,7 @@ func (repo *CommonAuthRepository) GetRefreshTokenByUserID(userID int) (*entities
 }
 
 func (repo *CommonAuthRepository) ExpireRefreshToken(refreshToken string) error {
-	connection := repo.DBConnector.GetConnection()
+	connection := repo.dbConnector.GetConnection()
 	err := connection.QueryRow(
 		`
 			UPDATE refresh_tokens
@@ -90,4 +90,8 @@ func (repo *CommonAuthRepository) ExpireRefreshToken(refreshToken string) error 
 	).Err()
 
 	return err
+}
+
+func NewCommonAuthRepository(dbConnector db.Connector) *CommonAuthRepository {
+	return &CommonAuthRepository{dbConnector: dbConnector}
 }

@@ -13,8 +13,8 @@ type UsersRepository interface {
 }
 
 type AuthRepository interface {
-	RegisterUser(user entities.RegisterUserDTO) (int, error)
-	CreateRefreshToken(userID int, refreshToken string, ttl time.Duration) (int, error)
+	RegisterUser(userData entities.RegisterUserDTO) (userID int, err error)
+	CreateRefreshToken(userID int, refreshToken string, ttl time.Duration) (refreshTokenID int, err error)
 	GetRefreshTokenByUserID(userID int) (*entities.RefreshToken, error)
 	ExpireRefreshToken(refreshToken string) error
 }

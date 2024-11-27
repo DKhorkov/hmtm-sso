@@ -11,8 +11,8 @@ import (
 	"github.com/DKhorkov/libs/logging"
 )
 
-func New() *Config {
-	return &Config{
+func New() Config {
+	return Config{
 		HTTP: HTTPConfig{
 			Host: loadenv.GetEnv("HOST", "0.0.0.0"),
 			Port: loadenv.GetEnvAsInt("PORT", 8070),

@@ -1,7 +1,7 @@
-package testlifespan
+package repositories_test
 
 import (
-	"database/sql"
+	"log/slog"
 	"os"
 	"path"
 	"testing"
@@ -12,10 +12,10 @@ import (
 
 var testsConfig = db.NewTestConfig()
 
-func StartUp(t *testing.T) *sql.DB {
-	connection, err := sql.Open(testsConfig.Driver, testsConfig.DSN)
+func StartUp(t *testing.T) *db.CommonDBConnector {
+	dbConnector, err := db.NewTestConnector(testsConfig, &slog.Logger{})
 	if err != nil {
-		t.Fatalf("failed to connect to database: %v", err)
+		t.Fatal(err)
 	}
 
 	if err = goose.SetDialect(testsConfig.Driver); err != nil {
@@ -28,11 +28,9 @@ func StartUp(t *testing.T) *sql.DB {
 	}
 
 	err = goose.Up(
-		connection,
+		dbConnector.GetConnection(),
 		path.Dir(
-			path.Dir(
-				path.Dir(cwd),
-			),
+			path.Dir(cwd),
 		)+testsConfig.MigrationsDir,
 	)
 
@@ -40,29 +38,25 @@ func StartUp(t *testing.T) *sql.DB {
 		panic(err)
 	}
 
-	return connection
+	return dbConnector
 }
 
-func TearDown(t *testing.T, connection *sql.DB) {
+func TearDown(t *testing.T, dbConnector db.Connector) {
+	defer dbConnector.CloseConnection()
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("failed to get cwd: %v", err)
 	}
 
 	err = goose.Down(
-		connection,
+		dbConnector.GetConnection(),
 		path.Dir(
-			path.Dir(
-				path.Dir(cwd),
-			),
+			path.Dir(cwd),
 		)+testsConfig.MigrationsDir,
 	)
 
 	if err != nil {
 		panic(err)
-	}
-
-	if err = connection.Close(); err != nil {
-		t.Fatalf("failed to close the connection to the database: %v", err)
 	}
 }

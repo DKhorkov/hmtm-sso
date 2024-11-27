@@ -19,13 +19,13 @@ import (
 type ServerAPI struct {
 	// Helps to test single endpoints, if others is not implemented yet
 	sso.UnimplementedAuthServiceServer
-	UseCases interfaces.UseCases
-	Logger   *slog.Logger
+	useCases interfaces.UseCases
+	logger   *slog.Logger
 }
 
 // Register handler registers new User with provided data.
 func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest) (*sso.RegisterResponse, error) {
-	api.Logger.InfoContext(
+	api.logger.InfoContext(
 		ctx,
 		"Received new request",
 		"Request",
@@ -43,9 +43,9 @@ func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest
 		},
 	}
 
-	userID, err := api.UseCases.RegisterUser(userData)
+	userID, err := api.useCases.RegisterUser(userData)
 	if err != nil {
-		api.Logger.ErrorContext(
+		api.logger.ErrorContext(
 			ctx,
 			"Error occurred while trying to register",
 			"Traceback",
@@ -67,7 +67,7 @@ func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest
 
 // Login handler authenticates user if provided credentials are valid and logs User in system.
 func (api *ServerAPI) Login(ctx context.Context, request *sso.LoginRequest) (*sso.LoginResponse, error) {
-	api.Logger.InfoContext(
+	api.logger.InfoContext(
 		ctx,
 		"Received new request",
 		"Request",
@@ -83,9 +83,9 @@ func (api *ServerAPI) Login(ctx context.Context, request *sso.LoginRequest) (*ss
 		Password: request.GetPassword(),
 	}
 
-	tokensDTO, err := api.UseCases.LoginUser(userData)
+	tokensDTO, err := api.useCases.LoginUser(userData)
 	if err != nil {
-		api.Logger.ErrorContext(
+		api.logger.ErrorContext(
 			ctx,
 			"Error occurred while trying to login",
 			"Traceback",
@@ -118,7 +118,7 @@ func (api *ServerAPI) RefreshTokens(
 	ctx context.Context,
 	request *sso.RefreshTokensRequest,
 ) (*sso.LoginResponse, error) {
-	api.Logger.InfoContext(
+	api.logger.InfoContext(
 		ctx,
 		"Received new request",
 		"Request",
@@ -134,9 +134,9 @@ func (api *ServerAPI) RefreshTokens(
 		RefreshToken: request.GetRefreshToken(),
 	}
 
-	tokensDTO, err := api.UseCases.RefreshTokens(refreshTokensDTO)
+	tokensDTO, err := api.useCases.RefreshTokens(refreshTokensDTO)
 	if err != nil {
-		api.Logger.ErrorContext(
+		api.logger.ErrorContext(
 			ctx,
 			"Error occurred while trying to login",
 			"Traceback",
@@ -167,5 +167,5 @@ func (api *ServerAPI) RefreshTokens(
 
 // RegisterServer handler (serverAPI) for AuthServer  to gRPC server:.
 func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger *slog.Logger) {
-	sso.RegisterAuthServiceServer(gRPCServer, &ServerAPI{UseCases: useCases, Logger: logger})
+	sso.RegisterAuthServiceServer(gRPCServer, &ServerAPI{useCases: useCases, logger: logger})
 }
