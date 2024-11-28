@@ -5,13 +5,12 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/DKhorkov/libs/security"
-
+	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
-	"github.com/DKhorkov/hmtm-sso/protobuf/generated/go/sso"
 	customgrpc "github.com/DKhorkov/libs/grpc"
 	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/security"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/emptypb"

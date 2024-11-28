@@ -10,15 +10,19 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
-var testsConfig = db.NewTestConfig()
+var (
+	driver        = "sqlite3"
+	dsn           = "file::memory:?cache=shared"
+	migrationsDir = "/migrations"
+)
 
 func StartUp(t *testing.T) *db.CommonDBConnector {
-	dbConnector, err := db.NewTestConnector(testsConfig, &slog.Logger{})
+	dbConnector, err := db.New(dsn, driver, &slog.Logger{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err = goose.SetDialect(testsConfig.Driver); err != nil {
+	if err = goose.SetDialect(driver); err != nil {
 		panic(err)
 	}
 
@@ -31,7 +35,7 @@ func StartUp(t *testing.T) *db.CommonDBConnector {
 		dbConnector.GetConnection(),
 		path.Dir(
 			path.Dir(cwd),
-		)+testsConfig.MigrationsDir,
+		)+migrationsDir,
 	)
 
 	if err != nil {
@@ -53,7 +57,7 @@ func TearDown(t *testing.T, dbConnector db.Connector) {
 		dbConnector.GetConnection(),
 		path.Dir(
 			path.Dir(cwd),
-		)+testsConfig.MigrationsDir,
+		)+migrationsDir,
 	)
 
 	if err != nil {

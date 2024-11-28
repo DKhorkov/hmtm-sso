@@ -19,7 +19,8 @@ func main() {
 	)
 
 	dbConnector, err := db.New(
-		settings.Database,
+		db.BuildDsn(settings.Database),
+		settings.Database.Driver,
 		logger,
 	)
 
