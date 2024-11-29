@@ -1,11 +1,12 @@
 package services
 
 import (
+	"log/slog"
+
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 	"github.com/DKhorkov/libs/logging"
-	"log/slog"
 )
 
 type CommonUsersService struct {
