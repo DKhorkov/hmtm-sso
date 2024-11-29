@@ -54,9 +54,8 @@ func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest
 			err,
 		)
 
-		var userAlreadyExists *customerrors.UserAlreadyExistsError
 		switch {
-		case errors.As(err, &userAlreadyExists):
+		case errors.As(err, &customerrors.UserAlreadyExistsError{}):
 			return nil, &customgrpc.BaseError{Status: codes.AlreadyExists, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
@@ -95,12 +94,10 @@ func (api *ServerAPI) Login(ctx context.Context, request *sso.LoginRequest) (*ss
 			err,
 		)
 
-		var userNotFoundError *customerrors.UserNotFoundError
-		var invalidPasswordError *customerrors.InvalidPasswordError
 		switch {
-		case errors.As(err, &userNotFoundError):
+		case errors.As(err, &customerrors.UserNotFoundError{}):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
-		case errors.As(err, &invalidPasswordError):
+		case errors.As(err, &customerrors.InvalidPasswordError{}):
 			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
@@ -145,13 +142,11 @@ func (api *ServerAPI) RefreshTokens(
 			err,
 		)
 
-		var invalidJWTError *security.InvalidJWTError
-		var accessTokenDoesNotBelongToRefreshTokenError *customerrors.AccessTokenDoesNotBelongToRefreshTokenError
-		var userNotFoundError *customerrors.UserNotFoundError
 		switch {
-		case errors.As(err, &invalidJWTError), errors.As(err, &accessTokenDoesNotBelongToRefreshTokenError):
+		case errors.As(err, &security.InvalidJWTError{}),
+			errors.As(err, &customerrors.AccessTokenDoesNotBelongToRefreshTokenError{}):
 			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
-		case errors.As(err, &userNotFoundError):
+		case errors.As(err, &customerrors.UserNotFoundError{}):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}

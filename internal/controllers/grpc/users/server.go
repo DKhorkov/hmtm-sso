@@ -48,9 +48,8 @@ func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) 
 			err,
 		)
 
-		var userNotFoundError *customerrors.UserNotFoundError
 		switch {
-		case errors.As(err, &userNotFoundError):
+		case errors.As(err, &customerrors.UserNotFoundError{}):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
@@ -129,12 +128,10 @@ func (api *ServerAPI) GetMe(ctx context.Context, request *sso.GetMeRequest) (*ss
 			err,
 		)
 
-		var invalidJWTError *security.InvalidJWTError
-		var userNotFoundError *customerrors.UserNotFoundError
 		switch {
-		case errors.As(err, &invalidJWTError):
+		case errors.As(err, &security.InvalidJWTError{}):
 			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
-		case errors.As(err, &userNotFoundError):
+		case errors.As(err, &customerrors.UserNotFoundError{}):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
