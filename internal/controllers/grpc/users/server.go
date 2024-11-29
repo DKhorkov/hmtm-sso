@@ -49,11 +49,12 @@ func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) 
 		)
 
 		var userNotFoundError *customerrors.UserNotFoundError
-		if errors.As(err, &userNotFoundError) {
+		switch {
+		case errors.As(err, &userNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 		}
-
-		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	return &sso.GetUserResponse{
@@ -129,16 +130,15 @@ func (api *ServerAPI) GetMe(ctx context.Context, request *sso.GetMeRequest) (*ss
 		)
 
 		var invalidJWTError *security.InvalidJWTError
-		if errors.As(err, &invalidJWTError) {
-			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
-		}
-
 		var userNotFoundError *customerrors.UserNotFoundError
-		if errors.As(err, &userNotFoundError) {
+		switch {
+		case errors.As(err, &invalidJWTError):
+			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
+		case errors.As(err, &userNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 		}
-
-		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	return &sso.GetUserResponse{

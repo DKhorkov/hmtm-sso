@@ -55,11 +55,12 @@ func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest
 		)
 
 		var userAlreadyExists *customerrors.UserAlreadyExistsError
-		if errors.As(err, &userAlreadyExists) {
+		switch {
+		case errors.As(err, &userAlreadyExists):
 			return nil, &customgrpc.BaseError{Status: codes.AlreadyExists, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 		}
-
-		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	return &sso.RegisterResponse{UserID: userID}, nil
@@ -95,16 +96,15 @@ func (api *ServerAPI) Login(ctx context.Context, request *sso.LoginRequest) (*ss
 		)
 
 		var userNotFoundError *customerrors.UserNotFoundError
-		if errors.As(err, &userNotFoundError) {
-			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
-		}
-
 		var invalidPasswordError *customerrors.InvalidPasswordError
-		if errors.As(err, &invalidPasswordError) {
+		switch {
+		case errors.As(err, &userNotFoundError):
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		case errors.As(err, &invalidPasswordError):
 			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 		}
-
-		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	return &sso.LoginResponse{
@@ -147,16 +147,15 @@ func (api *ServerAPI) RefreshTokens(
 
 		var invalidJWTError *security.InvalidJWTError
 		var accessTokenDoesNotBelongToRefreshTokenError *customerrors.AccessTokenDoesNotBelongToRefreshTokenError
-		if errors.As(err, &invalidJWTError) || errors.As(err, &accessTokenDoesNotBelongToRefreshTokenError) {
-			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
-		}
-
 		var userNotFoundError *customerrors.UserNotFoundError
-		if errors.As(err, &userNotFoundError) {
+		switch {
+		case errors.As(err, &invalidJWTError), errors.As(err, &accessTokenDoesNotBelongToRefreshTokenError):
+			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
+		case errors.As(err, &userNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 		}
-
-		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	return &sso.LoginResponse{
