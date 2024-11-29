@@ -14,7 +14,7 @@ type CommonUseCases struct {
 	jwtConfig    security.JWTConfig
 }
 
-func (useCases *CommonUseCases) RegisterUser(userData entities.RegisterUserDTO) (int, error) {
+func (useCases *CommonUseCases) RegisterUser(userData entities.RegisterUserDTO) (uint64, error) {
 	hashedPassword, err := security.Hash(userData.Credentials.Password, useCases.hashCost)
 	if err != nil {
 		return 0, err
@@ -81,7 +81,7 @@ func (useCases *CommonUseCases) LoginUser(userData entities.LoginUserDTO) (*enti
 	}, nil
 }
 
-func (useCases *CommonUseCases) GetUserByID(id int) (*entities.User, error) {
+func (useCases *CommonUseCases) GetUserByID(id uint64) (*entities.User, error) {
 	return useCases.usersService.GetUserByID(id)
 }
 
@@ -95,7 +95,7 @@ func (useCases *CommonUseCases) GetMe(accessToken string) (*entities.User, error
 		return nil, &security.InvalidJWTError{}
 	}
 
-	userID := int(accessTokenPayload.(float64))
+	userID := uint64(accessTokenPayload.(float64))
 	return useCases.usersService.GetUserByID(userID)
 }
 
@@ -107,7 +107,7 @@ func (useCases *CommonUseCases) RefreshTokens(refreshTokensData entities.TokensD
 	}
 
 	// Selecting refresh token model from Database, if refresh token has not expired yet:
-	userID := int(accessTokenPayload.(float64))
+	userID := uint64(accessTokenPayload.(float64))
 	dbRefreshToken, err := useCases.authService.GetRefreshTokenByUserID(userID)
 	if err != nil {
 		return nil, &security.InvalidJWTError{}

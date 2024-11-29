@@ -5,7 +5,7 @@ import "google/protobuf/empty.proto";
 
 package users;
 
-option go_package = "github.com/DKhorkov/hmtm-sso/protobuf/sso;sso";
+option go_package = "github.com/DKhorkov/hmtm-sso/api/protobuf/sso;sso";
 
 
 service UsersService {
@@ -19,11 +19,11 @@ message GetMeRequest {
 }
 
 message GetUserRequest {
-  int64 userID = 1;
+  uint64 ID = 1;
 }
 
 message GetUserResponse {
-  int64 userID = 1;
+  uint64 ID = 1;
   string email = 2;
   google.protobuf.Timestamp createdAt = 3;
   google.protobuf.Timestamp updatedAt = 4;

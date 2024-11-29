@@ -32,7 +32,7 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 		// SQLite inner realization without AUTO_INCREMENT for SERIAL PRIMARY KEY
 		userID, err := authRepository.RegisterUser(testUserDTO)
 		require.Error(t, err)
-		assert.Equal(t, 0, userID)
+		assert.Equal(t, uint64(0), userID)
 
 		var usersCount int
 		err = dbConnector.GetConnection().QueryRow(
@@ -66,6 +66,6 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 		authRepository := repositories.NewCommonAuthRepository(dbConnector)
 		userID, err := authRepository.RegisterUser(testUserDTO)
 		require.Error(t, err)
-		assert.Equal(t, 0, userID)
+		assert.Equal(t, uint64(0), userID)
 	})
 }

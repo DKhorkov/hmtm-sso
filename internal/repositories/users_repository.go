@@ -9,7 +9,7 @@ type CommonUsersRepository struct {
 	dbConnector db.Connector
 }
 
-func (repo *CommonUsersRepository) GetUserByID(id int) (*entities.User, error) {
+func (repo *CommonUsersRepository) GetUserByID(id uint64) (*entities.User, error) {
 	user := &entities.User{}
 	columns := db.GetEntityColumns(user)
 	connection := repo.dbConnector.GetConnection()

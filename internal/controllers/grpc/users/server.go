@@ -37,7 +37,7 @@ func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) 
 		logging.GetLogTraceback(),
 	)
 
-	user, err := api.useCases.GetUserByID(int(request.GetUserID()))
+	user, err := api.useCases.GetUserByID(request.GetID())
 	if err != nil {
 		api.logger.ErrorContext(
 			ctx,
@@ -57,7 +57,7 @@ func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) 
 	}
 
 	return &sso.GetUserResponse{
-		UserID:    int64(user.ID),
+		ID:        user.ID,
 		Email:     user.Email,
 		CreatedAt: timestamppb.New(user.CreatedAt),
 		UpdatedAt: timestamppb.New(user.UpdatedAt),
@@ -94,7 +94,7 @@ func (api *ServerAPI) GetUsers(ctx context.Context, request *emptypb.Empty) (*ss
 	usersForResponse := make([]*sso.GetUserResponse, len(users))
 	for i, user := range users {
 		usersForResponse[i] = &sso.GetUserResponse{
-			UserID:    int64(user.ID),
+			ID:        user.ID,
 			Email:     user.Email,
 			CreatedAt: timestamppb.New(user.CreatedAt),
 			UpdatedAt: timestamppb.New(user.UpdatedAt),
@@ -142,7 +142,7 @@ func (api *ServerAPI) GetMe(ctx context.Context, request *sso.GetMeRequest) (*ss
 	}
 
 	return &sso.GetUserResponse{
-		UserID:    int64(user.ID),
+		ID:        user.ID,
 		Email:     user.Email,
 		CreatedAt: timestamppb.New(user.CreatedAt),
 		UpdatedAt: timestamppb.New(user.UpdatedAt),

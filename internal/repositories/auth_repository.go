@@ -11,8 +11,8 @@ type CommonAuthRepository struct {
 	dbConnector db.Connector
 }
 
-func (repo *CommonAuthRepository) RegisterUser(userData entities.RegisterUserDTO) (int, error) {
-	var userID int
+func (repo *CommonAuthRepository) RegisterUser(userData entities.RegisterUserDTO) (uint64, error) {
+	var userID uint64
 	connection := repo.dbConnector.GetConnection()
 	err := connection.QueryRow(
 		`
@@ -32,11 +32,11 @@ func (repo *CommonAuthRepository) RegisterUser(userData entities.RegisterUserDTO
 }
 
 func (repo *CommonAuthRepository) CreateRefreshToken(
-	userID int,
+	userID uint64,
 	refreshToken string,
 	ttl time.Duration,
-) (int, error) {
-	var refreshTokenID int
+) (uint64, error) {
+	var refreshTokenID uint64
 	connection := repo.dbConnector.GetConnection()
 	err := connection.QueryRow(
 		`
@@ -56,7 +56,7 @@ func (repo *CommonAuthRepository) CreateRefreshToken(
 	return refreshTokenID, nil
 }
 
-func (repo *CommonAuthRepository) GetRefreshTokenByUserID(userID int) (*entities.RefreshToken, error) {
+func (repo *CommonAuthRepository) GetRefreshTokenByUserID(userID uint64) (*entities.RefreshToken, error) {
 	refreshToken := &entities.RefreshToken{}
 	columns := db.GetEntityColumns(refreshToken)
 	connection := repo.dbConnector.GetConnection()

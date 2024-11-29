@@ -65,8 +65,8 @@ tasks:
     internal: true
     dir: ../
     cmds:
-      - mkdir -p protobuf/protofiles
-      - mkdir -p protobuf/generated/go
+      - mkdir -p api/protobuf/protofiles
+      - mkdir -p api/protobuf/generated/go
 
   grpc_generate:
     desc: "Generate code from .proto files."

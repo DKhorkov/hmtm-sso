@@ -62,7 +62,7 @@ func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest
 		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
-	return &sso.RegisterResponse{UserID: int64(userID)}, nil
+	return &sso.RegisterResponse{UserID: userID}, nil
 }
 
 // Login handler authenticates user if provided credentials are valid and logs User in system.

@@ -9,11 +9,11 @@ import (
 )
 
 type MockedSsoRepository struct {
-	UsersStorage         map[int]*entities.User
-	RefreshTokensStorage map[int]*entities.RefreshToken
+	UsersStorage         map[uint64]*entities.User
+	RefreshTokensStorage map[uint64]*entities.RefreshToken
 }
 
-func (repo *MockedSsoRepository) RegisterUser(userData entities.RegisterUserDTO) (int, error) {
+func (repo *MockedSsoRepository) RegisterUser(userData entities.RegisterUserDTO) (uint64, error) {
 	for _, user := range repo.UsersStorage {
 		if user.Email == userData.Credentials.Email {
 			return 0, &customerrors.UserAlreadyExistsError{}
@@ -21,7 +21,7 @@ func (repo *MockedSsoRepository) RegisterUser(userData entities.RegisterUserDTO)
 	}
 
 	user := entities.User{
-		ID:        len(repo.UsersStorage) + 1,
+		ID:        uint64(len(repo.UsersStorage) + 1),
 		Email:     userData.Credentials.Email,
 		Password:  userData.Credentials.Password,
 		CreatedAt: time.Now(),
@@ -32,7 +32,7 @@ func (repo *MockedSsoRepository) RegisterUser(userData entities.RegisterUserDTO)
 	return user.ID, nil
 }
 
-func (repo *MockedSsoRepository) GetUserByID(id int) (*entities.User, error) {
+func (repo *MockedSsoRepository) GetUserByID(id uint64) (*entities.User, error) {
 	user := repo.UsersStorage[id]
 	if user != nil {
 		return user, nil
@@ -61,10 +61,10 @@ func (repo *MockedSsoRepository) GetUserByEmail(email string) (*entities.User, e
 }
 
 func (repo *MockedSsoRepository) CreateRefreshToken(
-	userID int,
+	userID uint64,
 	refreshToken string,
 	ttl time.Duration,
-) (int, error) {
+) (uint64, error) {
 	for _, token := range repo.RefreshTokensStorage {
 		if token.Value == refreshToken && time.Now().Before(token.TTL) {
 			return 0, &customerrors.RefreshTokenAlreadyExistsError{}
@@ -72,7 +72,7 @@ func (repo *MockedSsoRepository) CreateRefreshToken(
 	}
 
 	token := entities.RefreshToken{
-		ID:        len(repo.UsersStorage) + 1,
+		ID:        uint64(len(repo.UsersStorage) + 1),
 		Value:     refreshToken,
 		TTL:       time.Now().Add(ttl),
 		CreatedAt: time.Now(),
@@ -84,7 +84,7 @@ func (repo *MockedSsoRepository) CreateRefreshToken(
 	return token.ID, nil
 }
 
-func (repo *MockedSsoRepository) GetRefreshTokenByUserID(userID int) (*entities.RefreshToken, error) {
+func (repo *MockedSsoRepository) GetRefreshTokenByUserID(userID uint64) (*entities.RefreshToken, error) {
 	for _, token := range repo.RefreshTokensStorage {
 		if token.UserID == userID {
 			return token, nil

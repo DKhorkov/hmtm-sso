@@ -13,7 +13,7 @@ type CommonAuthService struct {
 	usersRepository interfaces.UsersRepository
 }
 
-func (service *CommonAuthService) RegisterUser(userData entities.RegisterUserDTO) (int, error) {
+func (service *CommonAuthService) RegisterUser(userData entities.RegisterUserDTO) (uint64, error) {
 	user, _ := service.usersRepository.GetUserByEmail(userData.Credentials.Email)
 	if user != nil {
 		return 0, &customerrors.UserAlreadyExistsError{}
@@ -23,14 +23,14 @@ func (service *CommonAuthService) RegisterUser(userData entities.RegisterUserDTO
 }
 
 func (service *CommonAuthService) CreateRefreshToken(
-	userID int,
+	userID uint64,
 	refreshToken string,
 	ttl time.Duration,
-) (int, error) {
+) (uint64, error) {
 	return service.authRepository.CreateRefreshToken(userID, refreshToken, ttl)
 }
 
-func (service *CommonAuthService) GetRefreshTokenByUserID(userID int) (*entities.RefreshToken, error) {
+func (service *CommonAuthService) GetRefreshTokenByUserID(userID uint64) (*entities.RefreshToken, error) {
 	return service.authRepository.GetRefreshTokenByUserID(userID)
 }
 

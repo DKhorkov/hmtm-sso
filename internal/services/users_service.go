@@ -14,7 +14,7 @@ func (service *CommonUsersService) GetAllUsers() ([]*entities.User, error) {
 	return service.usersRepository.GetAllUsers()
 }
 
-func (service *CommonUsersService) GetUserByID(id int) (*entities.User, error) {
+func (service *CommonUsersService) GetUserByID(id uint64) (*entities.User, error) {
 	user, err := service.usersRepository.GetUserByID(id)
 	if err != nil {
 		return nil, &customerrors.UserNotFoundError{}
