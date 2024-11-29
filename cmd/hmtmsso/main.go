@@ -32,8 +32,17 @@ func main() {
 
 	usersRepository := repositories.NewCommonUsersRepository(dbConnector)
 	authRepository := repositories.NewCommonAuthRepository(dbConnector)
-	authService := services.NewCommonAuthService(authRepository, usersRepository)
-	usersService := services.NewCommonUsersService(usersRepository)
+	authService := services.NewCommonAuthService(
+		authRepository,
+		usersRepository,
+		logger,
+	)
+
+	usersService := services.NewCommonUsersService(
+		usersRepository,
+		logger,
+	)
+
 	useCases := usecases.NewCommonUseCases(
 		authService,
 		usersService,

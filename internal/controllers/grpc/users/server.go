@@ -149,7 +149,7 @@ func (api *ServerAPI) GetMe(ctx context.Context, request *sso.GetMeRequest) (*ss
 	}, nil
 }
 
-// RegisterServer handler (serverAPI) for AuthServer  to gRPC server:.
+// RegisterServer handler (serverAPI) for UsersServer to gRPC server:.
 func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger *slog.Logger) {
 	sso.RegisterUsersServiceServer(gRPCServer, &ServerAPI{useCases: useCases, logger: logger})
 }

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"log/slog"
 	"time"
 
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
@@ -11,6 +12,7 @@ import (
 type CommonAuthService struct {
 	authRepository  interfaces.AuthRepository
 	usersRepository interfaces.UsersRepository
+	logger          *slog.Logger
 }
 
 func (service *CommonAuthService) RegisterUser(userData entities.RegisterUserDTO) (uint64, error) {
@@ -27,7 +29,11 @@ func (service *CommonAuthService) CreateRefreshToken(
 	refreshToken string,
 	ttl time.Duration,
 ) (uint64, error) {
-	return service.authRepository.CreateRefreshToken(userID, refreshToken, ttl)
+	return service.authRepository.CreateRefreshToken(
+		userID,
+		refreshToken,
+		ttl,
+	)
 }
 
 func (service *CommonAuthService) GetRefreshTokenByUserID(userID uint64) (*entities.RefreshToken, error) {
@@ -41,9 +47,11 @@ func (service *CommonAuthService) ExpireRefreshToken(refreshToken string) error 
 func NewCommonAuthService(
 	authRepository interfaces.AuthRepository,
 	usersRepository interfaces.UsersRepository,
+	logger *slog.Logger,
 ) *CommonAuthService {
 	return &CommonAuthService{
 		authRepository:  authRepository,
 		usersRepository: usersRepository,
+		logger:          logger,
 	}
 }

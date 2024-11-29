@@ -165,7 +165,7 @@ func (api *ServerAPI) RefreshTokens(
 	}, nil
 }
 
-// RegisterServer handler (serverAPI) for AuthServer  to gRPC server:.
+// RegisterServer handler (serverAPI) for AuthServer to gRPC server:.
 func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger *slog.Logger) {
 	sso.RegisterAuthServiceServer(gRPCServer, &ServerAPI{useCases: useCases, logger: logger})
 }
