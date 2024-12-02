@@ -7,6 +7,7 @@ tasks:
       - prod
     cmds:
       - task: create_logs_folder
+      - task: copy_env_file_for_docker
       - task: docker_build
       - task: docker_run
 
@@ -24,6 +25,12 @@ tasks:
     dir: ../
     cmds:
       - mkdir -p logs
+
+  copy_env_file_for_docker:
+    desc: "Copy .env file to docker folder to paste environments from file in docker compose file."
+    internal: true
+    dir: ../
+    cmd: cp .env build/package/.env
 
   docker_build:
     desc: "Build docker container."
@@ -45,9 +52,20 @@ tasks:
 
   docker_clean:
     desc: "Clean docker containers, images and volumes."
+    cmd: sudo docker system prune -a --volumes
+
+  clean_up:
+    desc: "Clean up all folders, docker volumes, images and containers."
+    dir: ../
     aliases:
       - clean
-    cmd: sudo docker system prune -a --volumes
+    cmds:
+      - sudo rm -rf logs/
+      - sudo rm -rf coverage/
+      - sudo rm -rf build/package/.env
+      - sudo rm -rf postgres_data/
+      - sudo rm -rf postgres_backups/
+      - task: docker_clean
 
   setup_proto:
     desc: "Install all go-proto requirements."
@@ -118,10 +136,12 @@ tasks:
     desc: "Apply all available migrations."
     aliases:
       - create_database
+    dotenv:
+      - .env
     vars:
       DIR: ./migrations
-      DRIVER: postgres
-      DATABASE_URL: "postgresql://hmtm_sso:hmtm_sso@0.0.0.0:5432/hmtm_sso"
+      DRIVER: $POSTGRES_DRIVER
+      DATABASE_URL: "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$HMTM_SSO_DB_OUTER_HOST:$HMTM_SSO_DB_OUTER_PORT/$POSTGRES_DB"
     dir: ../
     cmds:
       - go install github.com/pressly/goose/v3/cmd/goose@latest
@@ -131,10 +151,12 @@ tasks:
     desc: "Migrate up to a specific version."
     requires:
       vars: [ VERSION ]
+    dotenv:
+      - .env
     vars:
       DIR: ./migrations
-      DRIVER: postgres
-      DATABASE_URL: "postgresql://hmtm_sso:hmtm_sso@0.0.0.0:5432/hmtm_sso"
+      DRIVER: $POSTGRES_DRIVER
+      DATABASE_URL: "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$HMTM_SSO_DB_OUTER_HOST:$HMTM_SSO_DB_OUTER_PORT/$POSTGRES_DB"
     dir: ../
     cmds:
       - go install github.com/pressly/goose/v3/cmd/goose@latest
@@ -144,10 +166,12 @@ tasks:
     desc: "Rollback migrations to a specific version."
     requires:
       vars: [ VERSION ]
+    dotenv:
+      - .env
     vars:
       DIR: ./migrations
-      DRIVER: postgres
-      DATABASE_URL: "postgresql://hmtm_sso:hmtm_sso@0.0.0.0:5432/hmtm_sso"
+      DRIVER: $POSTGRES_DRIVER
+      DATABASE_URL: "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$HMTM_SSO_DB_OUTER_HOST:$HMTM_SSO_DB_OUTER_PORT/$POSTGRES_DB"
     dir: ../
     cmds:
       - go install github.com/pressly/goose/v3/cmd/goose@latest
@@ -157,10 +181,12 @@ tasks:
     desc: "Rollback all migrations (careful!)."
     aliases:
       - drop_tables
+    dotenv:
+      - .env
     vars:
       DIR: ./migrations
-      DRIVER: postgres
-      DATABASE_URL: "postgresql://hmtm_sso:hmtm_sso@0.0.0.0:5432/hmtm_sso"
+      DRIVER: $POSTGRES_DRIVER
+      DATABASE_URL: "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$HMTM_SSO_DB_OUTER_HOST:$HMTM_SSO_DB_OUTER_PORT/$POSTGRES_DB"
     dir: ../
     cmds:
       - go install github.com/pressly/goose/v3/cmd/goose@latest
@@ -170,10 +196,12 @@ tasks:
     desc: "Print status of all migrations."
     aliases:
       - status
+    dotenv:
+      - .env
     vars:
       DIR: ./migrations
-      DRIVER: postgres
-      DATABASE_URL: "postgresql://hmtm_sso:hmtm_sso@0.0.0.0:5432/hmtm_sso"
+      DRIVER: $POSTGRES_DRIVER
+      DATABASE_URL: "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$HMTM_SSO_DB_OUTER_HOST:$HMTM_SSO_DB_OUTER_PORT/$POSTGRES_DB"
     dir: ../
     cmds:
       - go install github.com/pressly/goose/v3/cmd/goose@latest
