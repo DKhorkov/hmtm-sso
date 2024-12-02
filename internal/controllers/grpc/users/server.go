@@ -2,63 +2,151 @@ package users
 
 import (
 	"context"
+	"errors"
+	"log/slog"
 
+	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
+	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
+	customgrpc "github.com/DKhorkov/libs/grpc"
+	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/security"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-
-	"github.com/DKhorkov/hmtm-sso/protobuf/generated/go/sso"
 )
 
 type ServerAPI struct {
 	// Helps to test single endpoints, if others is not implemented yet
 	sso.UnimplementedUsersServiceServer
-	UseCases interfaces.UseCases
+	useCases interfaces.UseCases
+	logger   *slog.Logger
 }
 
-// GetUser handler return user with provided data for UsersServer.
+// GetUser handler returns User according provided data.
 func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) (*sso.GetUserResponse, error) {
-	user, err := api.UseCases.GetUserByID(int(request.GetUserID()))
+	api.logger.InfoContext(
+		ctx,
+		"Received new request",
+		"Request",
+		request,
+		"Context",
+		ctx,
+		"Traceback",
+		logging.GetLogTraceback(),
+	)
+
+	user, err := api.useCases.GetUserByID(request.GetID())
 	if err != nil {
-		return nil, err
+		api.logger.ErrorContext(
+			ctx,
+			"Error occurred while trying to get user",
+			"Traceback",
+			logging.GetLogTraceback(),
+			"Error",
+			err,
+		)
+
+		switch {
+		case errors.As(err, &customerrors.UserNotFoundError{}):
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
 	}
 
-	response := &sso.GetUserResponse{
-		UserID:    int64(user.ID),
+	return &sso.GetUserResponse{
+		ID:        user.ID,
 		Email:     user.Email,
 		CreatedAt: timestamppb.New(user.CreatedAt),
 		UpdatedAt: timestamppb.New(user.UpdatedAt),
-	}
-
-	return response, nil
+	}, nil
 }
 
-// GetUsers user handler return all users for UsersServer.
+// GetUsers handler returns all Users.
 func (api *ServerAPI) GetUsers(ctx context.Context, request *emptypb.Empty) (*sso.GetUsersResponse, error) {
-	users, err := api.UseCases.GetAllUsers()
+	api.logger.InfoContext(
+		ctx,
+		"Received new request",
+		"Request",
+		request,
+		"Context",
+		ctx,
+		"Traceback",
+		logging.GetLogTraceback(),
+	)
+
+	users, err := api.useCases.GetAllUsers()
 	if err != nil {
-		return nil, err
+		api.logger.ErrorContext(
+			ctx,
+			"Error occurred while trying to get all users",
+			"Traceback",
+			logging.GetLogTraceback(),
+			"Error",
+			err,
+		)
+
+		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
 	usersForResponse := make([]*sso.GetUserResponse, len(users))
 	for i, user := range users {
 		usersForResponse[i] = &sso.GetUserResponse{
-			UserID:    int64(user.ID),
+			ID:        user.ID,
 			Email:     user.Email,
 			CreatedAt: timestamppb.New(user.CreatedAt),
 			UpdatedAt: timestamppb.New(user.UpdatedAt),
 		}
 	}
 
-	response := &sso.GetUsersResponse{
-		Users: usersForResponse,
-	}
-
-	return response, nil
+	return &sso.GetUsersResponse{Users: usersForResponse}, nil
 }
 
-// Register handler (serverAPI) for AuthServer  to gRPC server:.
-func Register(gRPCServer *grpc.Server, useCases interfaces.UseCases) {
-	sso.RegisterUsersServiceServer(gRPCServer, &ServerAPI{UseCases: useCases})
+// GetMe handler returns User according to provided Access Token.
+func (api *ServerAPI) GetMe(ctx context.Context, request *sso.GetMeRequest) (*sso.GetUserResponse, error) {
+	api.logger.InfoContext(
+		ctx,
+		"Received new request",
+		"Request",
+		request,
+		"Context",
+		ctx,
+		"Traceback",
+		logging.GetLogTraceback(),
+	)
+
+	user, err := api.useCases.GetMe(request.GetAccessToken())
+	if err != nil {
+		api.logger.ErrorContext(
+			ctx,
+			"Error occurred while trying to get user",
+			"Traceback",
+			logging.GetLogTraceback(),
+			"Error",
+			err,
+		)
+
+		switch {
+		case errors.As(err, &security.InvalidJWTError{}):
+			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
+		case errors.As(err, &customerrors.UserNotFoundError{}):
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
+	}
+
+	return &sso.GetUserResponse{
+		ID:        user.ID,
+		Email:     user.Email,
+		CreatedAt: timestamppb.New(user.CreatedAt),
+		UpdatedAt: timestamppb.New(user.UpdatedAt),
+	}, nil
+}
+
+// RegisterServer handler (serverAPI) for UsersServer to gRPC server:.
+func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger *slog.Logger) {
+	sso.RegisterUsersServiceServer(gRPCServer, &ServerAPI{useCases: useCases, logger: logger})
 }

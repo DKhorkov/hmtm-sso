@@ -13,7 +13,7 @@ FROM alpine AS runner
 WORKDIR /app
 
 COPY .env .
-
+COPY --from=builder /build/migrations/ /app/migrations/
 COPY --from=builder /build/hmtmsso /app/hmtmsso
 
 CMD ["./hmtmsso"]

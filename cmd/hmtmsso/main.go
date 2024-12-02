@@ -4,11 +4,11 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/app"
 	"github.com/DKhorkov/hmtm-sso/internal/config"
 	grpccontroller "github.com/DKhorkov/hmtm-sso/internal/controllers/grpc"
-	"github.com/DKhorkov/hmtm-sso/internal/database"
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
 	"github.com/DKhorkov/hmtm-sso/internal/services"
 	"github.com/DKhorkov/hmtm-sso/internal/usecases"
-	"github.com/DKhorkov/hmtm-sso/pkg/logging"
+	"github.com/DKhorkov/libs/db"
+	"github.com/DKhorkov/libs/logging"
 )
 
 func main() {
@@ -18,8 +18,9 @@ func main() {
 		settings.Logging.LogFilePath,
 	)
 
-	dbConnector, err := database.New(
-		settings.Databases.PostgreSQL,
+	dbConnector, err := db.New(
+		db.BuildDsn(settings.Database),
+		settings.Database.Driver,
 		logger,
 	)
 
@@ -29,23 +30,25 @@ func main() {
 
 	defer dbConnector.CloseConnection()
 
-	usersRepository := &repositories.CommonUsersRepository{DBConnector: dbConnector}
-	authRepository := &repositories.CommonAuthRepository{DBConnector: dbConnector}
-	authService := &services.CommonAuthService{
-		AuthRepository:  authRepository,
-		UsersRepository: usersRepository,
-		JWTConfig:       settings.Security.JWT,
-	}
+	usersRepository := repositories.NewCommonUsersRepository(dbConnector)
+	authRepository := repositories.NewCommonAuthRepository(dbConnector)
+	authService := services.NewCommonAuthService(
+		authRepository,
+		usersRepository,
+		logger,
+	)
 
-	usersService := &services.CommonUsersService{
-		UsersRepository: usersRepository,
-	}
+	usersService := services.NewCommonUsersService(
+		usersRepository,
+		logger,
+	)
 
-	useCases := &usecases.CommonUseCases{
-		AuthService:  authService,
-		UsersService: usersService,
-		HashCost:     settings.Security.HashCost,
-	}
+	useCases := usecases.NewCommonUseCases(
+		authService,
+		usersService,
+		settings.Security.HashCost,
+		settings.Security.JWT,
+	)
 
 	controller := grpccontroller.New(
 		settings.HTTP.Host,

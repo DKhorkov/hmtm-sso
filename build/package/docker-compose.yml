@@ -8,7 +8,7 @@ services:
       context: ../..
       dockerfile: ./build/package/Dockerfile
     ports:
-      - "8070:8070"
+      - "${HMTM_SSO_OUTER_PORT}:${HMTM_SSO_INNER_PORT}"
     depends_on:
       - hmtm_sso_database
     volumes:
@@ -26,4 +26,4 @@ services:
       - ../../postgres_backups:/backups
       - ../../scripts/postgres:/scripts
     ports:
-      - "5432:5432"
+      - "${HMTM_SSO_DB_OUTER_PORT}:${HMTM_SSO_DB_INNER_PORT}"

@@ -1,12 +1,14 @@
 package interfaces
 
 import (
-	"github.com/DKhorkov/hmtm-sso/entities"
+	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 )
 
 type UseCases interface {
-	GetUserByID(id int) (*entities.User, error)
+	GetUserByID(id uint64) (*entities.User, error)
 	GetAllUsers() ([]*entities.User, error)
-	RegisterUser(userData entities.RegisterUserDTO) (int, error)
-	LoginUser(userData entities.LoginUserDTO) (string, error)
+	RegisterUser(userData entities.RegisterUserDTO) (userID uint64, err error)
+	LoginUser(userData entities.LoginUserDTO) (*entities.TokensDTO, error)
+	GetMe(accessToken string) (*entities.User, error)
+	RefreshTokens(refreshTokensData entities.TokensDTO) (*entities.TokensDTO, error)
 }

@@ -5,12 +5,10 @@ import (
 	"log/slog"
 	"net"
 
-	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
-
 	"github.com/DKhorkov/hmtm-sso/internal/controllers/grpc/auth"
 	"github.com/DKhorkov/hmtm-sso/internal/controllers/grpc/users"
-
-	"github.com/DKhorkov/hmtm-sso/pkg/logging"
+	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
+	"github.com/DKhorkov/libs/logging"
 	"google.golang.org/grpc"
 )
 
@@ -67,8 +65,8 @@ func New(host string, port int, useCases interfaces.UseCases, logger *slog.Logge
 	grpcServer := grpc.NewServer()
 
 	// Connects our gRPC services to grpcServer:
-	auth.Register(grpcServer, useCases)
-	users.Register(grpcServer, useCases)
+	auth.RegisterServer(grpcServer, useCases, logger)
+	users.RegisterServer(grpcServer, useCases, logger)
 
 	return &Controller{
 		grpcServer: grpcServer,

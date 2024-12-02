@@ -1,20 +1,18 @@
 package repositories
 
 import (
-	"github.com/DKhorkov/hmtm-sso/entities"
-	"github.com/DKhorkov/hmtm-sso/internal/database"
-	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
-	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
+	"github.com/DKhorkov/hmtm-sso/pkg/entities"
+	"github.com/DKhorkov/libs/db"
 )
 
 type CommonUsersRepository struct {
-	DBConnector interfaces.DBConnector
+	dbConnector db.Connector
 }
 
-func (repo *CommonUsersRepository) GetUserByID(id int) (*entities.User, error) {
+func (repo *CommonUsersRepository) GetUserByID(id uint64) (*entities.User, error) {
 	user := &entities.User{}
-	columns := database.GetEntityColumns(user)
-	connection := repo.DBConnector.GetConnection()
+	columns := db.GetEntityColumns(user)
+	connection := repo.dbConnector.GetConnection()
 	err := connection.QueryRow(
 		`
 			SELECT * 
@@ -25,7 +23,7 @@ func (repo *CommonUsersRepository) GetUserByID(id int) (*entities.User, error) {
 	).Scan(columns...)
 
 	if err != nil {
-		return nil, &customerrors.UserNotFoundError{}
+		return nil, err
 	}
 
 	return user, nil
@@ -33,8 +31,8 @@ func (repo *CommonUsersRepository) GetUserByID(id int) (*entities.User, error) {
 
 func (repo *CommonUsersRepository) GetUserByEmail(email string) (*entities.User, error) {
 	user := &entities.User{}
-	columns := database.GetEntityColumns(user)
-	connection := repo.DBConnector.GetConnection()
+	columns := db.GetEntityColumns(user)
+	connection := repo.dbConnector.GetConnection()
 	err := connection.QueryRow(
 		`
 			SELECT * 
@@ -45,14 +43,14 @@ func (repo *CommonUsersRepository) GetUserByEmail(email string) (*entities.User,
 	).Scan(columns...)
 
 	if err != nil {
-		return nil, &customerrors.UserNotFoundError{}
+		return nil, err
 	}
 
 	return user, nil
 }
 
 func (repo *CommonUsersRepository) GetAllUsers() ([]*entities.User, error) {
-	connection := repo.DBConnector.GetConnection()
+	connection := repo.dbConnector.GetConnection()
 	rows, err := connection.Query(
 		`
 			SELECT * 
@@ -67,7 +65,7 @@ func (repo *CommonUsersRepository) GetAllUsers() ([]*entities.User, error) {
 	var users []*entities.User
 	for rows.Next() {
 		user := &entities.User{}
-		columns := database.GetEntityColumns(user)
+		columns := db.GetEntityColumns(user)
 		err = rows.Scan(columns...)
 		if err != nil {
 			return nil, err
@@ -81,4 +79,8 @@ func (repo *CommonUsersRepository) GetAllUsers() ([]*entities.User, error) {
 	}
 
 	return users, nil
+}
+
+func NewCommonUsersRepository(dbConnector db.Connector) *CommonUsersRepository {
+	return &CommonUsersRepository{dbConnector: dbConnector}
 }

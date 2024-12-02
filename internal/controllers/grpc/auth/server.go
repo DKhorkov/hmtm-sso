@@ -2,22 +2,40 @@ package auth
 
 import (
 	"context"
+	"errors"
+	"log/slog"
 
-	"github.com/DKhorkov/hmtm-sso/entities"
+	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
+	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
+	"github.com/DKhorkov/hmtm-sso/pkg/entities"
+	customgrpc "github.com/DKhorkov/libs/grpc"
+	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/security"
 	"google.golang.org/grpc"
-
-	"github.com/DKhorkov/hmtm-sso/protobuf/generated/go/sso"
+	"google.golang.org/grpc/codes"
 )
 
 type ServerAPI struct {
 	// Helps to test single endpoints, if others is not implemented yet
 	sso.UnimplementedAuthServiceServer
-	UseCases interfaces.UseCases
+	useCases interfaces.UseCases
+	logger   *slog.Logger
 }
 
-// Register user handler for AuthServer.
+// Register handler registers new User with provided data.
 func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest) (*sso.RegisterResponse, error) {
+	api.logger.InfoContext(
+		ctx,
+		"Received new request",
+		"Request",
+		request,
+		"Context",
+		ctx,
+		"Traceback",
+		logging.GetLogTraceback(),
+	)
+
 	userData := entities.RegisterUserDTO{
 		Credentials: entities.LoginUserDTO{
 			Email:    request.GetCredentials().GetEmail(),
@@ -25,30 +43,123 @@ func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest
 		},
 	}
 
-	userID, err := api.UseCases.RegisterUser(userData)
+	userID, err := api.useCases.RegisterUser(userData)
 	if err != nil {
-		return nil, err
+		api.logger.ErrorContext(
+			ctx,
+			"Error occurred while trying to register",
+			"Traceback",
+			logging.GetLogTraceback(),
+			"Error",
+			err,
+		)
+
+		switch {
+		case errors.As(err, &customerrors.UserAlreadyExistsError{}):
+			return nil, &customgrpc.BaseError{Status: codes.AlreadyExists, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
 	}
 
-	return &sso.RegisterResponse{UserID: int64(userID)}, nil
+	return &sso.RegisterResponse{UserID: userID}, nil
 }
 
-// Login user handler for AuthServer.
+// Login handler authenticates user if provided credentials are valid and logs User in system.
 func (api *ServerAPI) Login(ctx context.Context, request *sso.LoginRequest) (*sso.LoginResponse, error) {
+	api.logger.InfoContext(
+		ctx,
+		"Received new request",
+		"Request",
+		request,
+		"Context",
+		ctx,
+		"Traceback",
+		logging.GetLogTraceback(),
+	)
+
 	userData := entities.LoginUserDTO{
 		Email:    request.GetEmail(),
 		Password: request.GetPassword(),
 	}
 
-	token, err := api.UseCases.LoginUser(userData)
+	tokensDTO, err := api.useCases.LoginUser(userData)
 	if err != nil {
-		return &sso.LoginResponse{Token: ""}, err
+		api.logger.ErrorContext(
+			ctx,
+			"Error occurred while trying to login",
+			"Traceback",
+			logging.GetLogTraceback(),
+			"Error",
+			err,
+		)
+
+		switch {
+		case errors.As(err, &customerrors.UserNotFoundError{}):
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		case errors.As(err, &customerrors.InvalidPasswordError{}):
+			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
 	}
 
-	return &sso.LoginResponse{Token: token}, nil
+	return &sso.LoginResponse{
+		AccessToken:  tokensDTO.AccessToken,
+		RefreshToken: tokensDTO.RefreshToken,
+	}, nil
 }
 
-// Register handler (serverAPI) for AuthServer  to gRPC server:.
-func Register(gRPCServer *grpc.Server, useCases interfaces.UseCases) {
-	sso.RegisterAuthServiceServer(gRPCServer, &ServerAPI{UseCases: useCases})
+// RefreshTokens handler updates User auth tokens.
+func (api *ServerAPI) RefreshTokens(
+	ctx context.Context,
+	request *sso.RefreshTokensRequest,
+) (*sso.LoginResponse, error) {
+	api.logger.InfoContext(
+		ctx,
+		"Received new request",
+		"Request",
+		request,
+		"Context",
+		ctx,
+		"Traceback",
+		logging.GetLogTraceback(),
+	)
+
+	refreshTokensDTO := entities.TokensDTO{
+		AccessToken:  request.GetAccessToken(),
+		RefreshToken: request.GetRefreshToken(),
+	}
+
+	tokensDTO, err := api.useCases.RefreshTokens(refreshTokensDTO)
+	if err != nil {
+		api.logger.ErrorContext(
+			ctx,
+			"Error occurred while trying to login",
+			"Traceback",
+			logging.GetLogTraceback(),
+			"Error",
+			err,
+		)
+
+		switch {
+		case errors.As(err, &security.InvalidJWTError{}),
+			errors.As(err, &customerrors.AccessTokenDoesNotBelongToRefreshTokenError{}):
+			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
+		case errors.As(err, &customerrors.UserNotFoundError{}):
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
+	}
+
+	return &sso.LoginResponse{
+		AccessToken:  tokensDTO.AccessToken,
+		RefreshToken: tokensDTO.RefreshToken,
+	}, nil
+}
+
+// RegisterServer handler (serverAPI) for AuthServer to gRPC server:.
+func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger *slog.Logger) {
+	sso.RegisterAuthServiceServer(gRPCServer, &ServerAPI{useCases: useCases, logger: logger})
 }

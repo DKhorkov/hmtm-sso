@@ -1,42 +1,57 @@
 package services
 
 import (
-	"github.com/DKhorkov/hmtm-sso/entities"
-	"github.com/DKhorkov/hmtm-sso/internal/config"
+	"log/slog"
+	"time"
+
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
-	"github.com/DKhorkov/hmtm-sso/internal/security"
+	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 )
 
 type CommonAuthService struct {
-	AuthRepository  interfaces.AuthRepository
-	UsersRepository interfaces.UsersRepository
-	JWTConfig       config.JWTConfig
+	authRepository  interfaces.AuthRepository
+	usersRepository interfaces.UsersRepository
+	logger          *slog.Logger
 }
 
-func (service *CommonAuthService) LoginUser(userData entities.LoginUserDTO) (string, error) {
-	user, err := service.UsersRepository.GetUserByEmail(userData.Email)
-	if err != nil {
-		return "", err
-	}
-
-	if !security.ValidateHashedPassword(userData.Password, user.Password) {
-		return "", &customerrors.InvalidPasswordError{}
-	}
-
-	return security.GenerateJWT(
-		user,
-		service.JWTConfig.SecretKey,
-		service.JWTConfig.TTL,
-		service.JWTConfig.Algorithm,
-	)
-}
-
-func (service *CommonAuthService) RegisterUser(userData entities.RegisterUserDTO) (int, error) {
-	user, _ := service.UsersRepository.GetUserByEmail(userData.Credentials.Email)
+func (service *CommonAuthService) RegisterUser(userData entities.RegisterUserDTO) (uint64, error) {
+	user, _ := service.usersRepository.GetUserByEmail(userData.Credentials.Email)
 	if user != nil {
 		return 0, &customerrors.UserAlreadyExistsError{}
 	}
 
-	return service.AuthRepository.RegisterUser(userData)
+	return service.authRepository.RegisterUser(userData)
+}
+
+func (service *CommonAuthService) CreateRefreshToken(
+	userID uint64,
+	refreshToken string,
+	ttl time.Duration,
+) (uint64, error) {
+	return service.authRepository.CreateRefreshToken(
+		userID,
+		refreshToken,
+		ttl,
+	)
+}
+
+func (service *CommonAuthService) GetRefreshTokenByUserID(userID uint64) (*entities.RefreshToken, error) {
+	return service.authRepository.GetRefreshTokenByUserID(userID)
+}
+
+func (service *CommonAuthService) ExpireRefreshToken(refreshToken string) error {
+	return service.authRepository.ExpireRefreshToken(refreshToken)
+}
+
+func NewCommonAuthService(
+	authRepository interfaces.AuthRepository,
+	usersRepository interfaces.UsersRepository,
+	logger *slog.Logger,
+) *CommonAuthService {
+	return &CommonAuthService{
+		authRepository:  authRepository,
+		usersRepository: usersRepository,
+		logger:          logger,
+	}
 }
