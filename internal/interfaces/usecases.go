@@ -10,5 +10,5 @@ type UseCases interface {
 	RegisterUser(userData entities.RegisterUserDTO) (userID uint64, err error)
 	LoginUser(userData entities.LoginUserDTO) (*entities.TokensDTO, error)
 	GetMe(accessToken string) (*entities.User, error)
-	RefreshTokens(refreshTokensData entities.TokensDTO) (*entities.TokensDTO, error)
+	RefreshTokens(refreshToken string) (*entities.TokensDTO, error)
 }

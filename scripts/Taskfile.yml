@@ -213,6 +213,7 @@ tasks:
       - upload
     dir: ../
     cmds:
+      - task: copy_env_file_for_docker
       - task: docker_build
       - sudo docker tag hmtm_sso d3m0s/hmtm_sso
       - sudo docker push d3m0s/hmtm_sso

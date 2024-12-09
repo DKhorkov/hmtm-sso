@@ -126,12 +126,7 @@ func (api *ServerAPI) RefreshTokens(
 		logging.GetLogTraceback(),
 	)
 
-	refreshTokensDTO := entities.TokensDTO{
-		AccessToken:  request.GetAccessToken(),
-		RefreshToken: request.GetRefreshToken(),
-	}
-
-	tokensDTO, err := api.useCases.RefreshTokens(refreshTokensDTO)
+	tokensDTO, err := api.useCases.RefreshTokens(request.GetRefreshToken())
 	if err != nil {
 		api.logger.ErrorContext(
 			ctx,

@@ -99,9 +99,27 @@ func (useCases *CommonUseCases) GetMe(accessToken string) (*entities.User, error
 	return useCases.usersService.GetUserByID(userID)
 }
 
-func (useCases *CommonUseCases) RefreshTokens(refreshTokensData entities.TokensDTO) (*entities.TokensDTO, error) {
+func (useCases *CommonUseCases) RefreshTokens(refreshToken string) (*entities.TokensDTO, error) {
+	// Decoding refresh token to get original JWT and compare its value with value in Database:
+	oldRefreshTokenBytes, err := security.Decode(refreshToken)
+	if err != nil {
+		return nil, &security.InvalidJWTError{}
+	}
+
+	// Retrieving refresh token payload to get access token from refresh token:
+	oldRefreshToken := string(oldRefreshTokenBytes)
+	refreshTokenPayload, err := security.ParseJWT(oldRefreshToken, useCases.jwtConfig.SecretKey)
+	if err != nil {
+		return nil, &security.InvalidJWTError{}
+	}
+
+	oldAccessToken, ok := refreshTokenPayload.(string)
+	if !ok {
+		return nil, &security.InvalidJWTError{}
+	}
+
 	// Retrieving access token payload to get user ID:
-	accessTokenPayload, err := security.ParseJWT(refreshTokensData.AccessToken, useCases.jwtConfig.SecretKey)
+	accessTokenPayload, err := security.ParseJWT(oldAccessToken, useCases.jwtConfig.SecretKey)
 	if err != nil {
 		return nil, &security.InvalidJWTError{}
 	}
@@ -113,29 +131,8 @@ func (useCases *CommonUseCases) RefreshTokens(refreshTokensData entities.TokensD
 		return nil, &security.InvalidJWTError{}
 	}
 
-	// Decoding refresh token to get original JWT and compare its value with value in Database:
-	oldRefreshTokenBytes, err := security.Decode(refreshTokensData.RefreshToken)
-	if err != nil {
-		return nil, &security.InvalidJWTError{}
-	}
-
-	oldRefreshToken := string(oldRefreshTokenBytes)
+	// Checking if access token belongs to refresh token:
 	if oldRefreshToken != dbRefreshToken.Value {
-		return nil, &security.InvalidJWTError{}
-	}
-
-	// Retrieving refresh token payload to check, if access token belongs to refresh token:
-	refreshTokenPayload, err := security.ParseJWT(oldRefreshToken, useCases.jwtConfig.SecretKey)
-	if err != nil {
-		return nil, &security.InvalidJWTError{}
-	}
-
-	oldAccessToken, ok := refreshTokenPayload.(string)
-	if !ok {
-		return nil, &security.InvalidJWTError{}
-	}
-
-	if refreshTokensData.AccessToken != oldAccessToken {
 		return nil, &errors.AccessTokenDoesNotBelongToRefreshTokenError{}
 	}
 
@@ -145,7 +142,7 @@ func (useCases *CommonUseCases) RefreshTokens(refreshTokensData entities.TokensD
 	}
 
 	// Create tokens:
-	accessToken, err := security.GenerateJWT(
+	newAccessToken, err := security.GenerateJWT(
 		userID,
 		useCases.jwtConfig.SecretKey,
 		useCases.jwtConfig.AccessTokenTTL,
@@ -156,8 +153,8 @@ func (useCases *CommonUseCases) RefreshTokens(refreshTokensData entities.TokensD
 		return nil, err
 	}
 
-	refreshToken, err := security.GenerateJWT(
-		accessToken,
+	newRefreshToken, err := security.GenerateJWT(
+		newAccessToken,
 		useCases.jwtConfig.SecretKey,
 		useCases.jwtConfig.RefreshTokenTTL,
 		useCases.jwtConfig.Algorithm,
@@ -170,16 +167,16 @@ func (useCases *CommonUseCases) RefreshTokens(refreshTokensData entities.TokensD
 	// Save token to Database:
 	if _, err = useCases.authService.CreateRefreshToken(
 		userID,
-		refreshToken,
+		newRefreshToken,
 		useCases.jwtConfig.RefreshTokenTTL,
 	); err != nil {
 		return nil, err
 	}
 
 	// Encoding refresh token for secure usage via internet:
-	encodedRefreshToken := security.Encode([]byte(refreshToken))
+	encodedRefreshToken := security.Encode([]byte(newRefreshToken))
 	return &entities.TokensDTO{
-		AccessToken:  accessToken,
+		AccessToken:  newAccessToken,
 		RefreshToken: encodedRefreshToken,
 	}, nil
 }
