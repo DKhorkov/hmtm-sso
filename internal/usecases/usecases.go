@@ -167,7 +167,7 @@ func (useCases *CommonUseCases) RefreshTokens(refreshToken string) (*entities.To
 	// Save token to Database:
 	if _, err = useCases.authService.CreateRefreshToken(
 		userID,
-		refreshToken,
+		newRefreshToken,
 		useCases.jwtConfig.RefreshTokenTTL,
 	); err != nil {
 		return nil, err
