@@ -3,8 +3,9 @@ package repositories_test
 import (
 	"testing"
 
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
+
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
-	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -135,7 +136,7 @@ func TestRepositoriesGetAllUsers(t *testing.T) {
 		usersRepository := repositories.NewCommonUsersRepository(dbConnector)
 		users, err := usersRepository.GetAllUsers()
 		require.NoError(t, err)
-		assert.IsType(t, []*entities.User{}, users)
+		assert.IsType(t, []entities.User{}, users)
 		assert.NotEmpty(t, users)
 		assert.Len(t, users, 1)
 	})

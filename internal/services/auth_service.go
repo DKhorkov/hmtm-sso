@@ -4,9 +4,10 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
+
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
-	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 )
 
 type CommonAuthService struct {
