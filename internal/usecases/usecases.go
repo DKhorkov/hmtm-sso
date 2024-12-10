@@ -1,9 +1,9 @@
 package usecases
 
 import (
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	"github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
-	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 	"github.com/DKhorkov/libs/security"
 )
 
@@ -76,16 +76,17 @@ func (useCases *CommonUseCases) LoginUser(userData entities.LoginUserDTO) (*enti
 	// Encoding refresh token for secure usage via internet:
 	encodedRefreshToken := security.Encode([]byte(refreshToken))
 	return &entities.TokensDTO{
-		AccessToken:  accessToken,
-		RefreshToken: encodedRefreshToken,
-	}, nil
+			AccessToken:  accessToken,
+			RefreshToken: encodedRefreshToken,
+		},
+		nil
 }
 
 func (useCases *CommonUseCases) GetUserByID(id uint64) (*entities.User, error) {
 	return useCases.usersService.GetUserByID(id)
 }
 
-func (useCases *CommonUseCases) GetAllUsers() ([]*entities.User, error) {
+func (useCases *CommonUseCases) GetAllUsers() ([]entities.User, error) {
 	return useCases.usersService.GetAllUsers()
 }
 
@@ -176,9 +177,10 @@ func (useCases *CommonUseCases) RefreshTokens(refreshToken string) (*entities.To
 	// Encoding refresh token for secure usage via internet:
 	encodedRefreshToken := security.Encode([]byte(newRefreshToken))
 	return &entities.TokensDTO{
-		AccessToken:  newAccessToken,
-		RefreshToken: encodedRefreshToken,
-	}, nil
+			AccessToken:  newAccessToken,
+			RefreshToken: encodedRefreshToken,
+		},
+		nil
 }
 
 func NewCommonUseCases(

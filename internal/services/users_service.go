@@ -3,9 +3,10 @@ package services
 import (
 	"log/slog"
 
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
+
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
-	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 	"github.com/DKhorkov/libs/logging"
 )
 
@@ -14,7 +15,7 @@ type CommonUsersService struct {
 	logger          *slog.Logger
 }
 
-func (service *CommonUsersService) GetAllUsers() ([]*entities.User, error) {
+func (service *CommonUsersService) GetAllUsers() ([]entities.User, error) {
 	return service.usersRepository.GetAllUsers()
 }
 

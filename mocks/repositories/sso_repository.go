@@ -3,9 +3,8 @@ package mocks
 import (
 	"time"
 
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
-
-	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 )
 
 type MockedSsoRepository struct {
@@ -41,10 +40,10 @@ func (repo *MockedSsoRepository) GetUserByID(id uint64) (*entities.User, error) 
 	return nil, &customerrors.UserNotFoundError{}
 }
 
-func (repo *MockedSsoRepository) GetAllUsers() ([]*entities.User, error) {
-	var users []*entities.User
+func (repo *MockedSsoRepository) GetAllUsers() ([]entities.User, error) {
+	var users []entities.User
 	for _, user := range repo.UsersStorage {
-		users = append(users, user)
+		users = append(users, *user)
 	}
 
 	return users, nil

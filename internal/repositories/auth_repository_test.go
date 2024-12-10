@@ -3,9 +3,8 @@ package repositories_test
 import (
 	"testing"
 
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
-
-	"github.com/DKhorkov/hmtm-sso/pkg/entities"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

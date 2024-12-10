@@ -3,7 +3,8 @@ package repositories
 import (
 	"time"
 
-	"github.com/DKhorkov/hmtm-sso/pkg/entities"
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
+
 	"github.com/DKhorkov/libs/db"
 )
 

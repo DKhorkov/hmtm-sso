@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"github.com/DKhorkov/hmtm-sso/pkg/entities"
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	"github.com/DKhorkov/libs/db"
 )
 
@@ -49,7 +49,7 @@ func (repo *CommonUsersRepository) GetUserByEmail(email string) (*entities.User,
 	return user, nil
 }
 
-func (repo *CommonUsersRepository) GetAllUsers() ([]*entities.User, error) {
+func (repo *CommonUsersRepository) GetAllUsers() ([]entities.User, error) {
 	connection := repo.dbConnector.GetConnection()
 	rows, err := connection.Query(
 		`
@@ -62,10 +62,10 @@ func (repo *CommonUsersRepository) GetAllUsers() ([]*entities.User, error) {
 		return nil, err
 	}
 
-	var users []*entities.User
+	var users []entities.User
 	for rows.Next() {
-		user := &entities.User{}
-		columns := db.GetEntityColumns(user)
+		user := entities.User{}
+		columns := db.GetEntityColumns(&user) // Only pointer to use rows.Scan() successfully
 		err = rows.Scan(columns...)
 		if err != nil {
 			return nil, err
