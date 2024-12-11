@@ -30,7 +30,7 @@ func (service *CommonUsersService) GetUserByID(id uint64) (*entities.User, error
 			err,
 		)
 
-		return nil, &customerrors.UserNotFoundError{}
+		return nil, &customerrors.UserNotFoundError{BaseErr: err}
 	}
 
 	return user, nil
@@ -47,7 +47,7 @@ func (service *CommonUsersService) GetUserByEmail(email string) (*entities.User,
 			err,
 		)
 
-		return nil, &customerrors.UserNotFoundError{}
+		return nil, &customerrors.UserNotFoundError{BaseErr: err}
 	}
 
 	return user, nil

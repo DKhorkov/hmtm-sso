@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
-
 	"github.com/DKhorkov/libs/db"
 )
 
