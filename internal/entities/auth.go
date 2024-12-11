@@ -3,12 +3,12 @@ package entities
 import "time"
 
 type RefreshToken struct {
-	ID        uint64    `json:"id" gorm:"primary_key;AUTO_INCREMENT"`
-	UserID    uint64    `json:"userID" gorm:"not null"`
-	TTL       time.Time `json:"ttl" gorm:"not null"`
-	Value     string    `json:"value" gorm:"unique; not null"`
-	CreatedAt time.Time `json:"createdAt" gorm:"not null"`
-	UpdatedAt time.Time `json:"updatedAt" gorm:"not null"`
+	ID        uint64    `json:"id"`
+	UserID    uint64    `json:"userID"`
+	TTL       time.Time `json:"ttl"`
+	Value     string    `json:"value"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type LoginUserDTO struct {
