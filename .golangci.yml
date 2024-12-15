@@ -368,3 +368,9 @@ issues:
     - path: "mocks/repositories/sso_repository.go"
       linters:
         - gosec
+    - path: "internal/services/auth_service.go"
+      linters:
+        - revive
+    - path: "internal/services/users_service.go"
+      linters:
+        - revive

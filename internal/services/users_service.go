@@ -1,6 +1,8 @@
 package services
 
 import (
+	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
@@ -15,39 +17,37 @@ type CommonUsersService struct {
 	logger          *slog.Logger
 }
 
-func (service *CommonUsersService) GetAllUsers() ([]entities.User, error) {
+func (service *CommonUsersService) GetAllUsers(ctx context.Context) ([]entities.User, error) {
 	return service.usersRepository.GetAllUsers()
 }
 
-func (service *CommonUsersService) GetUserByID(id uint64) (*entities.User, error) {
+func (service *CommonUsersService) GetUserByID(ctx context.Context, id uint64) (*entities.User, error) {
 	user, err := service.usersRepository.GetUserByID(id)
 	if err != nil {
-		service.logger.Error(
-			"Error occurred while trying to get user by id",
-			"Traceback",
-			logging.GetLogTraceback(),
-			"Error",
+		logging.LogErrorContext(
+			ctx,
+			service.logger,
+			fmt.Sprintf("Error occurred while trying to get User with ID=%d", id),
 			err,
 		)
 
-		return nil, &customerrors.UserNotFoundError{BaseErr: err}
+		return nil, &customerrors.UserNotFoundError{}
 	}
 
 	return user, nil
 }
 
-func (service *CommonUsersService) GetUserByEmail(email string) (*entities.User, error) {
+func (service *CommonUsersService) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
 	user, err := service.usersRepository.GetUserByEmail(email)
 	if err != nil {
-		service.logger.Error(
-			"Error occurred while trying to get user by email",
-			"Traceback",
-			logging.GetLogTraceback(),
-			"Error",
+		logging.LogErrorContext(
+			ctx,
+			service.logger,
+			fmt.Sprintf("Error occurred while trying to get User with Email=%s", email),
 			err,
 		)
 
-		return nil, &customerrors.UserNotFoundError{BaseErr: err}
+		return nil, &customerrors.UserNotFoundError{}
 	}
 
 	return user, nil

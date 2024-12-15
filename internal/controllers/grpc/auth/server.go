@@ -3,7 +3,11 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
+
+	"github.com/DKhorkov/libs/contextlib"
+	"github.com/DKhorkov/libs/requestid"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 
@@ -26,34 +30,19 @@ type ServerAPI struct {
 
 // Register handler registers new User with provided data.
 func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest) (*sso.RegisterResponse, error) {
-	api.logger.InfoContext(
-		ctx,
-		"Received new request",
-		"Request",
-		request,
-		"Context",
-		ctx,
-		"Traceback",
-		logging.GetLogTraceback(),
-	)
+	ctx = contextlib.SetValue(ctx, requestid.Key, request.GetRequestID())
+	logging.LogRequest(ctx, api.logger, request)
 
 	userData := entities.RegisterUserDTO{
 		Credentials: entities.LoginUserDTO{
-			Email:    request.GetCredentials().GetEmail(),
-			Password: request.GetCredentials().GetPassword(),
+			Email:    request.GetEmail(),
+			Password: request.GetPassword(),
 		},
 	}
 
-	userID, err := api.useCases.RegisterUser(userData)
+	userID, err := api.useCases.RegisterUser(ctx, userData)
 	if err != nil {
-		api.logger.ErrorContext(
-			ctx,
-			"Error occurred while trying to register",
-			"Traceback",
-			logging.GetLogTraceback(),
-			"Error",
-			err,
-		)
+		logging.LogErrorContext(ctx, api.logger, "Error occurred while trying to register User", err)
 
 		switch {
 		case errors.As(err, &customerrors.UserAlreadyExistsError{}):
@@ -68,30 +57,20 @@ func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest
 
 // Login handler authenticates user if provided credentials are valid and logs User in system.
 func (api *ServerAPI) Login(ctx context.Context, request *sso.LoginRequest) (*sso.LoginResponse, error) {
-	api.logger.InfoContext(
-		ctx,
-		"Received new request",
-		"Request",
-		request,
-		"Context",
-		ctx,
-		"Traceback",
-		logging.GetLogTraceback(),
-	)
+	ctx = contextlib.SetValue(ctx, requestid.Key, request.GetRequestID())
+	logging.LogRequest(ctx, api.logger, request)
 
 	userData := entities.LoginUserDTO{
 		Email:    request.GetEmail(),
 		Password: request.GetPassword(),
 	}
 
-	tokensDTO, err := api.useCases.LoginUser(userData)
+	tokensDTO, err := api.useCases.LoginUser(ctx, userData)
 	if err != nil {
-		api.logger.ErrorContext(
+		logging.LogErrorContext(
 			ctx,
-			"Error occurred while trying to login",
-			"Traceback",
-			logging.GetLogTraceback(),
-			"Error",
+			api.logger,
+			fmt.Sprintf("Error occurred while trying to login User with email=%s", userData.Email),
 			err,
 		)
 
@@ -116,25 +95,15 @@ func (api *ServerAPI) RefreshTokens(
 	ctx context.Context,
 	request *sso.RefreshTokensRequest,
 ) (*sso.LoginResponse, error) {
-	api.logger.InfoContext(
-		ctx,
-		"Received new request",
-		"Request",
-		request,
-		"Context",
-		ctx,
-		"Traceback",
-		logging.GetLogTraceback(),
-	)
+	ctx = contextlib.SetValue(ctx, requestid.Key, request.GetRequestID())
+	logging.LogRequest(ctx, api.logger, request)
 
-	tokensDTO, err := api.useCases.RefreshTokens(request.GetRefreshToken())
+	tokensDTO, err := api.useCases.RefreshTokens(ctx, request.GetRefreshToken())
 	if err != nil {
-		api.logger.ErrorContext(
+		logging.LogErrorContext(
 			ctx,
-			"Error occurred while trying to login",
-			"Traceback",
-			logging.GetLogTraceback(),
-			"Error",
+			api.logger,
+			fmt.Sprintf("Error occurred while trying to refresh tokens with RefreshToken=%s", request.GetRefreshToken()),
 			err,
 		)
 

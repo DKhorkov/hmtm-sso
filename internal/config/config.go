@@ -40,7 +40,7 @@ func New() Config {
 			Driver:       loadenv.GetEnv("POSTGRES_DRIVER", "postgres"),
 		},
 		Logging: logging.Config{
-			Level:       logging.LogLevels.DEBUG,
+			Level:       logging.Levels.DEBUG,
 			LogFilePath: fmt.Sprintf("logs/%s.log", time.Now().Format("02-01-2006")),
 		},
 	}

@@ -3,7 +3,7 @@ module github.com/DKhorkov/hmtm-sso
 go 1.23.1
 
 require (
-	github.com/DKhorkov/libs v1.0.4
+	github.com/DKhorkov/libs v1.1.0
 	github.com/mattn/go-sqlite3 v1.14.23
 	github.com/pressly/goose/v3 v3.22.1
 	github.com/stretchr/testify v1.10.0
@@ -14,6 +14,7 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect

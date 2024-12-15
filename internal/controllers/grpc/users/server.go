@@ -3,7 +3,11 @@ package users
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
+
+	"github.com/DKhorkov/libs/contextlib"
+	"github.com/DKhorkov/libs/requestid"
 
 	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
@@ -13,7 +17,6 @@ import (
 	"github.com/DKhorkov/libs/security"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -26,25 +29,15 @@ type ServerAPI struct {
 
 // GetUser handler returns User according provided data.
 func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) (*sso.GetUserResponse, error) {
-	api.logger.InfoContext(
-		ctx,
-		"Received new request",
-		"Request",
-		request,
-		"Context",
-		ctx,
-		"Traceback",
-		logging.GetLogTraceback(),
-	)
+	ctx = contextlib.SetValue(ctx, requestid.Key, request.GetRequestID())
+	logging.LogRequest(ctx, api.logger, request)
 
-	user, err := api.useCases.GetUserByID(request.GetID())
+	user, err := api.useCases.GetUserByID(ctx, request.GetID())
 	if err != nil {
-		api.logger.ErrorContext(
+		logging.LogErrorContext(
 			ctx,
-			"Error occurred while trying to get user",
-			"Traceback",
-			logging.GetLogTraceback(),
-			"Error",
+			api.logger,
+			fmt.Sprintf("Error occurred while trying to get User with ID=%d", request.GetID()),
 			err,
 		)
 
@@ -65,29 +58,13 @@ func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) 
 }
 
 // GetUsers handler returns all Users.
-func (api *ServerAPI) GetUsers(ctx context.Context, request *emptypb.Empty) (*sso.GetUsersResponse, error) {
-	api.logger.InfoContext(
-		ctx,
-		"Received new request",
-		"Request",
-		request,
-		"Context",
-		ctx,
-		"Traceback",
-		logging.GetLogTraceback(),
-	)
+func (api *ServerAPI) GetUsers(ctx context.Context, request *sso.GetUsersRequest) (*sso.GetUsersResponse, error) {
+	ctx = contextlib.SetValue(ctx, requestid.Key, request.GetRequestID())
+	logging.LogRequest(ctx, api.logger, request)
 
-	users, err := api.useCases.GetAllUsers()
+	users, err := api.useCases.GetAllUsers(ctx)
 	if err != nil {
-		api.logger.ErrorContext(
-			ctx,
-			"Error occurred while trying to get all users",
-			"Traceback",
-			logging.GetLogTraceback(),
-			"Error",
-			err,
-		)
-
+		logging.LogErrorContext(ctx, api.logger, "Error occurred while trying to get all Users", err)
 		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
@@ -106,25 +83,15 @@ func (api *ServerAPI) GetUsers(ctx context.Context, request *emptypb.Empty) (*ss
 
 // GetMe handler returns User according to provided Access Token.
 func (api *ServerAPI) GetMe(ctx context.Context, request *sso.GetMeRequest) (*sso.GetUserResponse, error) {
-	api.logger.InfoContext(
-		ctx,
-		"Received new request",
-		"Request",
-		request,
-		"Context",
-		ctx,
-		"Traceback",
-		logging.GetLogTraceback(),
-	)
+	ctx = contextlib.SetValue(ctx, requestid.Key, request.GetRequestID())
+	logging.LogRequest(ctx, api.logger, request)
 
-	user, err := api.useCases.GetMe(request.GetAccessToken())
+	user, err := api.useCases.GetMe(ctx, request.GetAccessToken())
 	if err != nil {
-		api.logger.ErrorContext(
+		logging.LogErrorContext(
 			ctx,
-			"Error occurred while trying to get user",
-			"Traceback",
-			logging.GetLogTraceback(),
-			"Error",
+			api.logger,
+			fmt.Sprintf("Error occurred while trying to get User with AccessToken=%s", request.GetAccessToken()),
 			err,
 		)
 
