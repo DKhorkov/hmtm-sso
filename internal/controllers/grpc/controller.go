@@ -21,43 +21,30 @@ type Controller struct {
 
 // Run gRPC server.
 func (controller *Controller) Run() {
-	controller.logger.Info(
+	logging.LogInfo(
+		controller.logger,
 		fmt.Sprintf("Starting gRPC Server at http://%s:%d", controller.host, controller.port),
-		"Traceback",
-		logging.GetLogTraceback(),
 	)
 
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", controller.host, controller.port))
 	if err != nil {
-		controller.logger.Error(
-			"Failed to start gRPC Server",
-			"Traceback",
-			logging.GetLogTraceback(),
-			"Error",
-			err,
-		)
+		logging.LogError(controller.logger, "Failed to start gRPC Server", err)
 		panic(err)
 	}
 
 	if err = controller.grpcServer.Serve(listener); err != nil {
-		controller.logger.Error(
-			"Error occurred while listening to gRPC server",
-			"Traceback",
-			logging.GetLogTraceback(),
-			"Error",
-			err,
-		)
+		logging.LogError(controller.logger, "Error occurred while listening to gRPC server", err)
 		panic(err)
 	}
 
-	controller.logger.Info("Stopped serving new connections.")
+	logging.LogInfo(controller.logger, "Stopped serving new connections.")
 }
 
 // Stop gRPC server gracefully (graceful shutdown).
 func (controller *Controller) Stop() {
 	// Stops accepting new requests and processes already received requests:
 	controller.grpcServer.GracefulStop()
-	controller.logger.Info("Graceful shutdown completed.")
+	logging.LogInfo(controller.logger, "Graceful shutdown completed.")
 }
 
 // New creates an instance of gRPC Controller.

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"log/slog"
 	"time"
 
@@ -16,7 +17,7 @@ type CommonAuthService struct {
 	logger          *slog.Logger
 }
 
-func (service *CommonAuthService) RegisterUser(userData entities.RegisterUserDTO) (uint64, error) {
+func (service *CommonAuthService) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
 	user, _ := service.usersRepository.GetUserByEmail(userData.Credentials.Email)
 	if user != nil {
 		return 0, &customerrors.UserAlreadyExistsError{}
@@ -26,6 +27,7 @@ func (service *CommonAuthService) RegisterUser(userData entities.RegisterUserDTO
 }
 
 func (service *CommonAuthService) CreateRefreshToken(
+	ctx context.Context,
 	userID uint64,
 	refreshToken string,
 	ttl time.Duration,
@@ -37,11 +39,14 @@ func (service *CommonAuthService) CreateRefreshToken(
 	)
 }
 
-func (service *CommonAuthService) GetRefreshTokenByUserID(userID uint64) (*entities.RefreshToken, error) {
+func (service *CommonAuthService) GetRefreshTokenByUserID(
+	ctx context.Context,
+	userID uint64,
+) (*entities.RefreshToken, error) {
 	return service.authRepository.GetRefreshTokenByUserID(userID)
 }
 
-func (service *CommonAuthService) ExpireRefreshToken(refreshToken string) error {
+func (service *CommonAuthService) ExpireRefreshToken(ctx context.Context, refreshToken string) error {
 	return service.authRepository.ExpireRefreshToken(refreshToken)
 }
 

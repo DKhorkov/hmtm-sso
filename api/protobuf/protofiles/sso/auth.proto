@@ -12,12 +12,14 @@ service AuthService {
 }
 
 message RefreshTokensRequest {
-  string refreshToken = 1;
+  string requestID = 1;
+  string refreshToken = 2;
 }
 
 message LoginRequest {
-  string email = 1;
-  string password = 2;
+  string requestID = 1;
+  string email = 2;
+  string password = 3;
 }
 
 message LoginResponse {
@@ -26,7 +28,9 @@ message LoginResponse {
 }
 
 message RegisterRequest {
-  LoginRequest credentials = 1;
+  string requestID = 1;
+  string email = 2;
+  string password = 3;
 }
 
 message RegisterResponse {
