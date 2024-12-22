@@ -1,19 +1,40 @@
 package repositories
 
 import (
+	"context"
+	"log/slog"
+
+	"github.com/DKhorkov/libs/logging"
+
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	"github.com/DKhorkov/libs/db"
 )
 
-type CommonUsersRepository struct {
-	dbConnector db.Connector
+func NewCommonUsersRepository(
+	dbConnector db.Connector,
+	logger *slog.Logger,
+) *CommonUsersRepository {
+	return &CommonUsersRepository{
+		dbConnector: dbConnector,
+		logger:      logger,
+	}
 }
 
-func (repo *CommonUsersRepository) GetUserByID(id uint64) (*entities.User, error) {
+type CommonUsersRepository struct {
+	dbConnector db.Connector
+	logger      *slog.Logger
+}
+
+func (repo *CommonUsersRepository) GetUserByID(ctx context.Context, id uint64) (*entities.User, error) {
+	connection, err := repo.dbConnector.Connection(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	user := &entities.User{}
 	columns := db.GetEntityColumns(user)
-	connection := repo.dbConnector.GetConnection()
-	err := connection.QueryRow(
+	err = connection.QueryRowContext(
+		ctx,
 		`
 			SELECT * 
 			FROM users AS u
@@ -29,11 +50,16 @@ func (repo *CommonUsersRepository) GetUserByID(id uint64) (*entities.User, error
 	return user, nil
 }
 
-func (repo *CommonUsersRepository) GetUserByEmail(email string) (*entities.User, error) {
+func (repo *CommonUsersRepository) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
+	connection, err := repo.dbConnector.Connection(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	user := &entities.User{}
 	columns := db.GetEntityColumns(user)
-	connection := repo.dbConnector.GetConnection()
-	err := connection.QueryRow(
+	err = connection.QueryRowContext(
+		ctx,
 		`
 			SELECT * 
 			FROM users AS u
@@ -49,9 +75,14 @@ func (repo *CommonUsersRepository) GetUserByEmail(email string) (*entities.User,
 	return user, nil
 }
 
-func (repo *CommonUsersRepository) GetAllUsers() ([]entities.User, error) {
-	connection := repo.dbConnector.GetConnection()
-	rows, err := connection.Query(
+func (repo *CommonUsersRepository) GetAllUsers(ctx context.Context) ([]entities.User, error) {
+	connection, err := repo.dbConnector.Connection(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := connection.QueryContext(
+		ctx,
 		`
 			SELECT * 
 			FROM users
@@ -61,6 +92,17 @@ func (repo *CommonUsersRepository) GetAllUsers() ([]entities.User, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	defer func() {
+		if err = rows.Close(); err != nil {
+			logging.LogErrorContext(
+				ctx,
+				repo.logger,
+				"error during closing SQL rows",
+				err,
+			)
+		}
+	}()
 
 	var users []entities.User
 	for rows.Next() {
@@ -74,13 +116,13 @@ func (repo *CommonUsersRepository) GetAllUsers() ([]entities.User, error) {
 		users = append(users, user)
 	}
 
-	if err = rows.Close(); err != nil {
+	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
 	return users, nil
 }
 
-func NewCommonUsersRepository(dbConnector db.Connector) *CommonUsersRepository {
-	return &CommonUsersRepository{dbConnector: dbConnector}
+func (repo *CommonUsersRepository) Close() error {
+	return nil
 }

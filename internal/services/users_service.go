@@ -12,17 +12,24 @@ import (
 	"github.com/DKhorkov/libs/logging"
 )
 
+func NewCommonUsersService(usersRepository interfaces.UsersRepository, logger *slog.Logger) *CommonUsersService {
+	return &CommonUsersService{
+		usersRepository: usersRepository,
+		logger:          logger,
+	}
+}
+
 type CommonUsersService struct {
 	usersRepository interfaces.UsersRepository
 	logger          *slog.Logger
 }
 
 func (service *CommonUsersService) GetAllUsers(ctx context.Context) ([]entities.User, error) {
-	return service.usersRepository.GetAllUsers()
+	return service.usersRepository.GetAllUsers(ctx)
 }
 
 func (service *CommonUsersService) GetUserByID(ctx context.Context, id uint64) (*entities.User, error) {
-	user, err := service.usersRepository.GetUserByID(id)
+	user, err := service.usersRepository.GetUserByID(ctx, id)
 	if err != nil {
 		logging.LogErrorContext(
 			ctx,
@@ -38,7 +45,7 @@ func (service *CommonUsersService) GetUserByID(ctx context.Context, id uint64) (
 }
 
 func (service *CommonUsersService) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
-	user, err := service.usersRepository.GetUserByEmail(email)
+	user, err := service.usersRepository.GetUserByEmail(ctx, email)
 	if err != nil {
 		logging.LogErrorContext(
 			ctx,
@@ -51,11 +58,4 @@ func (service *CommonUsersService) GetUserByEmail(ctx context.Context, email str
 	}
 
 	return user, nil
-}
-
-func NewCommonUsersService(usersRepository interfaces.UsersRepository, logger *slog.Logger) *CommonUsersService {
-	return &CommonUsersService{
-		usersRepository: usersRepository,
-		logger:          logger,
-	}
 }

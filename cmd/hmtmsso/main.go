@@ -28,17 +28,33 @@ func main() {
 		panic(err)
 	}
 
-	defer dbConnector.CloseConnection()
+	defer func() {
+		if err = dbConnector.Close(); err != nil {
+			logging.LogError(logger, "Failed to close db connections pool", err)
+		}
+	}()
 
-	usersRepository := repositories.NewCommonUsersRepository(dbConnector)
-	authRepository := repositories.NewCommonAuthRepository(dbConnector)
-	authService := services.NewCommonAuthService(
-		authRepository,
+	usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger)
+	defer func() {
+		if err = usersRepository.Close(); err != nil {
+			logging.LogError(logger, "Failed to close Users repository", err)
+		}
+	}()
+
+	usersService := services.NewCommonUsersService(
 		usersRepository,
 		logger,
 	)
 
-	usersService := services.NewCommonUsersService(
+	authRepository := repositories.NewCommonAuthRepository(dbConnector)
+	defer func() {
+		if err = authRepository.Close(); err != nil {
+			logging.LogError(logger, "Failed to close Auth repository", err)
+		}
+	}()
+
+	authService := services.NewCommonAuthService(
+		authRepository,
 		usersRepository,
 		logger,
 	)
@@ -46,8 +62,7 @@ func main() {
 	useCases := usecases.NewCommonUseCases(
 		authService,
 		usersService,
-		settings.Security.HashCost,
-		settings.Security.JWT,
+		settings.Security,
 	)
 
 	controller := grpccontroller.New(

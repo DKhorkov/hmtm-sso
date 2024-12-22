@@ -1,20 +1,28 @@
 package interfaces
 
 import (
+	"context"
 	"time"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 )
 
 type UsersRepository interface {
-	GetUserByID(id uint64) (*entities.User, error)
-	GetAllUsers() ([]entities.User, error)
-	GetUserByEmail(email string) (*entities.User, error)
+	GetUserByID(ctx context.Context, id uint64) (*entities.User, error)
+	GetAllUsers(ctx context.Context) ([]entities.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*entities.User, error)
+	Close() error
 }
 
 type AuthRepository interface {
-	RegisterUser(userData entities.RegisterUserDTO) (userID uint64, err error)
-	CreateRefreshToken(userID uint64, refreshToken string, ttl time.Duration) (refreshTokenID uint64, err error)
-	GetRefreshTokenByUserID(userID uint64) (*entities.RefreshToken, error)
-	ExpireRefreshToken(refreshToken string) error
+	RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (userID uint64, err error)
+	CreateRefreshToken(
+		ctx context.Context,
+		userID uint64,
+		refreshToken string,
+		ttl time.Duration,
+	) (refreshTokenID uint64, err error)
+	GetRefreshTokenByUserID(ctx context.Context, userID uint64) (*entities.RefreshToken, error)
+	ExpireRefreshToken(ctx context.Context, refreshToken string) error
+	Close() error
 }

@@ -1,6 +1,7 @@
 package repositories_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
@@ -22,6 +23,8 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 	}
 
 	t.Run("successful registration", func(t *testing.T) {
+		ctx := context.Background()
+
 		dbConnector := StartUp(t)
 		defer TearDown(t, dbConnector)
 
@@ -29,12 +32,16 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 
 		// Error and zero userID due to returning nil ID after register.
 		// SQLite inner realization without AUTO_INCREMENT for SERIAL PRIMARY KEY
-		userID, err := authRepository.RegisterUser(testUserDTO)
+		userID, err := authRepository.RegisterUser(ctx, testUserDTO)
 		require.Error(t, err)
 		assert.Equal(t, uint64(0), userID)
 
+		connection, err := dbConnector.Connection(ctx)
+		require.NoError(t, err)
+
 		var usersCount int
-		err = dbConnector.GetConnection().QueryRow(
+		err = connection.QueryRowContext(
+			ctx,
 			`
 				SELECT COUNT(*)
 				FROM users
@@ -45,10 +52,16 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 	})
 
 	t.Run("registration failure due to existence of user with same email", func(t *testing.T) {
+		ctx := context.Background()
+
 		dbConnector := StartUp(t)
 		defer TearDown(t, dbConnector)
 
-		_, err := dbConnector.GetConnection().Exec(
+		connection, err := dbConnector.Connection(ctx)
+		require.NoError(t, err)
+
+		_, err = connection.ExecContext(
+			ctx,
 			`
 				INSERT INTO users (id, email, password) 
 				VALUES ($1, $2, $3)
@@ -63,7 +76,7 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 		}
 
 		authRepository := repositories.NewCommonAuthRepository(dbConnector)
-		userID, err := authRepository.RegisterUser(testUserDTO)
+		userID, err := authRepository.RegisterUser(ctx, testUserDTO)
 		require.Error(t, err)
 		assert.Equal(t, uint64(0), userID)
 	})

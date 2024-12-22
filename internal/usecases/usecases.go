@@ -9,15 +9,26 @@ import (
 	"github.com/DKhorkov/libs/security"
 )
 
+func NewCommonUseCases(
+	authService interfaces.AuthService,
+	usersService interfaces.UsersService,
+	securityConfig security.Config,
+) *CommonUseCases {
+	return &CommonUseCases{
+		authService:    authService,
+		usersService:   usersService,
+		securityConfig: securityConfig,
+	}
+}
+
 type CommonUseCases struct {
-	authService  interfaces.AuthService
-	usersService interfaces.UsersService
-	hashCost     int
-	jwtConfig    security.JWTConfig
+	authService    interfaces.AuthService
+	usersService   interfaces.UsersService
+	securityConfig security.Config
 }
 
 func (useCases *CommonUseCases) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
-	hashedPassword, err := security.Hash(userData.Credentials.Password, useCases.hashCost)
+	hashedPassword, err := security.Hash(userData.Credentials.Password, useCases.securityConfig.HashCost)
 	if err != nil {
 		return 0, err
 	}
@@ -49,9 +60,9 @@ func (useCases *CommonUseCases) LoginUser(
 	// Create tokens:
 	accessToken, err := security.GenerateJWT(
 		user.ID,
-		useCases.jwtConfig.SecretKey,
-		useCases.jwtConfig.AccessTokenTTL,
-		useCases.jwtConfig.Algorithm,
+		useCases.securityConfig.JWT.SecretKey,
+		useCases.securityConfig.JWT.AccessTokenTTL,
+		useCases.securityConfig.JWT.Algorithm,
 	)
 
 	if err != nil {
@@ -60,9 +71,9 @@ func (useCases *CommonUseCases) LoginUser(
 
 	refreshToken, err := security.GenerateJWT(
 		accessToken,
-		useCases.jwtConfig.SecretKey,
-		useCases.jwtConfig.RefreshTokenTTL,
-		useCases.jwtConfig.Algorithm,
+		useCases.securityConfig.JWT.SecretKey,
+		useCases.securityConfig.JWT.RefreshTokenTTL,
+		useCases.securityConfig.JWT.Algorithm,
 	)
 
 	if err != nil {
@@ -74,7 +85,7 @@ func (useCases *CommonUseCases) LoginUser(
 		ctx,
 		user.ID,
 		refreshToken,
-		useCases.jwtConfig.RefreshTokenTTL,
+		useCases.securityConfig.JWT.RefreshTokenTTL,
 	); err != nil {
 		return nil, err
 	}
@@ -97,7 +108,7 @@ func (useCases *CommonUseCases) GetAllUsers(ctx context.Context) ([]entities.Use
 }
 
 func (useCases *CommonUseCases) GetMe(ctx context.Context, accessToken string) (*entities.User, error) {
-	accessTokenPayload, err := security.ParseJWT(accessToken, useCases.jwtConfig.SecretKey)
+	accessTokenPayload, err := security.ParseJWT(accessToken, useCases.securityConfig.JWT.SecretKey)
 	if err != nil {
 		return nil, &security.InvalidJWTError{}
 	}
@@ -115,7 +126,7 @@ func (useCases *CommonUseCases) RefreshTokens(ctx context.Context, refreshToken 
 
 	// Retrieving refresh token payload to get access token from refresh token:
 	oldRefreshToken := string(oldRefreshTokenBytes)
-	refreshTokenPayload, err := security.ParseJWT(oldRefreshToken, useCases.jwtConfig.SecretKey)
+	refreshTokenPayload, err := security.ParseJWT(oldRefreshToken, useCases.securityConfig.JWT.SecretKey)
 	if err != nil {
 		return nil, &security.InvalidJWTError{}
 	}
@@ -126,7 +137,7 @@ func (useCases *CommonUseCases) RefreshTokens(ctx context.Context, refreshToken 
 	}
 
 	// Retrieving access token payload to get user ID:
-	accessTokenPayload, err := security.ParseJWT(oldAccessToken, useCases.jwtConfig.SecretKey)
+	accessTokenPayload, err := security.ParseJWT(oldAccessToken, useCases.securityConfig.JWT.SecretKey)
 	if err != nil {
 		return nil, &security.InvalidJWTError{}
 	}
@@ -151,9 +162,9 @@ func (useCases *CommonUseCases) RefreshTokens(ctx context.Context, refreshToken 
 	// Create tokens:
 	newAccessToken, err := security.GenerateJWT(
 		userID,
-		useCases.jwtConfig.SecretKey,
-		useCases.jwtConfig.AccessTokenTTL,
-		useCases.jwtConfig.Algorithm,
+		useCases.securityConfig.JWT.SecretKey,
+		useCases.securityConfig.JWT.AccessTokenTTL,
+		useCases.securityConfig.JWT.Algorithm,
 	)
 
 	if err != nil {
@@ -162,9 +173,9 @@ func (useCases *CommonUseCases) RefreshTokens(ctx context.Context, refreshToken 
 
 	newRefreshToken, err := security.GenerateJWT(
 		newAccessToken,
-		useCases.jwtConfig.SecretKey,
-		useCases.jwtConfig.RefreshTokenTTL,
-		useCases.jwtConfig.Algorithm,
+		useCases.securityConfig.JWT.SecretKey,
+		useCases.securityConfig.JWT.RefreshTokenTTL,
+		useCases.securityConfig.JWT.Algorithm,
 	)
 
 	if err != nil {
@@ -176,7 +187,7 @@ func (useCases *CommonUseCases) RefreshTokens(ctx context.Context, refreshToken 
 		ctx,
 		userID,
 		newRefreshToken,
-		useCases.jwtConfig.RefreshTokenTTL,
+		useCases.securityConfig.JWT.RefreshTokenTTL,
 	); err != nil {
 		return nil, err
 	}
@@ -188,18 +199,4 @@ func (useCases *CommonUseCases) RefreshTokens(ctx context.Context, refreshToken 
 			RefreshToken: encodedRefreshToken,
 		},
 		nil
-}
-
-func NewCommonUseCases(
-	authService interfaces.AuthService,
-	usersService interfaces.UsersService,
-	hashCost int,
-	jwtConfig security.JWTConfig,
-) *CommonUseCases {
-	return &CommonUseCases{
-		authService:  authService,
-		usersService: usersService,
-		hashCost:     hashCost,
-		jwtConfig:    jwtConfig,
-	}
 }

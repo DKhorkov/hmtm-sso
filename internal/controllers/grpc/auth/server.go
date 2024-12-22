@@ -21,6 +21,11 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
+// RegisterServer handler (serverAPI) for AuthServer to gRPC server:.
+func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger *slog.Logger) {
+	sso.RegisterAuthServiceServer(gRPCServer, &ServerAPI{useCases: useCases, logger: logger})
+}
+
 type ServerAPI struct {
 	// Helps to test single endpoints, if others is not implemented yet
 	sso.UnimplementedAuthServiceServer
@@ -122,9 +127,4 @@ func (api *ServerAPI) RefreshTokens(
 		AccessToken:  tokensDTO.AccessToken,
 		RefreshToken: tokensDTO.RefreshToken,
 	}, nil
-}
-
-// RegisterServer handler (serverAPI) for AuthServer to gRPC server:.
-func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger *slog.Logger) {
-	sso.RegisterAuthServiceServer(gRPCServer, &ServerAPI{useCases: useCases, logger: logger})
 }

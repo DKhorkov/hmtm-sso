@@ -12,6 +12,22 @@ import (
 	"google.golang.org/grpc"
 )
 
+// New creates an instance of gRPC Controller.
+func New(host string, port int, useCases interfaces.UseCases, logger *slog.Logger) *Controller {
+	grpcServer := grpc.NewServer()
+
+	// Connects our gRPC services to grpcServer:
+	auth.RegisterServer(grpcServer, useCases, logger)
+	users.RegisterServer(grpcServer, useCases, logger)
+
+	return &Controller{
+		grpcServer: grpcServer,
+		port:       port,
+		host:       host,
+		logger:     logger,
+	}
+}
+
 type Controller struct {
 	grpcServer *grpc.Server
 	host       string
@@ -45,20 +61,4 @@ func (controller *Controller) Stop() {
 	// Stops accepting new requests and processes already received requests:
 	controller.grpcServer.GracefulStop()
 	logging.LogInfo(controller.logger, "Graceful shutdown completed.")
-}
-
-// New creates an instance of gRPC Controller.
-func New(host string, port int, useCases interfaces.UseCases, logger *slog.Logger) *Controller {
-	grpcServer := grpc.NewServer()
-
-	// Connects our gRPC services to grpcServer:
-	auth.RegisterServer(grpcServer, useCases, logger)
-	users.RegisterServer(grpcServer, useCases, logger)
-
-	return &Controller{
-		grpcServer: grpcServer,
-		port:       port,
-		host:       host,
-		logger:     logger,
-	}
 }

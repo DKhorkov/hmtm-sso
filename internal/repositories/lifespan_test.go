@@ -10,10 +10,12 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
-var (
-	driver        = "sqlite3"
-	dsn           = "file::memory:?cache=shared"
-	migrationsDir = "/migrations"
+const (
+	driver = "sqlite3"
+	// dsn    = "file::memory:?cache=shared".
+	dsn              = "../../test.db"
+	migrationsDir    = "/migrations"
+	gooseZeroVersion = 0
 )
 
 func StartUp(t *testing.T) *db.CommonDBConnector {
@@ -32,7 +34,7 @@ func StartUp(t *testing.T) *db.CommonDBConnector {
 	}
 
 	err = goose.Up(
-		dbConnector.GetConnection(),
+		dbConnector.Pool(),
 		path.Dir(
 			path.Dir(cwd),
 		)+migrationsDir,
@@ -46,18 +48,23 @@ func StartUp(t *testing.T) *db.CommonDBConnector {
 }
 
 func TearDown(t *testing.T, dbConnector db.Connector) {
-	defer dbConnector.CloseConnection()
+	defer func() {
+		if err := dbConnector.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("failed to get cwd: %v", err)
 	}
 
-	err = goose.Down(
-		dbConnector.GetConnection(),
+	err = goose.DownTo(
+		dbConnector.Pool(),
 		path.Dir(
 			path.Dir(cwd),
 		)+migrationsDir,
+		gooseZeroVersion,
 	)
 
 	if err != nil {
