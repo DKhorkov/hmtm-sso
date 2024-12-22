@@ -1,20 +1,30 @@
 package repositories
 
 import (
+	"context"
 	"time"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	"github.com/DKhorkov/libs/db"
 )
 
+func NewCommonAuthRepository(dbConnector db.Connector) *CommonAuthRepository {
+	return &CommonAuthRepository{dbConnector: dbConnector}
+}
+
 type CommonAuthRepository struct {
 	dbConnector db.Connector
 }
 
-func (repo *CommonAuthRepository) RegisterUser(userData entities.RegisterUserDTO) (uint64, error) {
+func (repo *CommonAuthRepository) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
+	connection, err := repo.dbConnector.Connection(ctx)
+	if err != nil {
+		return 0, err
+	}
+
 	var userID uint64
-	connection := repo.dbConnector.GetConnection()
-	err := connection.QueryRow(
+	err = connection.QueryRowContext(
+		ctx,
 		`
 			INSERT INTO users (email, password) 
 			VALUES ($1, $2)
@@ -32,13 +42,19 @@ func (repo *CommonAuthRepository) RegisterUser(userData entities.RegisterUserDTO
 }
 
 func (repo *CommonAuthRepository) CreateRefreshToken(
+	ctx context.Context,
 	userID uint64,
 	refreshToken string,
 	ttl time.Duration,
 ) (uint64, error) {
+	connection, err := repo.dbConnector.Connection(ctx)
+	if err != nil {
+		return 0, err
+	}
+
 	var refreshTokenID uint64
-	connection := repo.dbConnector.GetConnection()
-	err := connection.QueryRow(
+	err = connection.QueryRowContext(
+		ctx,
 		`
 			INSERT INTO refresh_tokens (user_id, value, ttl) 
 			VALUES ($1, $2, $3)
@@ -56,11 +72,19 @@ func (repo *CommonAuthRepository) CreateRefreshToken(
 	return refreshTokenID, nil
 }
 
-func (repo *CommonAuthRepository) GetRefreshTokenByUserID(userID uint64) (*entities.RefreshToken, error) {
+func (repo *CommonAuthRepository) GetRefreshTokenByUserID(
+	ctx context.Context,
+	userID uint64,
+) (*entities.RefreshToken, error) {
+	connection, err := repo.dbConnector.Connection(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	refreshToken := &entities.RefreshToken{}
 	columns := db.GetEntityColumns(refreshToken)
-	connection := repo.dbConnector.GetConnection()
-	err := connection.QueryRow(
+	err = connection.QueryRowContext(
+		ctx,
 		`
 			SELECT * 
 			FROM refresh_tokens AS rt
@@ -77,9 +101,14 @@ func (repo *CommonAuthRepository) GetRefreshTokenByUserID(userID uint64) (*entit
 	return refreshToken, nil
 }
 
-func (repo *CommonAuthRepository) ExpireRefreshToken(refreshToken string) error {
-	connection := repo.dbConnector.GetConnection()
-	err := connection.QueryRow(
+func (repo *CommonAuthRepository) ExpireRefreshToken(ctx context.Context, refreshToken string) error {
+	connection, err := repo.dbConnector.Connection(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = connection.QueryRowContext(
+		ctx,
 		`
 			UPDATE refresh_tokens
 			SET ttl = $1
@@ -92,6 +121,6 @@ func (repo *CommonAuthRepository) ExpireRefreshToken(refreshToken string) error 
 	return err
 }
 
-func NewCommonAuthRepository(dbConnector db.Connector) *CommonAuthRepository {
-	return &CommonAuthRepository{dbConnector: dbConnector}
+func (repo *CommonAuthRepository) Close() error {
+	return nil
 }

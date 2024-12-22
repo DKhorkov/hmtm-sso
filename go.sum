@@ -1,5 +1,5 @@
-github.com/DKhorkov/libs v1.1.0 h1:ajK/hCsXgJeejRbHN0Vvn+SL93SNCwT7mmnEpPGptmw=
-github.com/DKhorkov/libs v1.1.0/go.mod h1:/lJKBOfHquNXSR5ziNNY1OPd5O87EAgu7+DDjLZCzPI=
+github.com/DKhorkov/libs v1.1.5 h1:Y+w+7K0TIIgcoV9db4huuKEkUVWEJdsuH3p9jR5c0hI=
+github.com/DKhorkov/libs v1.1.5/go.mod h1:/lJKBOfHquNXSR5ziNNY1OPd5O87EAgu7+DDjLZCzPI=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

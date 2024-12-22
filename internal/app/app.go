@@ -8,6 +8,12 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 )
 
+func New(controller interfaces.Controller) *App {
+	return &App{
+		controller: controller,
+	}
+}
+
 type App struct {
 	controller interfaces.Controller
 }
@@ -23,10 +29,4 @@ func (application *App) Run() {
 	signal.Notify(stopChannel, syscall.SIGINT, syscall.SIGTERM)
 	<-stopChannel
 	application.controller.Stop()
-}
-
-func New(controller interfaces.Controller) *App {
-	return &App{
-		controller: controller,
-	}
 }

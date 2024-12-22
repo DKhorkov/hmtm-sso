@@ -1,6 +1,8 @@
 package repositories_test
 
 import (
+	"context"
+	"log/slog"
 	"testing"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
@@ -19,8 +21,13 @@ func TestRepositoriesGetUserByID(t *testing.T) {
 	)
 
 	t.Run("get existing user", func(t *testing.T) {
+		ctx := context.Background()
+
 		dbConnector := StartUp(t)
 		defer TearDown(t, dbConnector)
+
+		connection, err := dbConnector.Connection(ctx)
+		require.NoError(t, err)
 
 		testUser := &entities.User{
 			ID:       testUserID,
@@ -28,7 +35,8 @@ func TestRepositoriesGetUserByID(t *testing.T) {
 			Password: "password",
 		}
 
-		_, err := dbConnector.GetConnection().Exec(
+		_, err = connection.ExecContext(
+			ctx,
 			`
 				INSERT INTO users (id, email, password) 
 				VALUES ($1, $2, $3)
@@ -42,8 +50,8 @@ func TestRepositoriesGetUserByID(t *testing.T) {
 			t.Fatalf("failed to insert user: %v", err)
 		}
 
-		usersRepository := repositories.NewCommonUsersRepository(dbConnector)
-		user, err := usersRepository.GetUserByID(testUser.ID)
+		usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
+		user, err := usersRepository.GetUserByID(ctx, testUser.ID)
 		require.NoError(t, err)
 		assert.Equal(t, testUser.ID, user.ID)
 		assert.Equal(t, testUser.Email, user.Email)
@@ -53,8 +61,8 @@ func TestRepositoriesGetUserByID(t *testing.T) {
 		dbConnector := StartUp(t)
 		defer TearDown(t, dbConnector)
 
-		usersRepository := repositories.NewCommonUsersRepository(dbConnector)
-		user, err := usersRepository.GetUserByID(testUserID)
+		usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
+		user, err := usersRepository.GetUserByID(context.Background(), testUserID)
 		require.Error(t, err)
 		assert.Nil(t, user)
 	})
@@ -67,8 +75,13 @@ func TestRepositoriesGetUserByEmail(t *testing.T) {
 	)
 
 	t.Run("get existing user", func(t *testing.T) {
+		ctx := context.Background()
+
 		dbConnector := StartUp(t)
 		defer TearDown(t, dbConnector)
+
+		connection, err := dbConnector.Connection(ctx)
+		require.NoError(t, err)
 
 		testUser := &entities.User{
 			ID:       testUserID,
@@ -76,7 +89,8 @@ func TestRepositoriesGetUserByEmail(t *testing.T) {
 			Password: "password",
 		}
 
-		_, err := dbConnector.GetConnection().Exec(
+		_, err = connection.ExecContext(
+			ctx,
 			`
 				INSERT INTO users (id, email, password) 
 				VALUES ($1, $2, $3)
@@ -90,8 +104,8 @@ func TestRepositoriesGetUserByEmail(t *testing.T) {
 			t.Fatalf("failed to insert user: %v", err)
 		}
 
-		usersRepository := repositories.NewCommonUsersRepository(dbConnector)
-		user, err := usersRepository.GetUserByEmail(testUser.Email)
+		usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
+		user, err := usersRepository.GetUserByEmail(ctx, testUser.Email)
 		require.NoError(t, err)
 		assert.Equal(t, testUser.ID, user.ID)
 		assert.Equal(t, testUser.Email, user.Email)
@@ -101,8 +115,8 @@ func TestRepositoriesGetUserByEmail(t *testing.T) {
 		dbConnector := StartUp(t)
 		defer TearDown(t, dbConnector)
 
-		usersRepository := repositories.NewCommonUsersRepository(dbConnector)
-		user, err := usersRepository.GetUserByEmail(testUserEmail)
+		usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
+		user, err := usersRepository.GetUserByEmail(context.Background(), testUserEmail)
 		require.Error(t, err)
 		assert.Nil(t, user)
 	})
@@ -110,8 +124,13 @@ func TestRepositoriesGetUserByEmail(t *testing.T) {
 
 func TestRepositoriesGetAllUsers(t *testing.T) {
 	t.Run("get users with existing users", func(t *testing.T) {
+		ctx := context.Background()
+
 		dbConnector := StartUp(t)
 		defer TearDown(t, dbConnector)
+
+		connection, err := dbConnector.Connection(ctx)
+		require.NoError(t, err)
 
 		testUser := &entities.User{
 			ID:       1,
@@ -119,7 +138,8 @@ func TestRepositoriesGetAllUsers(t *testing.T) {
 			Password: "password",
 		}
 
-		_, err := dbConnector.GetConnection().Exec(
+		_, err = connection.ExecContext(
+			ctx,
 			`
 				INSERT INTO users (id, email, password) 
 				VALUES ($1, $2, $3)
@@ -133,8 +153,8 @@ func TestRepositoriesGetAllUsers(t *testing.T) {
 			t.Fatalf("failed to insert user: %v", err)
 		}
 
-		usersRepository := repositories.NewCommonUsersRepository(dbConnector)
-		users, err := usersRepository.GetAllUsers()
+		usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
+		users, err := usersRepository.GetAllUsers(ctx)
 		require.NoError(t, err)
 		assert.IsType(t, []entities.User{}, users)
 		assert.NotEmpty(t, users)
@@ -145,8 +165,8 @@ func TestRepositoriesGetAllUsers(t *testing.T) {
 		dbConnector := StartUp(t)
 		defer TearDown(t, dbConnector)
 
-		usersRepository := repositories.NewCommonUsersRepository(dbConnector)
-		users, err := usersRepository.GetAllUsers()
+		usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
+		users, err := usersRepository.GetAllUsers(context.Background())
 		require.NoError(t, err)
 		assert.Empty(t, users)
 	})
