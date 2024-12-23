@@ -10,7 +10,7 @@ task -d scripts docker_prod -v
 
 ### Run via source files:
 
-To run application via source files, use next commands:
+To run application via source files, use next command:
 
 ```shell
 go run ./cmd/hmtmsso/main.go
@@ -32,17 +32,27 @@ task -d scripts grpc_generate -v
 
 ## Linters
 
+To run linters, use next command:
+
 ```shell
  task -d scripts linters -v
 ```
 
 ## Tests
 
-To run test use next commands. Coverage info will be
+To run test, use next command. Coverage info will be
 recorded to ```tests/coverage``` folder:
 
 ```shell
 task -d scripts tests -v
+```
+
+## Benchmarks
+
+To run benchmarks, use next command:
+
+```shell
+task -d scripts bench -v
 ```
 
 ## Migrations

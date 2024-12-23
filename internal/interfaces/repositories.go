@@ -11,7 +11,6 @@ type UsersRepository interface {
 	GetUserByID(ctx context.Context, id uint64) (*entities.User, error)
 	GetAllUsers(ctx context.Context) ([]entities.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*entities.User, error)
-	Close() error
 }
 
 type AuthRepository interface {
@@ -24,5 +23,4 @@ type AuthRepository interface {
 	) (refreshTokenID uint64, err error)
 	GetRefreshTokenByUserID(ctx context.Context, userID uint64) (*entities.RefreshToken, error)
 	ExpireRefreshToken(ctx context.Context, refreshToken string) error
-	Close() error
 }
