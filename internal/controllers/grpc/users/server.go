@@ -6,9 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/DKhorkov/libs/contextlib"
-	"github.com/DKhorkov/libs/requestid"
-
 	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
@@ -34,9 +31,6 @@ type ServerAPI struct {
 
 // GetUser handler returns User according provided data.
 func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) (*sso.GetUserResponse, error) {
-	ctx = contextlib.SetValue(ctx, requestid.Key, request.GetRequestID())
-	logging.LogRequest(ctx, api.logger, request)
-
 	user, err := api.useCases.GetUserByID(ctx, request.GetID())
 	if err != nil {
 		logging.LogErrorContext(
@@ -64,9 +58,6 @@ func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) 
 
 // GetUsers handler returns all Users.
 func (api *ServerAPI) GetUsers(ctx context.Context, request *sso.GetUsersRequest) (*sso.GetUsersResponse, error) {
-	ctx = contextlib.SetValue(ctx, requestid.Key, request.GetRequestID())
-	logging.LogRequest(ctx, api.logger, request)
-
 	users, err := api.useCases.GetAllUsers(ctx)
 	if err != nil {
 		logging.LogErrorContext(ctx, api.logger, "Error occurred while trying to get all Users", err)
@@ -88,9 +79,6 @@ func (api *ServerAPI) GetUsers(ctx context.Context, request *sso.GetUsersRequest
 
 // GetMe handler returns User according to provided Access Token.
 func (api *ServerAPI) GetMe(ctx context.Context, request *sso.GetMeRequest) (*sso.GetUserResponse, error) {
-	ctx = contextlib.SetValue(ctx, requestid.Key, request.GetRequestID())
-	logging.LogRequest(ctx, api.logger, request)
-
 	user, err := api.useCases.GetMe(ctx, request.GetAccessToken())
 	if err != nil {
 		logging.LogErrorContext(

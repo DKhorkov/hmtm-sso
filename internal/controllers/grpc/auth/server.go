@@ -6,9 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/DKhorkov/libs/contextlib"
-	"github.com/DKhorkov/libs/requestid"
-
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 
 	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
@@ -35,9 +32,6 @@ type ServerAPI struct {
 
 // Register handler registers new User with provided data.
 func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest) (*sso.RegisterResponse, error) {
-	ctx = contextlib.SetValue(ctx, requestid.Key, request.GetRequestID())
-	logging.LogRequest(ctx, api.logger, request)
-
 	userData := entities.RegisterUserDTO{
 		Credentials: entities.LoginUserDTO{
 			Email:    request.GetEmail(),
@@ -62,9 +56,6 @@ func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest
 
 // Login handler authenticates user if provided credentials are valid and logs User in system.
 func (api *ServerAPI) Login(ctx context.Context, request *sso.LoginRequest) (*sso.LoginResponse, error) {
-	ctx = contextlib.SetValue(ctx, requestid.Key, request.GetRequestID())
-	logging.LogRequest(ctx, api.logger, request)
-
 	userData := entities.LoginUserDTO{
 		Email:    request.GetEmail(),
 		Password: request.GetPassword(),
@@ -100,9 +91,6 @@ func (api *ServerAPI) RefreshTokens(
 	ctx context.Context,
 	request *sso.RefreshTokensRequest,
 ) (*sso.LoginResponse, error) {
-	ctx = contextlib.SetValue(ctx, requestid.Key, request.GetRequestID())
-	logging.LogRequest(ctx, api.logger, request)
-
 	tokensDTO, err := api.useCases.RefreshTokens(ctx, request.GetRefreshToken())
 	if err != nil {
 		logging.LogErrorContext(
