@@ -1,10 +1,10 @@
 package repositories_test
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"path"
-	"testing"
 
 	"github.com/DKhorkov/libs/db"
 	"github.com/pressly/goose/v3"
@@ -18,10 +18,10 @@ const (
 	gooseZeroVersion = 0
 )
 
-func StartUp(t *testing.T) *db.CommonDBConnector {
+func StartUp() *db.CommonDBConnector {
 	dbConnector, err := db.New(dsn, driver, &slog.Logger{})
 	if err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
 	if err = goose.SetDialect(driver); err != nil {
@@ -30,7 +30,7 @@ func StartUp(t *testing.T) *db.CommonDBConnector {
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("failed to get cwd: %v", err)
+		panic(fmt.Sprintf("failed to get cwd: %v", err))
 	}
 
 	err = goose.Up(
@@ -47,16 +47,16 @@ func StartUp(t *testing.T) *db.CommonDBConnector {
 	return dbConnector
 }
 
-func TearDown(t *testing.T, dbConnector db.Connector) {
+func TearDown(dbConnector db.Connector) {
 	defer func() {
 		if err := dbConnector.Close(); err != nil {
-			t.Fatal(err)
+			panic(err)
 		}
 	}()
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("failed to get cwd: %v", err)
+		panic(fmt.Sprintf("failed to get cwd: %v", err))
 	}
 
 	err = goose.DownTo(

@@ -14,17 +14,17 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func TestRepositoriesGetUserByID(t *testing.T) {
-	const (
-		testUserID    = 1
-		testUserEmail = "user@example.com"
-	)
+const (
+	testUserID    = 1
+	testUserEmail = "user@example.com"
+)
 
+func TestRepositoriesGetUserByID(t *testing.T) {
 	t.Run("get existing user", func(t *testing.T) {
 		ctx := context.Background()
 
-		dbConnector := StartUp(t)
-		defer TearDown(t, dbConnector)
+		dbConnector := StartUp()
+		defer TearDown(dbConnector)
 
 		connection, err := dbConnector.Connection(ctx)
 		require.NoError(t, err)
@@ -51,6 +51,7 @@ func TestRepositoriesGetUserByID(t *testing.T) {
 		}
 
 		usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
+
 		user, err := usersRepository.GetUserByID(ctx, testUser.ID)
 		require.NoError(t, err)
 		assert.Equal(t, testUser.ID, user.ID)
@@ -58,10 +59,11 @@ func TestRepositoriesGetUserByID(t *testing.T) {
 	})
 
 	t.Run("get non existing user failure", func(t *testing.T) {
-		dbConnector := StartUp(t)
-		defer TearDown(t, dbConnector)
+		dbConnector := StartUp()
+		defer TearDown(dbConnector)
 
 		usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
+
 		user, err := usersRepository.GetUserByID(context.Background(), testUserID)
 		require.Error(t, err)
 		assert.Nil(t, user)
@@ -69,16 +71,11 @@ func TestRepositoriesGetUserByID(t *testing.T) {
 }
 
 func TestRepositoriesGetUserByEmail(t *testing.T) {
-	const (
-		testUserID    = 1
-		testUserEmail = "user@example.com"
-	)
-
 	t.Run("get existing user", func(t *testing.T) {
 		ctx := context.Background()
 
-		dbConnector := StartUp(t)
-		defer TearDown(t, dbConnector)
+		dbConnector := StartUp()
+		defer TearDown(dbConnector)
 
 		connection, err := dbConnector.Connection(ctx)
 		require.NoError(t, err)
@@ -105,6 +102,7 @@ func TestRepositoriesGetUserByEmail(t *testing.T) {
 		}
 
 		usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
+
 		user, err := usersRepository.GetUserByEmail(ctx, testUser.Email)
 		require.NoError(t, err)
 		assert.Equal(t, testUser.ID, user.ID)
@@ -112,10 +110,11 @@ func TestRepositoriesGetUserByEmail(t *testing.T) {
 	})
 
 	t.Run("get non existing user failure", func(t *testing.T) {
-		dbConnector := StartUp(t)
-		defer TearDown(t, dbConnector)
+		dbConnector := StartUp()
+		defer TearDown(dbConnector)
 
 		usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
+
 		user, err := usersRepository.GetUserByEmail(context.Background(), testUserEmail)
 		require.Error(t, err)
 		assert.Nil(t, user)
@@ -126,8 +125,8 @@ func TestRepositoriesGetAllUsers(t *testing.T) {
 	t.Run("get users with existing users", func(t *testing.T) {
 		ctx := context.Background()
 
-		dbConnector := StartUp(t)
-		defer TearDown(t, dbConnector)
+		dbConnector := StartUp()
+		defer TearDown(dbConnector)
 
 		connection, err := dbConnector.Connection(ctx)
 		require.NoError(t, err)
@@ -154,6 +153,7 @@ func TestRepositoriesGetAllUsers(t *testing.T) {
 		}
 
 		usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
+
 		users, err := usersRepository.GetAllUsers(ctx)
 		require.NoError(t, err)
 		assert.IsType(t, []entities.User{}, users)
@@ -162,12 +162,109 @@ func TestRepositoriesGetAllUsers(t *testing.T) {
 	})
 
 	t.Run("get users without existing users", func(t *testing.T) {
-		dbConnector := StartUp(t)
-		defer TearDown(t, dbConnector)
+		dbConnector := StartUp()
+		defer TearDown(dbConnector)
 
 		usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
+
 		users, err := usersRepository.GetAllUsers(context.Background())
 		require.NoError(t, err)
 		assert.Empty(t, users)
 	})
+}
+
+func BenchmarkRepositoriesGetUserByID(b *testing.B) {
+	dbConnector := StartUp()
+	defer TearDown(dbConnector)
+
+	ctx := context.Background()
+	connection, err := dbConnector.Connection(ctx)
+	require.NoError(b, err)
+	_, err = connection.ExecContext(
+		ctx,
+		`
+				INSERT INTO users (id, email, password) 
+				VALUES ($1, $2, $3)
+			`,
+		testUserID,
+		testUserEmail,
+		"testUserPassword",
+	)
+
+	if err != nil {
+		b.Fatalf("failed to insert user: %v", err)
+	}
+
+	usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
+
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		_, _ = usersRepository.GetUserByID(
+			ctx,
+			testUserID,
+		)
+	}
+}
+
+func BenchmarkRepositoriesGetUserByEmail(b *testing.B) {
+	dbConnector := StartUp()
+	defer TearDown(dbConnector)
+
+	ctx := context.Background()
+	connection, err := dbConnector.Connection(ctx)
+	require.NoError(b, err)
+	_, err = connection.ExecContext(
+		ctx,
+		`
+				INSERT INTO users (id, email, password) 
+				VALUES ($1, $2, $3)
+			`,
+		testUserID,
+		testUserEmail,
+		"testUserPassword",
+	)
+
+	if err != nil {
+		b.Fatalf("failed to insert user: %v", err)
+	}
+
+	usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
+
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		_, _ = usersRepository.GetUserByEmail(
+			ctx,
+			testUserEmail,
+		)
+	}
+}
+
+func BenchmarkRepositoriesGetAllUsers(b *testing.B) {
+	dbConnector := StartUp()
+	defer TearDown(dbConnector)
+
+	ctx := context.Background()
+	connection, err := dbConnector.Connection(ctx)
+	require.NoError(b, err)
+	_, err = connection.ExecContext(
+		ctx,
+		`
+				INSERT INTO users (id, email, password) 
+				VALUES ($1, $2, $3)
+			`,
+		testUserID,
+		testUserEmail,
+		"testUserPassword",
+	)
+
+	if err != nil {
+		b.Fatalf("failed to insert user: %v", err)
+	}
+
+	usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
+
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		_, _ = usersRepository.GetAllUsers(ctx)
+	}
 }

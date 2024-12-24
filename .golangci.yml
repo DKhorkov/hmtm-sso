@@ -374,3 +374,6 @@ issues:
     - path: "internal/services/users_service.go"
       linters:
         - revive
+    - path: "internal/repositories/auth_repository_test.go"
+      linters:
+        - gochecknoglobals

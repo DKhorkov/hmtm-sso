@@ -8,13 +8,20 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/controllers/grpc/auth"
 	"github.com/DKhorkov/hmtm-sso/internal/controllers/grpc/users"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
+	customgrpc "github.com/DKhorkov/libs/grpc"
 	"github.com/DKhorkov/libs/logging"
 	"google.golang.org/grpc"
 )
 
 // New creates an instance of gRPC Controller.
 func New(host string, port int, useCases interfaces.UseCases, logger *slog.Logger) *Controller {
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			customgrpc.ServerLoggingUnaryInterceptor(
+				logger,
+			),
+		),
+	)
 
 	// Connects our gRPC services to grpcServer:
 	auth.RegisterServer(grpcServer, useCases, logger)

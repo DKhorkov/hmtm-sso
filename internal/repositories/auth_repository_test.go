@@ -13,20 +13,21 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func TestRepositoriesRegisterUser(t *testing.T) {
-	const testUserEmail = "user@example.com"
-	testUserDTO := entities.RegisterUserDTO{
+var (
+	testUserDTO = entities.RegisterUserDTO{
 		Credentials: entities.LoginUserDTO{
 			Email:    testUserEmail,
 			Password: "password",
 		},
 	}
+)
 
+func TestRepositoriesRegisterUser(t *testing.T) {
 	t.Run("successful registration", func(t *testing.T) {
 		ctx := context.Background()
 
-		dbConnector := StartUp(t)
-		defer TearDown(t, dbConnector)
+		dbConnector := StartUp()
+		defer TearDown(dbConnector)
 
 		authRepository := repositories.NewCommonAuthRepository(dbConnector)
 
@@ -54,8 +55,8 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 	t.Run("registration failure due to existence of user with same email", func(t *testing.T) {
 		ctx := context.Background()
 
-		dbConnector := StartUp(t)
-		defer TearDown(t, dbConnector)
+		dbConnector := StartUp()
+		defer TearDown(dbConnector)
 
 		connection, err := dbConnector.Connection(ctx)
 		require.NoError(t, err)
@@ -76,8 +77,24 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 		}
 
 		authRepository := repositories.NewCommonAuthRepository(dbConnector)
+
 		userID, err := authRepository.RegisterUser(ctx, testUserDTO)
 		require.Error(t, err)
 		assert.Equal(t, uint64(0), userID)
 	})
+}
+
+func BenchmarkRepositoriesRegisterUser(b *testing.B) {
+	dbConnector := StartUp()
+	defer TearDown(dbConnector)
+
+	authRepository := repositories.NewCommonAuthRepository(dbConnector)
+
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		_, _ = authRepository.RegisterUser(
+			context.Background(),
+			testUserDTO,
+		)
+	}
 }
