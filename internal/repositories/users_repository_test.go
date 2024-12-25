@@ -21,11 +21,8 @@ const (
 
 func TestRepositoriesGetUserByID(t *testing.T) {
 	t.Run("get existing user", func(t *testing.T) {
+		dbConnector := StartUp(t)
 		ctx := context.Background()
-
-		dbConnector := StartUp()
-		defer TearDown(dbConnector)
-
 		connection, err := dbConnector.Connection(ctx)
 		require.NoError(t, err)
 
@@ -59,9 +56,7 @@ func TestRepositoriesGetUserByID(t *testing.T) {
 	})
 
 	t.Run("get non existing user failure", func(t *testing.T) {
-		dbConnector := StartUp()
-		defer TearDown(dbConnector)
-
+		dbConnector := StartUp(t)
 		usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
 
 		user, err := usersRepository.GetUserByID(context.Background(), testUserID)
@@ -72,11 +67,8 @@ func TestRepositoriesGetUserByID(t *testing.T) {
 
 func TestRepositoriesGetUserByEmail(t *testing.T) {
 	t.Run("get existing user", func(t *testing.T) {
+		dbConnector := StartUp(t)
 		ctx := context.Background()
-
-		dbConnector := StartUp()
-		defer TearDown(dbConnector)
-
 		connection, err := dbConnector.Connection(ctx)
 		require.NoError(t, err)
 
@@ -110,9 +102,7 @@ func TestRepositoriesGetUserByEmail(t *testing.T) {
 	})
 
 	t.Run("get non existing user failure", func(t *testing.T) {
-		dbConnector := StartUp()
-		defer TearDown(dbConnector)
-
+		dbConnector := StartUp(t)
 		usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
 
 		user, err := usersRepository.GetUserByEmail(context.Background(), testUserEmail)
@@ -123,11 +113,8 @@ func TestRepositoriesGetUserByEmail(t *testing.T) {
 
 func TestRepositoriesGetAllUsers(t *testing.T) {
 	t.Run("get users with existing users", func(t *testing.T) {
+		dbConnector := StartUp(t)
 		ctx := context.Background()
-
-		dbConnector := StartUp()
-		defer TearDown(dbConnector)
-
 		connection, err := dbConnector.Connection(ctx)
 		require.NoError(t, err)
 
@@ -162,9 +149,7 @@ func TestRepositoriesGetAllUsers(t *testing.T) {
 	})
 
 	t.Run("get users without existing users", func(t *testing.T) {
-		dbConnector := StartUp()
-		defer TearDown(dbConnector)
-
+		dbConnector := StartUp(t)
 		usersRepository := repositories.NewCommonUsersRepository(dbConnector, &slog.Logger{})
 
 		users, err := usersRepository.GetAllUsers(context.Background())
@@ -174,9 +159,7 @@ func TestRepositoriesGetAllUsers(t *testing.T) {
 }
 
 func BenchmarkRepositoriesGetUserByID(b *testing.B) {
-	dbConnector := StartUp()
-	defer TearDown(dbConnector)
-
+	dbConnector := StartUp(b)
 	ctx := context.Background()
 	connection, err := dbConnector.Connection(ctx)
 	require.NoError(b, err)
@@ -207,9 +190,7 @@ func BenchmarkRepositoriesGetUserByID(b *testing.B) {
 }
 
 func BenchmarkRepositoriesGetUserByEmail(b *testing.B) {
-	dbConnector := StartUp()
-	defer TearDown(dbConnector)
-
+	dbConnector := StartUp(b)
 	ctx := context.Background()
 	connection, err := dbConnector.Connection(ctx)
 	require.NoError(b, err)
@@ -240,9 +221,7 @@ func BenchmarkRepositoriesGetUserByEmail(b *testing.B) {
 }
 
 func BenchmarkRepositoriesGetAllUsers(b *testing.B) {
-	dbConnector := StartUp()
-	defer TearDown(dbConnector)
-
+	dbConnector := StartUp(b)
 	ctx := context.Background()
 	connection, err := dbConnector.Connection(ctx)
 	require.NoError(b, err)

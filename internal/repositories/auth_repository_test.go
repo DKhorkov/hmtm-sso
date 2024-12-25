@@ -24,15 +24,12 @@ var (
 
 func TestRepositoriesRegisterUser(t *testing.T) {
 	t.Run("successful registration", func(t *testing.T) {
-		ctx := context.Background()
-
-		dbConnector := StartUp()
-		defer TearDown(dbConnector)
-
+		dbConnector := StartUp(t)
 		authRepository := repositories.NewCommonAuthRepository(dbConnector)
 
 		// Error and zero userID due to returning nil ID after register.
 		// SQLite inner realization without AUTO_INCREMENT for SERIAL PRIMARY KEY
+		ctx := context.Background()
 		userID, err := authRepository.RegisterUser(ctx, testUserDTO)
 		require.Error(t, err)
 		assert.Equal(t, uint64(0), userID)
@@ -53,11 +50,8 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 	})
 
 	t.Run("registration failure due to existence of user with same email", func(t *testing.T) {
+		dbConnector := StartUp(t)
 		ctx := context.Background()
-
-		dbConnector := StartUp()
-		defer TearDown(dbConnector)
-
 		connection, err := dbConnector.Connection(ctx)
 		require.NoError(t, err)
 
@@ -85,9 +79,7 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 }
 
 func BenchmarkRepositoriesRegisterUser(b *testing.B) {
-	dbConnector := StartUp()
-	defer TearDown(dbConnector)
-
+	dbConnector := StartUp(b)
 	authRepository := repositories.NewCommonAuthRepository(dbConnector)
 
 	b.ResetTimer()
