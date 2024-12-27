@@ -8,33 +8,33 @@ option go_package = "github.com/DKhorkov/hmtm-sso/api/protobuf/sso;sso";
 
 
 service UsersService {
-  rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
-  rpc GetUsers(GetUsersRequest) returns (GetUsersResponse) {}
-  rpc GetMe(GetMeRequest) returns (GetUserResponse) {}
+  rpc GetUser(GetUserIn) returns (GetUserOut) {}
+  rpc GetUsers(GetUsersIn) returns (GetUsersOut) {}
+  rpc GetMe(GetMeIn) returns (GetUserOut) {}
 }
 
-message GetMeRequest {
+message GetMeIn {
   string requestID = 1;
   string accessToken = 2;
 }
 
-message GetUserRequest {
+message GetUserIn {
   string requestID = 1;
   uint64 ID = 2;
 }
 
-message GetUserResponse {
+message GetUserOut {
   uint64 ID = 1;
   string email = 2;
   google.protobuf.Timestamp createdAt = 3;
   google.protobuf.Timestamp updatedAt = 4;
 }
 
-message GetUsersRequest {
+message GetUsersIn {
   string requestID = 1;
 }
 
-message GetUsersResponse {
-  repeated GetUserResponse users = 1;
+message GetUsersOut {
+  repeated GetUserOut users = 1;
 }
 

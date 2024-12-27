@@ -362,8 +362,6 @@ issues:
     - path: "internal/usecases/usecases.go"
       linters:
         - govet
-    - path: "internal/usecases/usecases.go"
-      linters:
         - errcheck
     - path: "mocks/repositories/sso_repository.go"
       linters:
