@@ -31,11 +31,11 @@ type ServerAPI struct {
 }
 
 // Register handler registers new User with provided data.
-func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest) (*sso.RegisterResponse, error) {
+func (api *ServerAPI) Register(ctx context.Context, in *sso.RegisterIn) (*sso.RegisterOut, error) {
 	userData := entities.RegisterUserDTO{
 		Credentials: entities.LoginUserDTO{
-			Email:    request.GetEmail(),
-			Password: request.GetPassword(),
+			Email:    in.GetEmail(),
+			Password: in.GetPassword(),
 		},
 	}
 
@@ -51,14 +51,14 @@ func (api *ServerAPI) Register(ctx context.Context, request *sso.RegisterRequest
 		}
 	}
 
-	return &sso.RegisterResponse{UserID: userID}, nil
+	return &sso.RegisterOut{UserID: userID}, nil
 }
 
 // Login handler authenticates user if provided credentials are valid and logs User in system.
-func (api *ServerAPI) Login(ctx context.Context, request *sso.LoginRequest) (*sso.LoginResponse, error) {
+func (api *ServerAPI) Login(ctx context.Context, in *sso.LoginIn) (*sso.LoginOut, error) {
 	userData := entities.LoginUserDTO{
-		Email:    request.GetEmail(),
-		Password: request.GetPassword(),
+		Email:    in.GetEmail(),
+		Password: in.GetPassword(),
 	}
 
 	tokensDTO, err := api.useCases.LoginUser(ctx, userData)
@@ -80,23 +80,20 @@ func (api *ServerAPI) Login(ctx context.Context, request *sso.LoginRequest) (*ss
 		}
 	}
 
-	return &sso.LoginResponse{
+	return &sso.LoginOut{
 		AccessToken:  tokensDTO.AccessToken,
 		RefreshToken: tokensDTO.RefreshToken,
 	}, nil
 }
 
 // RefreshTokens handler updates User auth tokens.
-func (api *ServerAPI) RefreshTokens(
-	ctx context.Context,
-	request *sso.RefreshTokensRequest,
-) (*sso.LoginResponse, error) {
-	tokensDTO, err := api.useCases.RefreshTokens(ctx, request.GetRefreshToken())
+func (api *ServerAPI) RefreshTokens(ctx context.Context, in *sso.RefreshTokensIn) (*sso.LoginOut, error) {
+	tokensDTO, err := api.useCases.RefreshTokens(ctx, in.GetRefreshToken())
 	if err != nil {
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf("Error occurred while trying to refresh tokens with RefreshToken=%s", request.GetRefreshToken()),
+			fmt.Sprintf("Error occurred while trying to refresh tokens with RefreshToken=%s", in.GetRefreshToken()),
 			err,
 		)
 
@@ -111,7 +108,7 @@ func (api *ServerAPI) RefreshTokens(
 		}
 	}
 
-	return &sso.LoginResponse{
+	return &sso.LoginOut{
 		AccessToken:  tokensDTO.AccessToken,
 		RefreshToken: tokensDTO.RefreshToken,
 	}, nil

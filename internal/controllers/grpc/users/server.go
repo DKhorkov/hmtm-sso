@@ -30,13 +30,13 @@ type ServerAPI struct {
 }
 
 // GetUser handler returns User according provided data.
-func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) (*sso.GetUserResponse, error) {
-	user, err := api.useCases.GetUserByID(ctx, request.GetID())
+func (api *ServerAPI) GetUser(ctx context.Context, in *sso.GetUserIn) (*sso.GetUserOut, error) {
+	user, err := api.useCases.GetUserByID(ctx, in.GetID())
 	if err != nil {
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf("Error occurred while trying to get User with ID=%d", request.GetID()),
+			fmt.Sprintf("Error occurred while trying to get User with ID=%d", in.GetID()),
 			err,
 		)
 
@@ -48,7 +48,7 @@ func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) 
 		}
 	}
 
-	return &sso.GetUserResponse{
+	return &sso.GetUserOut{
 		ID:        user.ID,
 		Email:     user.Email,
 		CreatedAt: timestamppb.New(user.CreatedAt),
@@ -57,16 +57,16 @@ func (api *ServerAPI) GetUser(ctx context.Context, request *sso.GetUserRequest) 
 }
 
 // GetUsers handler returns all Users.
-func (api *ServerAPI) GetUsers(ctx context.Context, request *sso.GetUsersRequest) (*sso.GetUsersResponse, error) {
+func (api *ServerAPI) GetUsers(ctx context.Context, in *sso.GetUsersIn) (*sso.GetUsersOut, error) {
 	users, err := api.useCases.GetAllUsers(ctx)
 	if err != nil {
 		logging.LogErrorContext(ctx, api.logger, "Error occurred while trying to get all Users", err)
 		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
-	usersForResponse := make([]*sso.GetUserResponse, len(users))
+	processedUsers := make([]*sso.GetUserOut, len(users))
 	for i, user := range users {
-		usersForResponse[i] = &sso.GetUserResponse{
+		processedUsers[i] = &sso.GetUserOut{
 			ID:        user.ID,
 			Email:     user.Email,
 			CreatedAt: timestamppb.New(user.CreatedAt),
@@ -74,17 +74,17 @@ func (api *ServerAPI) GetUsers(ctx context.Context, request *sso.GetUsersRequest
 		}
 	}
 
-	return &sso.GetUsersResponse{Users: usersForResponse}, nil
+	return &sso.GetUsersOut{Users: processedUsers}, nil
 }
 
 // GetMe handler returns User according to provided Access Token.
-func (api *ServerAPI) GetMe(ctx context.Context, request *sso.GetMeRequest) (*sso.GetUserResponse, error) {
-	user, err := api.useCases.GetMe(ctx, request.GetAccessToken())
+func (api *ServerAPI) GetMe(ctx context.Context, in *sso.GetMeIn) (*sso.GetUserOut, error) {
+	user, err := api.useCases.GetMe(ctx, in.GetAccessToken())
 	if err != nil {
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf("Error occurred while trying to get User with AccessToken=%s", request.GetAccessToken()),
+			fmt.Sprintf("Error occurred while trying to get User with AccessToken=%s", in.GetAccessToken()),
 			err,
 		)
 
@@ -98,7 +98,7 @@ func (api *ServerAPI) GetMe(ctx context.Context, request *sso.GetMeRequest) (*ss
 		}
 	}
 
-	return &sso.GetUserResponse{
+	return &sso.GetUserOut{
 		ID:        user.ID,
 		Email:     user.Email,
 		CreatedAt: timestamppb.New(user.CreatedAt),

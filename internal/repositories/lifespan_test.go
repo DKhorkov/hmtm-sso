@@ -1,10 +1,10 @@
 package repositories_test
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 	"path"
+	"testing"
 
 	"github.com/DKhorkov/libs/db"
 	"github.com/pressly/goose/v3"
@@ -18,19 +18,26 @@ const (
 	gooseZeroVersion = 0
 )
 
-func StartUp() *db.CommonDBConnector {
+func StartUp(tb testing.TB) *db.CommonDBConnector {
 	dbConnector, err := db.New(dsn, driver, &slog.Logger{})
 	if err != nil {
-		panic(err)
+		tb.Fatal(err)
 	}
 
+	//// Cleaning up not to use defer Teardown in test and to avoid DRY.
+	defer tb.Cleanup(
+		func() {
+			TearDown(tb, dbConnector)
+		},
+	)
+
 	if err = goose.SetDialect(driver); err != nil {
-		panic(err)
+		tb.Fatal(err)
 	}
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		panic(fmt.Sprintf("failed to get cwd: %v", err))
+		tb.Fatalf("failed to get cwd: %v", err)
 	}
 
 	err = goose.Up(
@@ -41,22 +48,22 @@ func StartUp() *db.CommonDBConnector {
 	)
 
 	if err != nil {
-		panic(err)
+		tb.Fatal(err)
 	}
 
 	return dbConnector
 }
 
-func TearDown(dbConnector db.Connector) {
+func TearDown(tb testing.TB, dbConnector db.Connector) {
 	defer func() {
 		if err := dbConnector.Close(); err != nil {
-			panic(err)
+			tb.Fatal(err)
 		}
 	}()
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		panic(fmt.Sprintf("failed to get cwd: %v", err))
+		tb.Fatalf("failed to get cwd: %v", err)
 	}
 
 	err = goose.DownTo(
@@ -68,6 +75,6 @@ func TearDown(dbConnector db.Connector) {
 	)
 
 	if err != nil {
-		panic(err)
+		tb.Fatal(err)
 	}
 }
