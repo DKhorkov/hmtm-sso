@@ -17,7 +17,7 @@ import (
 func New(host string, port int, useCases interfaces.UseCases, logger *slog.Logger) *Controller {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
-			customgrpc.ServerLoggingUnaryInterceptor(
+			customgrpc.UnaryServerLoggingInterceptor(
 				logger,
 			),
 		),
