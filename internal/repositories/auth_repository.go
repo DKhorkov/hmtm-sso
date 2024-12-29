@@ -2,18 +2,26 @@ package repositories
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	"github.com/DKhorkov/libs/db"
 )
 
-func NewCommonAuthRepository(dbConnector db.Connector) *CommonAuthRepository {
-	return &CommonAuthRepository{dbConnector: dbConnector}
+func NewCommonAuthRepository(
+	dbConnector db.Connector,
+	logger *slog.Logger,
+) *CommonAuthRepository {
+	return &CommonAuthRepository{
+		dbConnector: dbConnector,
+		logger:      logger,
+	}
 }
 
 type CommonAuthRepository struct {
 	dbConnector db.Connector
+	logger      *slog.Logger
 }
 
 func (repo *CommonAuthRepository) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
@@ -21,6 +29,8 @@ func (repo *CommonAuthRepository) RegisterUser(ctx context.Context, userData ent
 	if err != nil {
 		return 0, err
 	}
+
+	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
 	var userID uint64
 	err = connection.QueryRowContext(
@@ -52,6 +62,8 @@ func (repo *CommonAuthRepository) CreateRefreshToken(
 		return 0, err
 	}
 
+	defer db.CloseConnectionContext(ctx, connection, repo.logger)
+
 	var refreshTokenID uint64
 	err = connection.QueryRowContext(
 		ctx,
@@ -81,6 +93,8 @@ func (repo *CommonAuthRepository) GetRefreshTokenByUserID(
 		return nil, err
 	}
 
+	defer db.CloseConnectionContext(ctx, connection, repo.logger)
+
 	refreshToken := &entities.RefreshToken{}
 	columns := db.GetEntityColumns(refreshToken)
 	err = connection.QueryRowContext(
@@ -106,6 +120,8 @@ func (repo *CommonAuthRepository) ExpireRefreshToken(ctx context.Context, refres
 	if err != nil {
 		return err
 	}
+
+	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
 	err = connection.QueryRowContext(
 		ctx,
