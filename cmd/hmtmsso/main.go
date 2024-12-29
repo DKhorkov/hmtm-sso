@@ -40,7 +40,7 @@ func main() {
 		logger,
 	)
 
-	authRepository := repositories.NewCommonAuthRepository(dbConnector)
+	authRepository := repositories.NewCommonAuthRepository(dbConnector, logger)
 	authService := services.NewCommonAuthService(
 		authRepository,
 		usersRepository,
