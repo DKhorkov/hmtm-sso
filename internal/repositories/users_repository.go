@@ -31,6 +31,8 @@ func (repo *CommonUsersRepository) GetUserByID(ctx context.Context, id uint64) (
 		return nil, err
 	}
 
+	defer db.CloseConnectionContext(ctx, connection, repo.logger)
+
 	user := &entities.User{}
 	columns := db.GetEntityColumns(user)
 	err = connection.QueryRowContext(
@@ -56,6 +58,8 @@ func (repo *CommonUsersRepository) GetUserByEmail(ctx context.Context, email str
 		return nil, err
 	}
 
+	defer db.CloseConnectionContext(ctx, connection, repo.logger)
+
 	user := &entities.User{}
 	columns := db.GetEntityColumns(user)
 	err = connection.QueryRowContext(
@@ -80,6 +84,8 @@ func (repo *CommonUsersRepository) GetAllUsers(ctx context.Context) ([]entities.
 	if err != nil {
 		return nil, err
 	}
+
+	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
 	rows, err := connection.QueryContext(
 		ctx,

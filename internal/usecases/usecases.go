@@ -113,7 +113,12 @@ func (useCases *CommonUseCases) GetMe(ctx context.Context, accessToken string) (
 		return nil, &security.InvalidJWTError{}
 	}
 
-	userID := uint64(accessTokenPayload.(float64))
+	floatUserID, ok := accessTokenPayload.(float64)
+	if !ok {
+		return nil, &security.InvalidJWTError{}
+	}
+
+	userID := uint64(floatUserID)
 	return useCases.usersService.GetUserByID(ctx, userID)
 }
 
@@ -143,7 +148,12 @@ func (useCases *CommonUseCases) RefreshTokens(ctx context.Context, refreshToken 
 	}
 
 	// Selecting refresh token model from Database, if refresh token has not expired yet:
-	userID := uint64(accessTokenPayload.(float64))
+	floatUserID, ok := accessTokenPayload.(float64)
+	if !ok {
+		return nil, &security.InvalidJWTError{}
+	}
+
+	userID := uint64(floatUserID)
 	dbRefreshToken, err := useCases.authService.GetRefreshTokenByUserID(ctx, userID)
 	if err != nil {
 		return nil, &security.InvalidJWTError{}

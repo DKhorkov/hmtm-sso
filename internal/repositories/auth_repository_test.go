@@ -2,6 +2,7 @@ package repositories_test
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
@@ -20,12 +21,13 @@ var (
 			Password: "password",
 		},
 	}
+	logger = &slog.Logger{}
 )
 
 func TestRepositoriesRegisterUser(t *testing.T) {
 	t.Run("successful registration", func(t *testing.T) {
 		dbConnector := StartUp(t)
-		authRepository := repositories.NewCommonAuthRepository(dbConnector)
+		authRepository := repositories.NewCommonAuthRepository(dbConnector, logger)
 
 		// Error and zero userID due to returning nil ID after register.
 		// SQLite inner realization without AUTO_INCREMENT for SERIAL PRIMARY KEY
@@ -36,6 +38,12 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 
 		connection, err := dbConnector.Connection(ctx)
 		require.NoError(t, err)
+
+		defer func() {
+			if err = connection.Close(); err != nil {
+				t.Fatal(err)
+			}
+		}()
 
 		var usersCount int
 		err = connection.QueryRowContext(
@@ -55,6 +63,12 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 		connection, err := dbConnector.Connection(ctx)
 		require.NoError(t, err)
 
+		defer func() {
+			if err = connection.Close(); err != nil {
+				t.Fatal(err)
+			}
+		}()
+
 		_, err = connection.ExecContext(
 			ctx,
 			`
@@ -70,7 +84,7 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 			t.Fatalf("failed to insert user: %v", err)
 		}
 
-		authRepository := repositories.NewCommonAuthRepository(dbConnector)
+		authRepository := repositories.NewCommonAuthRepository(dbConnector, logger)
 
 		userID, err := authRepository.RegisterUser(ctx, testUserDTO)
 		require.Error(t, err)
@@ -80,7 +94,7 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 
 func BenchmarkRepositoriesRegisterUser(b *testing.B) {
 	dbConnector := StartUp(b)
-	authRepository := repositories.NewCommonAuthRepository(dbConnector)
+	authRepository := repositories.NewCommonAuthRepository(dbConnector, logger)
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
