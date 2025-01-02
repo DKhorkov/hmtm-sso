@@ -205,7 +205,7 @@ func BenchmarkRepositoriesGetUserByID(b *testing.B) {
 	usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger)
 
 	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		_, _ = usersRepository.GetUserByID(
 			ctx,
 			testUserID,
@@ -243,7 +243,7 @@ func BenchmarkRepositoriesGetUserByEmail(b *testing.B) {
 	usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger)
 
 	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		_, _ = usersRepository.GetUserByEmail(
 			ctx,
 			testUserEmail,
@@ -281,7 +281,7 @@ func BenchmarkRepositoriesGetAllUsers(b *testing.B) {
 	usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger)
 
 	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		_, _ = usersRepository.GetAllUsers(ctx)
 	}
 }

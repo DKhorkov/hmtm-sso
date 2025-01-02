@@ -93,10 +93,9 @@ func (useCases *CommonUseCases) LoginUser(
 	// Encoding refresh token for secure usage via internet:
 	encodedRefreshToken := security.Encode([]byte(refreshToken))
 	return &entities.TokensDTO{
-			AccessToken:  accessToken,
-			RefreshToken: encodedRefreshToken,
-		},
-		nil
+		AccessToken:  accessToken,
+		RefreshToken: encodedRefreshToken,
+	}, nil
 }
 
 func (useCases *CommonUseCases) GetUserByID(ctx context.Context, id uint64) (*entities.User, error) {
@@ -205,8 +204,7 @@ func (useCases *CommonUseCases) RefreshTokens(ctx context.Context, refreshToken 
 	// Encoding refresh token for secure usage via internet:
 	encodedRefreshToken := security.Encode([]byte(newRefreshToken))
 	return &entities.TokensDTO{
-			AccessToken:  newAccessToken,
-			RefreshToken: encodedRefreshToken,
-		},
-		nil
+		AccessToken:  newAccessToken,
+		RefreshToken: encodedRefreshToken,
+	}, nil
 }

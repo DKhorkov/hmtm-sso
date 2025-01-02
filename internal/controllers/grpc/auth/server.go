@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/DKhorkov/hmtm-sso/internal/entities"
-
 	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 	customgrpc "github.com/DKhorkov/libs/grpc"

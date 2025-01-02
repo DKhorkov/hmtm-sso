@@ -97,7 +97,7 @@ func BenchmarkRepositoriesRegisterUser(b *testing.B) {
 	authRepository := repositories.NewCommonAuthRepository(dbConnector, logger)
 
 	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		_, _ = authRepository.RegisterUser(
 			context.Background(),
 			testUserDTO,

@@ -123,7 +123,7 @@ func (repo *CommonAuthRepository) ExpireRefreshToken(ctx context.Context, refres
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
-	err = connection.QueryRowContext(
+	_, err = connection.ExecContext(
 		ctx,
 		`
 			UPDATE refresh_tokens
@@ -132,7 +132,7 @@ func (repo *CommonAuthRepository) ExpireRefreshToken(ctx context.Context, refres
 		`,
 		time.Now().Add(time.Hour*time.Duration(-24)),
 		refreshToken,
-	).Err()
+	)
 
 	return err
 }

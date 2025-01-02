@@ -13,7 +13,7 @@ task -d scripts docker_prod -v
 To run application via source files, use next command:
 
 ```shell
-go run ./cmd/hmtmsso/main.go
+go run ./cmd/server/server.go
 ```
 
 ## gRPC:
