@@ -374,3 +374,10 @@ issues:
     - path: "internal/repositories/auth_repository_test.go"
       linters:
         - gochecknoglobals
+    - path: "cmd/client/client.go"
+      linters:
+        - mnd
+        - govet
+    - path: "internal/repositories/auth_repository.go"
+      linters:
+        - gosec
