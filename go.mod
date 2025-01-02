@@ -3,7 +3,7 @@ module github.com/DKhorkov/hmtm-sso
 go 1.23.1
 
 require (
-	github.com/DKhorkov/libs v1.1.8
+	github.com/DKhorkov/libs v1.1.9
 	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/pressly/goose/v3 v3.24.0
 	github.com/stretchr/testify v1.10.0

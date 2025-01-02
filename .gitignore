@@ -30,7 +30,6 @@ go.work.sum
 logs/
 *.db
 bench.txt
-cmd/client/client.go
 
 # Environments
 .venv
