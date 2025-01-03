@@ -3,8 +3,9 @@ package usecases
 import (
 	"context"
 
+	"github.com/DKhorkov/hmtm-sso/internal/config"
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
-	"github.com/DKhorkov/hmtm-sso/internal/errors"
+	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 	"github.com/DKhorkov/libs/security"
 )
@@ -13,21 +14,32 @@ func NewCommonUseCases(
 	authService interfaces.AuthService,
 	usersService interfaces.UsersService,
 	securityConfig security.Config,
+	validationConfig config.ValidationConfig,
 ) *CommonUseCases {
 	return &CommonUseCases{
-		authService:    authService,
-		usersService:   usersService,
-		securityConfig: securityConfig,
+		authService:      authService,
+		usersService:     usersService,
+		securityConfig:   securityConfig,
+		validationConfig: validationConfig,
 	}
 }
 
 type CommonUseCases struct {
-	authService    interfaces.AuthService
-	usersService   interfaces.UsersService
-	securityConfig security.Config
+	authService      interfaces.AuthService
+	usersService     interfaces.UsersService
+	securityConfig   security.Config
+	validationConfig config.ValidationConfig
 }
 
 func (useCases *CommonUseCases) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
+	if !validateEmail(userData.Credentials.Email, useCases.validationConfig.EmailRegExp) {
+		return 0, &customerrors.InvalidEmailError{}
+	}
+
+	if !validatePassword(userData.Credentials.Password, useCases.validationConfig.PasswordRegExps) {
+		return 0, &customerrors.InvalidPasswordError{}
+	}
+
 	hashedPassword, err := security.Hash(userData.Credentials.Password, useCases.securityConfig.HashCost)
 	if err != nil {
 		return 0, err
@@ -48,7 +60,7 @@ func (useCases *CommonUseCases) LoginUser(
 	}
 
 	if !security.ValidateHash(userData.Password, user.Password) {
-		return nil, &errors.InvalidPasswordError{}
+		return nil, &customerrors.WrongPasswordError{}
 	}
 
 	if dbRefreshToken, err := useCases.authService.GetRefreshTokenByUserID(ctx, user.ID); err == nil {
@@ -160,7 +172,7 @@ func (useCases *CommonUseCases) RefreshTokens(ctx context.Context, refreshToken 
 
 	// Checking if access token belongs to refresh token:
 	if oldRefreshToken != dbRefreshToken.Value {
-		return nil, &errors.AccessTokenDoesNotBelongToRefreshTokenError{}
+		return nil, &customerrors.AccessTokenDoesNotBelongToRefreshTokenError{}
 	}
 
 	// Expiring old refresh token in Database to have only one valid refresh token instance:

@@ -33,16 +33,23 @@ func main() {
 	}
 
 	requestID := requestid.New()
-	tokens, err := client.Login(
-		context.Background(),
-		&sso.LoginIn{
-			RequestID: requestID,
-			Email:     "test@mail.test",
-			Password:  "qwer1234",
-		},
-	)
-	fmt.Println(tokens, err)
+	// tokens, err := client.Login(
+	//	context.Background(),
+	//	&sso.LoginIn{
+	//		RequestID: requestID,
+	//		Email:     "test@mail.test",
+	//		Password:  "qwer1234",
+	//	},
+	//)
+	//fmt.Println(tokens, err)
 
 	// users, err := client.GetUsers(context.Background(), &sso.GetUsersIn{RequestID: requestID})
 	// fmt.Println(users, err)
+
+	userID, err := client.Register(context.Background(), &sso.RegisterIn{
+		RequestID: requestID,
+		Email:     "sometestemail@yandex.ru",
+		Password:  "test@Password2",
+	})
+	fmt.Println("Register: ", userID, err)
 }
