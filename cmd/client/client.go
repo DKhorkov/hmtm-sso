@@ -41,7 +41,7 @@ func main() {
 	//		Password:  "qwer1234",
 	//	},
 	//)
-	//fmt.Println(tokens, err)
+	// fmt.Println(tokens, err)
 
 	// users, err := client.GetUsers(context.Background(), &sso.GetUsersIn{RequestID: requestID})
 	// fmt.Println(users, err)
