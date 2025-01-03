@@ -55,6 +55,7 @@ func main() {
 		authService,
 		usersService,
 		settings.Security,
+		settings.Validation,
 	)
 
 	controller := grpccontroller.New(

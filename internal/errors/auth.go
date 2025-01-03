@@ -20,12 +20,12 @@ func (e UserNotFoundError) Error() string {
 	return template
 }
 
-type InvalidPasswordError struct {
+type WrongPasswordError struct {
 	Message string
 	BaseErr error
 }
 
-func (e InvalidPasswordError) Error() string {
+func (e WrongPasswordError) Error() string {
 	template := "wrong password"
 	if e.Message != "" {
 		template = e.Message
@@ -81,6 +81,42 @@ type RefreshTokenNotFoundError struct {
 
 func (e RefreshTokenNotFoundError) Error() string {
 	template := "refresh token not found"
+	if e.Message != "" {
+		template = e.Message
+	}
+
+	if e.BaseErr != nil {
+		return fmt.Sprintf(template+". Base error: %v", e.BaseErr)
+	}
+
+	return template
+}
+
+type InvalidEmailError struct {
+	Message string
+	BaseErr error
+}
+
+func (e InvalidEmailError) Error() string {
+	template := "email does not meet the requirements"
+	if e.Message != "" {
+		template = e.Message
+	}
+
+	if e.BaseErr != nil {
+		return fmt.Sprintf(template+". Base error: %v", e.BaseErr)
+	}
+
+	return template
+}
+
+type InvalidPasswordError struct {
+	Message string
+	BaseErr error
+}
+
+func (e InvalidPasswordError) Error() string {
+	template := "password does not meet the requirements"
 	if e.Message != "" {
 		template = e.Message
 	}

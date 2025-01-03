@@ -381,3 +381,6 @@ issues:
     - path: "internal/repositories/auth_repository.go"
       linters:
         - gosec
+    - path: "internal/usecases/validators_test.go"
+      linters:
+        - testpackage

@@ -43,6 +43,9 @@ func (api *ServerAPI) Register(ctx context.Context, in *sso.RegisterIn) (*sso.Re
 		logging.LogErrorContext(ctx, api.logger, "Error occurred while trying to register User", err)
 
 		switch {
+		case errors.As(err, &customerrors.InvalidEmailError{}),
+			errors.As(err, &customerrors.InvalidPasswordError{}):
+			return nil, &customgrpc.BaseError{Status: codes.FailedPrecondition, Message: err.Error()}
 		case errors.As(err, &customerrors.UserAlreadyExistsError{}):
 			return nil, &customgrpc.BaseError{Status: codes.AlreadyExists, Message: err.Error()}
 		default:
@@ -72,7 +75,7 @@ func (api *ServerAPI) Login(ctx context.Context, in *sso.LoginIn) (*sso.LoginOut
 		switch {
 		case errors.As(err, &customerrors.UserNotFoundError{}):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
-		case errors.As(err, &customerrors.InvalidPasswordError{}):
+		case errors.As(err, &customerrors.WrongPasswordError{}):
 			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}

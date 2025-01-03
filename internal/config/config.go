@@ -53,6 +53,20 @@ func New() Config {
 			Level:       logging.Levels.DEBUG,
 			LogFilePath: fmt.Sprintf("logs/%s.log", time.Now().Format("02-01-2006")),
 		},
+		Validation: ValidationConfig{
+			EmailRegExp: loadenv.GetEnv("EMAIL_REGEXP", "^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,4}$"),
+			PasswordRegExps: loadenv.GetEnvAsSlice(
+				"PASSWORD_REGEXPS",
+				[]string{
+					".{8,}",
+					"[a-z]",
+					"[A-Z]",
+					"[0-9]",
+					"[^\\d\\w]",
+				},
+				";",
+			),
+		},
 	}
 }
 
@@ -61,9 +75,15 @@ type HTTPConfig struct {
 	Port int
 }
 
+type ValidationConfig struct {
+	EmailRegExp     string
+	PasswordRegExps []string // since Go's regex doesn't support backtracking.
+}
+
 type Config struct {
-	HTTP     HTTPConfig
-	Security security.Config
-	Database db.Config
-	Logging  logging.Config
+	HTTP       HTTPConfig
+	Security   security.Config
+	Database   db.Config
+	Logging    logging.Config
+	Validation ValidationConfig
 }
