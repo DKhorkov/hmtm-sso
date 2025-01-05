@@ -25,9 +25,15 @@ message GetUserIn {
 
 message GetUserOut {
   uint64 ID = 1;
-  string email = 2;
-  google.protobuf.Timestamp createdAt = 3;
-  google.protobuf.Timestamp updatedAt = 4;
+  string displayName = 2;
+  string email = 3;
+  bool emailConfirmed = 4;
+  optional string Phone = 5;
+  bool phoneConfirmed = 6;
+  optional string telegram = 7;
+  optional string avatar = 8;
+  google.protobuf.Timestamp createdAt = 9;
+  google.protobuf.Timestamp updatedAt = 10;
 }
 
 message GetUsersIn {

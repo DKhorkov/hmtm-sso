@@ -47,9 +47,10 @@ func main() {
 	// fmt.Println(users, err)
 
 	userID, err := client.Register(context.Background(), &sso.RegisterIn{
-		RequestID: requestID,
-		Email:     "sometestemail@yandex.ru",
-		Password:  "test@Password2",
+		RequestID:   requestID,
+		DisplayName: "test User",
+		Email:       "sometestemail2@yandex.ru",
+		Password:    "test@Password2",
 	})
 	fmt.Println("Register: ", userID, err)
 }

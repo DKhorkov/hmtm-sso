@@ -32,10 +32,9 @@ type ServerAPI struct {
 // Register handler registers new User with provided data.
 func (api *ServerAPI) Register(ctx context.Context, in *sso.RegisterIn) (*sso.RegisterOut, error) {
 	userData := entities.RegisterUserDTO{
-		Credentials: entities.LoginUserDTO{
-			Email:    in.GetEmail(),
-			Password: in.GetPassword(),
-		},
+		DisplayName: in.GetDisplayName(),
+		Email:       in.GetEmail(),
+		Password:    in.GetPassword(),
 	}
 
 	userID, err := api.useCases.RegisterUser(ctx, userData)
@@ -56,7 +55,7 @@ func (api *ServerAPI) Register(ctx context.Context, in *sso.RegisterIn) (*sso.Re
 	return &sso.RegisterOut{UserID: userID}, nil
 }
 
-// Login handler authenticates user if provided credentials are valid and logs User in system.
+// Login handler authenticates User if provided credentials are valid and logs User in system.
 func (api *ServerAPI) Login(ctx context.Context, in *sso.LoginIn) (*sso.LoginOut, error) {
 	userData := entities.LoginUserDTO{
 		Email:    in.GetEmail(),

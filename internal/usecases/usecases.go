@@ -32,20 +32,24 @@ type CommonUseCases struct {
 }
 
 func (useCases *CommonUseCases) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
-	if !validateEmail(userData.Credentials.Email, useCases.validationConfig.EmailRegExp) {
+	if !validateValueByRule(userData.Email, useCases.validationConfig.EmailRegExp) {
 		return 0, &customerrors.InvalidEmailError{}
 	}
 
-	if !validatePassword(userData.Credentials.Password, useCases.validationConfig.PasswordRegExps) {
+	if !validateValueByRules(userData.Password, useCases.validationConfig.PasswordRegExps) {
 		return 0, &customerrors.InvalidPasswordError{}
 	}
 
-	hashedPassword, err := security.Hash(userData.Credentials.Password, useCases.securityConfig.HashCost)
+	if !validateValueByRules(userData.DisplayName, useCases.validationConfig.DisplayNameRegExps) {
+		return 0, &customerrors.InvalidDisplayNameError{}
+	}
+
+	hashedPassword, err := security.Hash(userData.Password, useCases.securityConfig.HashCost)
 	if err != nil {
 		return 0, err
 	}
 
-	userData.Credentials.Password = hashedPassword
+	userData.Password = hashedPassword
 	return useCases.authService.RegisterUser(ctx, userData)
 }
 

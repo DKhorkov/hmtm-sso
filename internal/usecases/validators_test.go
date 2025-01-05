@@ -55,7 +55,7 @@ func TestValidateEmail(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			valid := validateEmail(tc.email, tc.rule)
+			valid := validateValueByRule(tc.email, tc.rule)
 			assert.Equal(t, tc.expected, valid)
 		})
 	}
@@ -122,7 +122,7 @@ func TestValidatePassword(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			valid := validatePassword(tc.password, tc.rules)
+			valid := validateValueByRules(tc.password, tc.rules)
 			assert.Equal(t, tc.expected, valid)
 		})
 	}

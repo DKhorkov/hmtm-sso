@@ -66,6 +66,15 @@ func New() Config {
 				},
 				";",
 			),
+			DisplayNameRegExps: loadenv.GetEnvAsSlice(
+				"PASSWORD_REGEXPS",
+				[]string{
+					".{4,}",
+					"[a-z]",
+					"[A-Z]",
+				},
+				";",
+			),
 		},
 	}
 }
@@ -76,8 +85,9 @@ type HTTPConfig struct {
 }
 
 type ValidationConfig struct {
-	EmailRegExp     string
-	PasswordRegExps []string // since Go's regex doesn't support backtracking.
+	EmailRegExp        string
+	PasswordRegExps    []string // since Go's regex doesn't support backtracking.
+	DisplayNameRegExps []string
 }
 
 type Config struct {
