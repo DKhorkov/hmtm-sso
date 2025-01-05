@@ -28,7 +28,7 @@ message GetUserOut {
   string displayName = 2;
   string email = 3;
   bool emailConfirmed = 4;
-  optional string Phone = 5;
+  optional string phone = 5;
   bool phoneConfirmed = 6;
   optional string telegram = 7;
   optional string avatar = 8;

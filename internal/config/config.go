@@ -67,7 +67,7 @@ func New() Config {
 				";",
 			),
 			DisplayNameRegExps: loadenv.GetEnvAsSlice(
-				"PASSWORD_REGEXPS",
+				"DISPLAY_NAME_REGEXPS",
 				[]string{
 					".{4,}",
 					"[a-z]",
