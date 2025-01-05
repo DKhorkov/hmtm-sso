@@ -32,18 +32,20 @@ func TestRepositoriesGetUserByID(t *testing.T) {
 		}()
 
 		testUser := &entities.User{
-			ID:       testUserID,
-			Email:    testUserEmail,
-			Password: "password",
+			ID:          testUserID,
+			DisplayName: "Display Name",
+			Email:       testUserEmail,
+			Password:    "password",
 		}
 
 		_, err = connection.ExecContext(
 			ctx,
 			`
-				INSERT INTO users (id, email, password) 
-				VALUES ($1, $2, $3)
+				INSERT INTO users (id, display_name, email, password) 
+				VALUES ($1, $2, $3, $4)
 			`,
 			testUser.ID,
+			testUser.DisplayName,
 			testUser.Email,
 			testUser.Password,
 		)
@@ -92,10 +94,11 @@ func TestRepositoriesGetUserByEmail(t *testing.T) {
 		_, err = connection.ExecContext(
 			ctx,
 			`
-				INSERT INTO users (id, email, password) 
-				VALUES ($1, $2, $3)
+				INSERT INTO users (id, display_name, email, password) 
+				VALUES ($1, $2, $3, $4)
 			`,
 			testUser.ID,
+			testUser.DisplayName,
 			testUser.Email,
 			testUser.Password,
 		)
@@ -144,10 +147,11 @@ func TestRepositoriesGetAllUsers(t *testing.T) {
 		_, err = connection.ExecContext(
 			ctx,
 			`
-				INSERT INTO users (id, email, password) 
-				VALUES ($1, $2, $3)
+				INSERT INTO users (id, display_name, email, password) 
+				VALUES ($1, $2, $3, $4)
 			`,
 			testUser.ID,
+			testUser.DisplayName,
 			testUser.Email,
 			testUser.Password,
 		)
@@ -190,10 +194,11 @@ func BenchmarkRepositoriesGetUserByID(b *testing.B) {
 	_, err = connection.ExecContext(
 		ctx,
 		`
-				INSERT INTO users (id, email, password) 
-				VALUES ($1, $2, $3)
+				INSERT INTO users (id, display_name, email, password) 
+				VALUES ($1, $2, $3, $4)
 			`,
 		testUserID,
+		"Display Name",
 		testUserEmail,
 		"testUserPassword",
 	)
@@ -228,10 +233,11 @@ func BenchmarkRepositoriesGetUserByEmail(b *testing.B) {
 	_, err = connection.ExecContext(
 		ctx,
 		`
-				INSERT INTO users (id, email, password) 
-				VALUES ($1, $2, $3)
+				INSERT INTO users (id, display_name, email, password) 
+				VALUES ($1, $2, $3, $4)
 			`,
 		testUserID,
+		"Display Name",
 		testUserEmail,
 		"testUserPassword",
 	)
@@ -266,10 +272,11 @@ func BenchmarkRepositoriesGetAllUsers(b *testing.B) {
 	_, err = connection.ExecContext(
 		ctx,
 		`
-				INSERT INTO users (id, email, password) 
-				VALUES ($1, $2, $3)
+				INSERT INTO users (id, display_name, email, password) 
+				VALUES ($1, $2, $3, $4)
 			`,
 		testUserID,
+		"Display Name",
 		testUserEmail,
 		"testUserPassword",
 	)

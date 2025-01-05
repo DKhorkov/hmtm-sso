@@ -127,3 +127,21 @@ func (e InvalidPasswordError) Error() string {
 
 	return template
 }
+
+type InvalidDisplayNameError struct {
+	Message string
+	BaseErr error
+}
+
+func (e InvalidDisplayNameError) Error() string {
+	template := "display name not meet the requirements"
+	if e.Message != "" {
+		template = e.Message
+	}
+
+	if e.BaseErr != nil {
+		return fmt.Sprintf(template+". Base error: %v", e.BaseErr)
+	}
+
+	return template
+}

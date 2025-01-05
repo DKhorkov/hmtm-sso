@@ -16,10 +16,9 @@ import (
 
 var (
 	testUserDTO = entities.RegisterUserDTO{
-		Credentials: entities.LoginUserDTO{
-			Email:    testUserEmail,
-			Password: "password",
-		},
+		DisplayName: "test User",
+		Email:       testUserEmail,
+		Password:    "password",
 	}
 	logger = &slog.Logger{}
 )
@@ -72,12 +71,13 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 		_, err = connection.ExecContext(
 			ctx,
 			`
-				INSERT INTO users (id, email, password) 
-				VALUES ($1, $2, $3)
+				INSERT INTO users (id, display_name, email, password) 
+				VALUES ($1, $2, $3, $4)
 			`,
 			1,
-			testUserDTO.Credentials.Email,
-			testUserDTO.Credentials.Password,
+			testUserDTO.DisplayName,
+			testUserDTO.Email,
+			testUserDTO.Password,
 		)
 
 		if err != nil {

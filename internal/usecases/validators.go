@@ -2,14 +2,14 @@ package usecases
 
 import "regexp"
 
-func validateEmail(email string, rule string) bool {
+func validateValueByRule(value string, rule string) bool {
 	pattern := regexp.MustCompile(rule)
-	return pattern.MatchString(email)
+	return pattern.MatchString(value)
 }
 
-func validatePassword(password string, rules []string) bool {
+func validateValueByRules(value string, rules []string) bool {
 	for _, rule := range rules {
-		matched, _ := regexp.MatchString(rule, password)
+		matched, _ := regexp.MatchString(rule, value)
 		if !matched {
 			return false
 		}

@@ -29,8 +29,9 @@ message LoginOut {
 
 message RegisterIn {
   string requestID = 1;
-  string email = 2;
-  string password = 3;
+  string displayName = 2;
+  string email = 3;
+  string password = 4;
 }
 
 message RegisterOut {

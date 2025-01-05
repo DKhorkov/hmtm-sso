@@ -36,12 +36,13 @@ func (repo *CommonAuthRepository) RegisterUser(ctx context.Context, userData ent
 	err = connection.QueryRowContext(
 		ctx,
 		`
-			INSERT INTO users (email, password) 
-			VALUES ($1, $2)
+			INSERT INTO users (display_name, email, password) 
+			VALUES ($1, $2, $3)
 			RETURNING users.id
 		`,
-		userData.Credentials.Email,
-		userData.Credentials.Password,
+		userData.DisplayName,
+		userData.Email,
+		userData.Password,
 	).Scan(&userID)
 
 	if err != nil {

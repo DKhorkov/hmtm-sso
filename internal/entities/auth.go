@@ -17,7 +17,9 @@ type LoginUserDTO struct {
 }
 
 type RegisterUserDTO struct {
-	Credentials LoginUserDTO
+	DisplayName string `json:"display_name"`
+	Email       string `json:"email"`
+	Password    string `json:"password"`
 }
 
 type TokensDTO struct {

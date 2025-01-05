@@ -49,10 +49,16 @@ func (api *ServerAPI) GetUser(ctx context.Context, in *sso.GetUserIn) (*sso.GetU
 	}
 
 	return &sso.GetUserOut{
-		ID:        user.ID,
-		Email:     user.Email,
-		CreatedAt: timestamppb.New(user.CreatedAt),
-		UpdatedAt: timestamppb.New(user.UpdatedAt),
+		ID:             user.ID,
+		DisplayName:    user.DisplayName,
+		Email:          user.Email,
+		EmailConfirmed: user.EmailConfirmed,
+		Phone:          user.Phone,
+		PhoneConfirmed: user.PhoneConfirmed,
+		Telegram:       user.Telegram,
+		Avatar:         user.Avatar,
+		CreatedAt:      timestamppb.New(user.CreatedAt),
+		UpdatedAt:      timestamppb.New(user.UpdatedAt),
 	}, nil
 }
 
@@ -67,10 +73,16 @@ func (api *ServerAPI) GetUsers(ctx context.Context, in *sso.GetUsersIn) (*sso.Ge
 	processedUsers := make([]*sso.GetUserOut, len(users))
 	for i, user := range users {
 		processedUsers[i] = &sso.GetUserOut{
-			ID:        user.ID,
-			Email:     user.Email,
-			CreatedAt: timestamppb.New(user.CreatedAt),
-			UpdatedAt: timestamppb.New(user.UpdatedAt),
+			ID:             user.ID,
+			DisplayName:    user.DisplayName,
+			Email:          user.Email,
+			EmailConfirmed: user.EmailConfirmed,
+			Phone:          user.Phone,
+			PhoneConfirmed: user.PhoneConfirmed,
+			Telegram:       user.Telegram,
+			Avatar:         user.Avatar,
+			CreatedAt:      timestamppb.New(user.CreatedAt),
+			UpdatedAt:      timestamppb.New(user.UpdatedAt),
 		}
 	}
 
@@ -99,9 +111,15 @@ func (api *ServerAPI) GetMe(ctx context.Context, in *sso.GetMeIn) (*sso.GetUserO
 	}
 
 	return &sso.GetUserOut{
-		ID:        user.ID,
-		Email:     user.Email,
-		CreatedAt: timestamppb.New(user.CreatedAt),
-		UpdatedAt: timestamppb.New(user.UpdatedAt),
+		ID:             user.ID,
+		DisplayName:    user.DisplayName,
+		Email:          user.Email,
+		EmailConfirmed: user.EmailConfirmed,
+		Phone:          user.Phone,
+		PhoneConfirmed: user.PhoneConfirmed,
+		Telegram:       user.Telegram,
+		Avatar:         user.Avatar,
+		CreatedAt:      timestamppb.New(user.CreatedAt),
+		UpdatedAt:      timestamppb.New(user.UpdatedAt),
 	}, nil
 }

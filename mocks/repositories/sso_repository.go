@@ -14,17 +14,18 @@ type MockedSsoRepository struct {
 
 func (repo *MockedSsoRepository) RegisterUser(userData entities.RegisterUserDTO) (uint64, error) {
 	for _, user := range repo.UsersStorage {
-		if user.Email == userData.Credentials.Email {
+		if user.Email == userData.Email {
 			return 0, &customerrors.UserAlreadyExistsError{}
 		}
 	}
 
 	user := entities.User{
-		ID:        uint64(len(repo.UsersStorage) + 1),
-		Email:     userData.Credentials.Email,
-		Password:  userData.Credentials.Password,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		ID:          uint64(len(repo.UsersStorage) + 1),
+		DisplayName: userData.DisplayName,
+		Email:       userData.Email,
+		Password:    userData.Password,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	repo.UsersStorage[user.ID] = &user

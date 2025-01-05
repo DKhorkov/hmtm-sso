@@ -30,7 +30,7 @@ type CommonAuthService struct {
 }
 
 func (service *CommonAuthService) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
-	user, _ := service.usersRepository.GetUserByEmail(ctx, userData.Credentials.Email)
+	user, _ := service.usersRepository.GetUserByEmail(ctx, userData.Email)
 	if user != nil {
 		return 0, &customerrors.UserAlreadyExistsError{}
 	}
