@@ -14,7 +14,6 @@ import (
 	"github.com/DKhorkov/libs/security"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // RegisterServer handler (serverAPI) for UsersServer to gRPC server:.
@@ -48,18 +47,7 @@ func (api *ServerAPI) GetUser(ctx context.Context, in *sso.GetUserIn) (*sso.GetU
 		}
 	}
 
-	return &sso.GetUserOut{
-		ID:             user.ID,
-		DisplayName:    user.DisplayName,
-		Email:          user.Email,
-		EmailConfirmed: user.EmailConfirmed,
-		Phone:          user.Phone,
-		PhoneConfirmed: user.PhoneConfirmed,
-		Telegram:       user.Telegram,
-		Avatar:         user.Avatar,
-		CreatedAt:      timestamppb.New(user.CreatedAt),
-		UpdatedAt:      timestamppb.New(user.UpdatedAt),
-	}, nil
+	return prepareUserOut(user), nil
 }
 
 // GetUsers handler returns all Users.
@@ -71,19 +59,8 @@ func (api *ServerAPI) GetUsers(ctx context.Context, in *sso.GetUsersIn) (*sso.Ge
 	}
 
 	processedUsers := make([]*sso.GetUserOut, len(users))
-	for i, user := range users {
-		processedUsers[i] = &sso.GetUserOut{
-			ID:             user.ID,
-			DisplayName:    user.DisplayName,
-			Email:          user.Email,
-			EmailConfirmed: user.EmailConfirmed,
-			Phone:          user.Phone,
-			PhoneConfirmed: user.PhoneConfirmed,
-			Telegram:       user.Telegram,
-			Avatar:         user.Avatar,
-			CreatedAt:      timestamppb.New(user.CreatedAt),
-			UpdatedAt:      timestamppb.New(user.UpdatedAt),
-		}
+	for userIndex := range users {
+		processedUsers[userIndex] = prepareUserOut(&users[userIndex])
 	}
 
 	return &sso.GetUsersOut{Users: processedUsers}, nil
@@ -110,16 +87,5 @@ func (api *ServerAPI) GetMe(ctx context.Context, in *sso.GetMeIn) (*sso.GetUserO
 		}
 	}
 
-	return &sso.GetUserOut{
-		ID:             user.ID,
-		DisplayName:    user.DisplayName,
-		Email:          user.Email,
-		EmailConfirmed: user.EmailConfirmed,
-		Phone:          user.Phone,
-		PhoneConfirmed: user.PhoneConfirmed,
-		Telegram:       user.Telegram,
-		Avatar:         user.Avatar,
-		CreatedAt:      timestamppb.New(user.CreatedAt),
-		UpdatedAt:      timestamppb.New(user.UpdatedAt),
-	}, nil
+	return prepareUserOut(user), nil
 }
