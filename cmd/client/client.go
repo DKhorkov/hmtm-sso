@@ -53,5 +53,5 @@ func main() {
 	//	Email:       "sometestemail2@yandex.ru",
 	//	Password:    "test@Password2",
 	// })
-	//fmt.Println("Register: ", userID, err)
+	// fmt.Println("Register: ", userID, err)
 }
