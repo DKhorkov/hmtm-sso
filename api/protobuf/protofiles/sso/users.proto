@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 package users;
 
@@ -9,18 +10,16 @@ option go_package = "github.com/DKhorkov/hmtm-sso/api/protobuf/sso;sso";
 
 service UsersService {
   rpc GetUser(GetUserIn) returns (GetUserOut) {}
-  rpc GetUsers(GetUsersIn) returns (GetUsersOut) {}
+  rpc GetUsers(google.protobuf.Empty) returns (GetUsersOut) {}
   rpc GetMe(GetMeIn) returns (GetUserOut) {}
 }
 
 message GetMeIn {
-  string requestID = 1;
-  string accessToken = 2;
+  string accessToken = 1;
 }
 
 message GetUserIn {
-  string requestID = 1;
-  uint64 ID = 2;
+  uint64 ID = 1;
 }
 
 message GetUserOut {
@@ -35,10 +34,6 @@ message GetUserOut {
   optional string avatar = 9;
   google.protobuf.Timestamp createdAt = 10;
   google.protobuf.Timestamp updatedAt = 11;
-}
-
-message GetUsersIn {
-  string requestID = 1;
 }
 
 message GetUsersOut {

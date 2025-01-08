@@ -12,14 +12,12 @@ service AuthService {
 }
 
 message RefreshTokensIn {
-  string requestID = 1;
-  string refreshToken = 2;
+  string refreshToken = 1;
 }
 
 message LoginIn {
-  string requestID = 1;
-  string email = 2;
-  string password = 3;
+  string email = 1;
+  string password = 2;
 }
 
 message LoginOut {
@@ -28,10 +26,9 @@ message LoginOut {
 }
 
 message RegisterIn {
-  string requestID = 1;
-  string displayName = 2;
-  string email = 3;
-  string password = 4;
+  string displayName = 1;
+  string email = 2;
+  string password = 3;
 }
 
 message RegisterOut {

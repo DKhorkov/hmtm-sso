@@ -6,14 +6,16 @@ import (
 	"fmt"
 	"log/slog"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 	customgrpc "github.com/DKhorkov/libs/grpc"
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/security"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 )
 
 // RegisterServer handler (serverAPI) for UsersServer to gRPC server:.
@@ -51,7 +53,7 @@ func (api *ServerAPI) GetUser(ctx context.Context, in *sso.GetUserIn) (*sso.GetU
 }
 
 // GetUsers handler returns all Users.
-func (api *ServerAPI) GetUsers(ctx context.Context, in *sso.GetUsersIn) (*sso.GetUsersOut, error) {
+func (api *ServerAPI) GetUsers(ctx context.Context, in *emptypb.Empty) (*sso.GetUsersOut, error) {
 	users, err := api.useCases.GetAllUsers(ctx)
 	if err != nil {
 		logging.LogErrorContext(ctx, api.logger, "Error occurred while trying to get all Users", err)
