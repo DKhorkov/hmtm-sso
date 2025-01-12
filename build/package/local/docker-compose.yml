@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  hmtm_sso_database:
+    container_name: hmtm_sso_database
+    hostname: hmtm_sso_database
+    image: postgres
+    restart: always
+    env_file:
+      - ../../../.env
+    volumes:
+      - ../../../postgres_data:/var/lib/postgresql/data
+      - ../../../postgres_backups:/backups
+      - ../../../scripts/postgres:/scripts
+    ports:
+      - "${HMTM_SSO_DB_OUTER_PORT}:${HMTM_SSO_DB_INNER_PORT}"
