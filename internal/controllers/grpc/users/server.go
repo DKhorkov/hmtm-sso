@@ -49,7 +49,7 @@ func (api *ServerAPI) GetUser(ctx context.Context, in *sso.GetUserIn) (*sso.GetU
 		}
 	}
 
-	return prepareUserOut(user), nil
+	return prepareUserOut(*user), nil
 }
 
 // GetUsers handler returns all Users.
@@ -61,8 +61,8 @@ func (api *ServerAPI) GetUsers(ctx context.Context, in *emptypb.Empty) (*sso.Get
 	}
 
 	processedUsers := make([]*sso.GetUserOut, len(users))
-	for userIndex := range users {
-		processedUsers[userIndex] = prepareUserOut(&users[userIndex])
+	for i, user := range users {
+		processedUsers[i] = prepareUserOut(user)
 	}
 
 	return &sso.GetUsersOut{Users: processedUsers}, nil
@@ -89,5 +89,5 @@ func (api *ServerAPI) GetMe(ctx context.Context, in *sso.GetMeIn) (*sso.GetUserO
 		}
 	}
 
-	return prepareUserOut(user), nil
+	return prepareUserOut(*user), nil
 }
