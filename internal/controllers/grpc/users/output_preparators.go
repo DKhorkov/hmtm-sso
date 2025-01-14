@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func prepareUserOut(user *entities.User) *sso.GetUserOut {
+func prepareUserOut(user entities.User) *sso.GetUserOut {
 	return &sso.GetUserOut{
 		ID:                user.ID,
 		DisplayName:       user.DisplayName,
