@@ -5,13 +5,15 @@ import (
 	"log/slog"
 	"testing"
 
+	"go.uber.org/mock/gomock"
+
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
-
+	"github.com/DKhorkov/libs/tracing"
+	tracingmock "github.com/DKhorkov/libs/tracing/mocks"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
@@ -20,13 +22,20 @@ var (
 		Email:       testUserEmail,
 		Password:    "password",
 	}
-	logger = &slog.Logger{}
+	logger     = &slog.Logger{}
+	spanConfig = tracing.SpanConfig{}
 )
 
 func TestRepositoriesRegisterUser(t *testing.T) {
 	t.Run("successful registration", func(t *testing.T) {
 		dbConnector := StartUp(t)
-		authRepository := repositories.NewCommonAuthRepository(dbConnector, logger)
+		traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(t))
+		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
+			context.Background(),
+			tracingmock.NewMockSpan(),
+		).Times(1)
+
+		authRepository := repositories.NewCommonAuthRepository(dbConnector, logger, traceProvider, spanConfig)
 
 		// Error and zero userID due to returning nil ID after register.
 		// SQLite inner realization without AUTO_INCREMENT for SERIAL PRIMARY KEY
@@ -84,7 +93,13 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 			t.Fatalf("failed to insert user: %v", err)
 		}
 
-		authRepository := repositories.NewCommonAuthRepository(dbConnector, logger)
+		traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(t))
+		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
+			context.Background(),
+			tracingmock.NewMockSpan(),
+		).Times(1)
+
+		authRepository := repositories.NewCommonAuthRepository(dbConnector, logger, traceProvider, spanConfig)
 
 		userID, err := authRepository.RegisterUser(ctx, testUserDTO)
 		require.Error(t, err)
@@ -94,7 +109,13 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 
 func BenchmarkRepositoriesRegisterUser(b *testing.B) {
 	dbConnector := StartUp(b)
-	authRepository := repositories.NewCommonAuthRepository(dbConnector, logger)
+	traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(b))
+	traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
+		context.Background(),
+		tracingmock.NewMockSpan(),
+	).AnyTimes()
+
+	authRepository := repositories.NewCommonAuthRepository(dbConnector, logger, traceProvider, spanConfig)
 
 	b.ResetTimer()
 	for range b.N {

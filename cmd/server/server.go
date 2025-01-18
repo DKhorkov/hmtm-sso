@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/DKhorkov/hmtm-sso/internal/app"
 	"github.com/DKhorkov/hmtm-sso/internal/config"
 	grpccontroller "github.com/DKhorkov/hmtm-sso/internal/controllers/grpc"
@@ -9,6 +11,7 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/usecases"
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/tracing"
 )
 
 func main() {
@@ -38,13 +41,36 @@ func main() {
 		}
 	}()
 
-	usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger)
+	traceProvider, err := tracing.New(settings.Tracing.Server)
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		if err = traceProvider.Shutdown(context.Background()); err != nil {
+			logging.LogError(logger, "Error shutting down tracer", err)
+		}
+	}()
+
+	usersRepository := repositories.NewCommonUsersRepository(
+		dbConnector,
+		logger,
+		traceProvider,
+		settings.Tracing.Spans.Repositories.Users,
+	)
+
 	usersService := services.NewCommonUsersService(
 		usersRepository,
 		logger,
 	)
 
-	authRepository := repositories.NewCommonAuthRepository(dbConnector, logger)
+	authRepository := repositories.NewCommonAuthRepository(
+		dbConnector,
+		logger,
+		traceProvider,
+		settings.Tracing.Spans.Repositories.Auth,
+	)
+
 	authService := services.NewCommonAuthService(
 		authRepository,
 		usersRepository,
@@ -63,6 +89,8 @@ func main() {
 		settings.HTTP.Port,
 		useCases,
 		logger,
+		traceProvider,
+		settings.Tracing.Spans.Root,
 	)
 
 	application := app.New(controller)

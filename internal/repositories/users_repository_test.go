@@ -4,6 +4,9 @@ import (
 	"context"
 	"testing"
 
+	tracingmock "github.com/DKhorkov/libs/tracing/mocks"
+	"go.uber.org/mock/gomock"
+
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
@@ -54,7 +57,13 @@ func TestRepositoriesGetUserByID(t *testing.T) {
 			t.Fatalf("failed to insert user: %v", err)
 		}
 
-		usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger)
+		traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(t))
+		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
+			context.Background(),
+			tracingmock.NewMockSpan(),
+		).Times(1)
+
+		usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger, traceProvider, spanConfig)
 
 		user, err := usersRepository.GetUserByID(ctx, testUser.ID)
 		require.NoError(t, err)
@@ -64,7 +73,13 @@ func TestRepositoriesGetUserByID(t *testing.T) {
 
 	t.Run("get non existing user failure", func(t *testing.T) {
 		dbConnector := StartUp(t)
-		usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger)
+		traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(t))
+		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
+			context.Background(),
+			tracingmock.NewMockSpan(),
+		).Times(1)
+
+		usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger, traceProvider, spanConfig)
 
 		user, err := usersRepository.GetUserByID(context.Background(), testUserID)
 		require.Error(t, err)
@@ -107,7 +122,13 @@ func TestRepositoriesGetUserByEmail(t *testing.T) {
 			t.Fatalf("failed to insert user: %v", err)
 		}
 
-		usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger)
+		traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(t))
+		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
+			context.Background(),
+			tracingmock.NewMockSpan(),
+		).Times(1)
+
+		usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger, traceProvider, spanConfig)
 
 		user, err := usersRepository.GetUserByEmail(ctx, testUser.Email)
 		require.NoError(t, err)
@@ -117,7 +138,13 @@ func TestRepositoriesGetUserByEmail(t *testing.T) {
 
 	t.Run("get non existing user failure", func(t *testing.T) {
 		dbConnector := StartUp(t)
-		usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger)
+		traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(t))
+		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
+			context.Background(),
+			tracingmock.NewMockSpan(),
+		).Times(1)
+
+		usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger, traceProvider, spanConfig)
 
 		user, err := usersRepository.GetUserByEmail(context.Background(), testUserEmail)
 		require.Error(t, err)
@@ -160,7 +187,13 @@ func TestRepositoriesGetAllUsers(t *testing.T) {
 			t.Fatalf("failed to insert user: %v", err)
 		}
 
-		usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger)
+		traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(t))
+		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
+			context.Background(),
+			tracingmock.NewMockSpan(),
+		).Times(1)
+
+		usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger, traceProvider, spanConfig)
 
 		users, err := usersRepository.GetAllUsers(ctx)
 		require.NoError(t, err)
@@ -171,7 +204,13 @@ func TestRepositoriesGetAllUsers(t *testing.T) {
 
 	t.Run("get users without existing users", func(t *testing.T) {
 		dbConnector := StartUp(t)
-		usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger)
+		traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(t))
+		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
+			context.Background(),
+			tracingmock.NewMockSpan(),
+		).Times(1)
+
+		usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger, traceProvider, spanConfig)
 
 		users, err := usersRepository.GetAllUsers(context.Background())
 		require.NoError(t, err)
@@ -207,7 +246,13 @@ func BenchmarkRepositoriesGetUserByID(b *testing.B) {
 		b.Fatalf("failed to insert user: %v", err)
 	}
 
-	usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger)
+	traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(b))
+	traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
+		context.Background(),
+		tracingmock.NewMockSpan(),
+	).AnyTimes()
+
+	usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger, traceProvider, spanConfig)
 
 	b.ResetTimer()
 	for range b.N {
@@ -246,7 +291,13 @@ func BenchmarkRepositoriesGetUserByEmail(b *testing.B) {
 		b.Fatalf("failed to insert user: %v", err)
 	}
 
-	usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger)
+	traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(b))
+	traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
+		context.Background(),
+		tracingmock.NewMockSpan(),
+	).AnyTimes()
+
+	usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger, traceProvider, spanConfig)
 
 	b.ResetTimer()
 	for range b.N {
@@ -285,7 +336,13 @@ func BenchmarkRepositoriesGetAllUsers(b *testing.B) {
 		b.Fatalf("failed to insert user: %v", err)
 	}
 
-	usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger)
+	traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(b))
+	traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
+		context.Background(),
+		tracingmock.NewMockSpan(),
+	).AnyTimes()
+
+	usersRepository := repositories.NewCommonUsersRepository(dbConnector, logger, traceProvider, spanConfig)
 
 	b.ResetTimer()
 	for range b.N {
