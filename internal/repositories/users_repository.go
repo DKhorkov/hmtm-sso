@@ -4,28 +4,39 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/DKhorkov/libs/logging"
-
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	"github.com/DKhorkov/libs/db"
+	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/tracing"
 )
 
 func NewCommonUsersRepository(
 	dbConnector db.Connector,
 	logger *slog.Logger,
+	traceProvider tracing.TraceProvider,
+	spanConfig tracing.SpanConfig,
 ) *CommonUsersRepository {
 	return &CommonUsersRepository{
-		dbConnector: dbConnector,
-		logger:      logger,
+		dbConnector:   dbConnector,
+		logger:        logger,
+		traceProvider: traceProvider,
+		spanConfig:    spanConfig,
 	}
 }
 
 type CommonUsersRepository struct {
-	dbConnector db.Connector
-	logger      *slog.Logger
+	dbConnector   db.Connector
+	logger        *slog.Logger
+	traceProvider tracing.TraceProvider
+	spanConfig    tracing.SpanConfig
 }
 
 func (repo *CommonUsersRepository) GetUserByID(ctx context.Context, id uint64) (*entities.User, error) {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
 		return nil, err
@@ -49,10 +60,16 @@ func (repo *CommonUsersRepository) GetUserByID(ctx context.Context, id uint64) (
 		return nil, err
 	}
 
+	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return user, nil
 }
 
 func (repo *CommonUsersRepository) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
 		return nil, err
@@ -76,10 +93,16 @@ func (repo *CommonUsersRepository) GetUserByEmail(ctx context.Context, email str
 		return nil, err
 	}
 
+	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return user, nil
 }
 
 func (repo *CommonUsersRepository) GetAllUsers(ctx context.Context) ([]entities.User, error) {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
 		return nil, err
@@ -126,6 +149,7 @@ func (repo *CommonUsersRepository) GetAllUsers(ctx context.Context) ([]entities.
 		return nil, err
 	}
 
+	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return users, nil
 }
 

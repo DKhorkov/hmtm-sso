@@ -7,24 +7,36 @@ import (
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	"github.com/DKhorkov/libs/db"
+	"github.com/DKhorkov/libs/tracing"
 )
 
 func NewCommonAuthRepository(
 	dbConnector db.Connector,
 	logger *slog.Logger,
+	traceProvider tracing.TraceProvider,
+	spanConfig tracing.SpanConfig,
 ) *CommonAuthRepository {
 	return &CommonAuthRepository{
-		dbConnector: dbConnector,
-		logger:      logger,
+		dbConnector:   dbConnector,
+		logger:        logger,
+		traceProvider: traceProvider,
+		spanConfig:    spanConfig,
 	}
 }
 
 type CommonAuthRepository struct {
-	dbConnector db.Connector
-	logger      *slog.Logger
+	dbConnector   db.Connector
+	logger        *slog.Logger
+	traceProvider tracing.TraceProvider
+	spanConfig    tracing.SpanConfig
 }
 
 func (repo *CommonAuthRepository) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
 		return 0, err
@@ -49,6 +61,7 @@ func (repo *CommonAuthRepository) RegisterUser(ctx context.Context, userData ent
 		return 0, err
 	}
 
+	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return userID, nil
 }
 
@@ -58,6 +71,11 @@ func (repo *CommonAuthRepository) CreateRefreshToken(
 	refreshToken string,
 	ttl time.Duration,
 ) (uint64, error) {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
 		return 0, err
@@ -82,6 +100,7 @@ func (repo *CommonAuthRepository) CreateRefreshToken(
 		return 0, err
 	}
 
+	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return refreshTokenID, nil
 }
 
@@ -89,6 +108,11 @@ func (repo *CommonAuthRepository) GetRefreshTokenByUserID(
 	ctx context.Context,
 	userID uint64,
 ) (*entities.RefreshToken, error) {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
 		return nil, err
@@ -113,10 +137,16 @@ func (repo *CommonAuthRepository) GetRefreshTokenByUserID(
 		return nil, err
 	}
 
+	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return refreshToken, nil
 }
 
 func (repo *CommonAuthRepository) ExpireRefreshToken(ctx context.Context, refreshToken string) error {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
 		return err
@@ -135,6 +165,7 @@ func (repo *CommonAuthRepository) ExpireRefreshToken(ctx context.Context, refres
 		refreshToken,
 	)
 
+	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return err
 }
 

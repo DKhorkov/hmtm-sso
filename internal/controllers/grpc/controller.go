@@ -5,22 +5,30 @@ import (
 	"log/slog"
 	"net"
 
+	"github.com/DKhorkov/libs/tracing"
+
 	"google.golang.org/grpc"
 
 	"github.com/DKhorkov/hmtm-sso/internal/controllers/grpc/auth"
 	"github.com/DKhorkov/hmtm-sso/internal/controllers/grpc/users"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
-	customgrpc "github.com/DKhorkov/libs/grpc"
+	customgrpc "github.com/DKhorkov/libs/grpc/interceptors"
 	"github.com/DKhorkov/libs/logging"
 )
 
 // New creates an instance of gRPC Controller.
-func New(host string, port int, useCases interfaces.UseCases, logger *slog.Logger) *Controller {
+func New(
+	host string,
+	port int,
+	useCases interfaces.UseCases,
+	logger *slog.Logger,
+	traceProvider tracing.TraceProvider,
+	spanConfig tracing.SpanConfig,
+) *Controller {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
-			customgrpc.UnaryServerLoggingInterceptor(
-				logger,
-			),
+			customgrpc.UnaryServerTracingInterceptor(traceProvider, spanConfig),
+			customgrpc.UnaryServerLoggingInterceptor(logger),
 		),
 	)
 

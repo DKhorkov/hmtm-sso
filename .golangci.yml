@@ -381,6 +381,14 @@ issues:
     - path: "internal/repositories/auth_repository.go"
       linters:
         - gosec
+        - dupl
+    - path: "internal/repositories/users_repository.go"
+      linters:
+        - dupl
     - path: "internal/usecases/validators_test.go"
       linters:
         - testpackage
+    - path: "internal/config/config.go"
+      linters:
+        - nosprintfhostport
+        - funlen
