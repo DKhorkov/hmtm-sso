@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
@@ -27,6 +29,15 @@ type ServerAPI struct {
 	sso.UnimplementedAuthServiceServer
 	useCases interfaces.UseCases
 	logger   *slog.Logger
+}
+
+func (api *ServerAPI) Logout(ctx context.Context, in *sso.LogoutIn) (*emptypb.Empty, error) {
+	err := api.useCases.LogoutUser(ctx, in.GetAccessToken())
+	if err != nil {
+		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+	}
+
+	return &emptypb.Empty{}, nil
 }
 
 // Register handler registers new User with provided data.
