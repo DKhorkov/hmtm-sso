@@ -224,3 +224,23 @@ func (useCases *CommonUseCases) RefreshTokens(ctx context.Context, refreshToken 
 		RefreshToken: encodedRefreshToken,
 	}, nil
 }
+
+func (useCases *CommonUseCases) LogoutUser(ctx context.Context, accessToken string) error {
+	accessTokenPayload, err := security.ParseJWT(accessToken, useCases.securityConfig.JWT.SecretKey)
+	if err != nil {
+		return &security.InvalidJWTError{}
+	}
+
+	floatUserID, ok := accessTokenPayload.(float64)
+	if !ok {
+		return &security.InvalidJWTError{}
+	}
+
+	userID := uint64(floatUserID)
+	refreshToken, _ := useCases.authService.GetRefreshTokenByUserID(ctx, userID)
+	if refreshToken == nil {
+		return nil
+	}
+
+	return useCases.authService.ExpireRefreshToken(ctx, refreshToken.Value)
+}

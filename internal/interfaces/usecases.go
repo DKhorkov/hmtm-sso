@@ -11,6 +11,7 @@ type UseCases interface {
 	GetAllUsers(ctx context.Context) ([]entities.User, error)
 	RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (userID uint64, err error)
 	LoginUser(ctx context.Context, userData entities.LoginUserDTO) (*entities.TokensDTO, error)
+	LogoutUser(ctx context.Context, accessToken string) error
 	GetMe(ctx context.Context, accessToken string) (*entities.User, error)
 	RefreshTokens(ctx context.Context, refreshToken string) (*entities.TokensDTO, error)
 }

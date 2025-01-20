@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
+
 package auth;
 
 option go_package = "github.com/DKhorkov/hmtm-sso/api/protobuf/sso;sso";
@@ -7,6 +9,7 @@ option go_package = "github.com/DKhorkov/hmtm-sso/api/protobuf/sso;sso";
 
 service AuthService {
   rpc Login(LoginIn) returns (LoginOut) {}
+  rpc Logout(LogoutIn) returns (google.protobuf.Empty) {}
   rpc Register(RegisterIn) returns (RegisterOut) {}
   rpc RefreshTokens(RefreshTokensIn) returns (LoginOut) {}
 }
@@ -33,4 +36,8 @@ message RegisterIn {
 
 message RegisterOut {
   uint64 userID = 1;
+}
+
+message LogoutIn {
+  string accessToken = 1;
 }

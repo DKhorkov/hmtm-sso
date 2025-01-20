@@ -54,4 +54,16 @@ func main() {
 	//	Password:    "test@Password2",
 	// })
 	// fmt.Println("Register: ", userID, err)
+
+	tokens, err := client.Login(ctx, &sso.LoginIn{
+
+		Email:    "sometestemail2@yandex.ru",
+		Password: "test@Password2",
+	})
+	fmt.Println(tokens, err)
+
+	_, logoutErr := client.Logout(ctx, &sso.LogoutIn{
+		AccessToken: tokens.GetAccessToken(),
+	})
+	fmt.Println(logoutErr)
 }
