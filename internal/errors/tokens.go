@@ -19,3 +19,7 @@ func (e AccessTokenDoesNotBelongToRefreshTokenError) Error() string {
 
 	return template
 }
+
+func (e AccessTokenDoesNotBelongToRefreshTokenError) Unwrap() error {
+	return e.BaseErr
+}

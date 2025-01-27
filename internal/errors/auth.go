@@ -2,24 +2,6 @@ package errors
 
 import "fmt"
 
-type UserNotFoundError struct {
-	Message string
-	BaseErr error
-}
-
-func (e UserNotFoundError) Error() string {
-	template := "user not found"
-	if e.Message != "" {
-		template = e.Message
-	}
-
-	if e.BaseErr != nil {
-		return fmt.Sprintf(template+". Base error: %v", e.BaseErr)
-	}
-
-	return template
-}
-
 type WrongPasswordError struct {
 	Message string
 	BaseErr error
@@ -36,6 +18,10 @@ func (e WrongPasswordError) Error() string {
 	}
 
 	return template
+}
+
+func (e WrongPasswordError) Unwrap() error {
+	return e.BaseErr
 }
 
 type UserAlreadyExistsError struct {
@@ -56,6 +42,10 @@ func (e UserAlreadyExistsError) Error() string {
 	return template
 }
 
+func (e UserAlreadyExistsError) Unwrap() error {
+	return e.BaseErr
+}
+
 type RefreshTokenAlreadyExistsError struct {
 	Message string
 	BaseErr error
@@ -72,6 +62,10 @@ func (e RefreshTokenAlreadyExistsError) Error() string {
 	}
 
 	return template
+}
+
+func (e RefreshTokenAlreadyExistsError) Unwrap() error {
+	return e.BaseErr
 }
 
 type RefreshTokenNotFoundError struct {
@@ -92,6 +86,10 @@ func (e RefreshTokenNotFoundError) Error() string {
 	return template
 }
 
+func (e RefreshTokenNotFoundError) Unwrap() error {
+	return e.BaseErr
+}
+
 type InvalidEmailError struct {
 	Message string
 	BaseErr error
@@ -108,6 +106,10 @@ func (e InvalidEmailError) Error() string {
 	}
 
 	return template
+}
+
+func (e InvalidEmailError) Unwrap() error {
+	return e.BaseErr
 }
 
 type InvalidPasswordError struct {
@@ -128,6 +130,10 @@ func (e InvalidPasswordError) Error() string {
 	return template
 }
 
+func (e InvalidPasswordError) Unwrap() error {
+	return e.BaseErr
+}
+
 type InvalidDisplayNameError struct {
 	Message string
 	BaseErr error
@@ -144,4 +150,8 @@ func (e InvalidDisplayNameError) Error() string {
 	}
 
 	return template
+}
+
+func (e InvalidDisplayNameError) Unwrap() error {
+	return e.BaseErr
 }
