@@ -1,10 +1,14 @@
 module github.com/DKhorkov/hmtm-sso
 
-go 1.23.1
+go 1.23.4
+
+toolchain go1.23.6
 
 require (
-	github.com/DKhorkov/libs v1.2.10
+	github.com/DKhorkov/hmtm-notifications v1.0.0
+	github.com/DKhorkov/libs v1.2.12
 	github.com/mattn/go-sqlite3 v1.14.24
+	github.com/nats-io/nats.go v1.38.0
 	github.com/pressly/goose/v3 v3.24.0
 	github.com/stretchr/testify v1.10.0
 	go.opentelemetry.io/otel v1.34.0
@@ -22,8 +26,11 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.2.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect
+	github.com/nats-io/nkeys v0.4.9 // indirect
+	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect

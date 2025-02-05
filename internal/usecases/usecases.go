@@ -2,11 +2,17 @@ package usecases
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"log/slog"
 
+	notification "github.com/DKhorkov/hmtm-notifications/dto"
 	"github.com/DKhorkov/hmtm-sso/internal/config"
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
+	"github.com/DKhorkov/libs/logging"
+	customnats "github.com/DKhorkov/libs/nats"
 	"github.com/DKhorkov/libs/security"
 )
 
@@ -15,12 +21,18 @@ func NewCommonUseCases(
 	usersService interfaces.UsersService,
 	securityConfig security.Config,
 	validationConfig config.ValidationConfig,
+	natsPublisher customnats.Publisher,
+	natsConfig config.NATSConfig,
+	logger *slog.Logger,
 ) *CommonUseCases {
 	return &CommonUseCases{
 		authService:      authService,
 		usersService:     usersService,
 		securityConfig:   securityConfig,
 		validationConfig: validationConfig,
+		natsPublisher:    natsPublisher,
+		natsConfig:       natsConfig,
+		logger:           logger,
 	}
 }
 
@@ -29,6 +41,9 @@ type CommonUseCases struct {
 	usersService     interfaces.UsersService
 	securityConfig   security.Config
 	validationConfig config.ValidationConfig
+	natsPublisher    customnats.Publisher
+	natsConfig       config.NATSConfig
+	logger           *slog.Logger
 }
 
 func (useCases *CommonUseCases) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
@@ -50,7 +65,38 @@ func (useCases *CommonUseCases) RegisterUser(ctx context.Context, userData entit
 	}
 
 	userData.Password = hashedPassword
-	return useCases.authService.RegisterUser(ctx, userData)
+	userID, err := useCases.authService.RegisterUser(ctx, userData)
+	if err != nil {
+		return 0, err
+	}
+
+	verifyEmailDTO := &notification.VerifyEmailDTO{
+		UserID: userID,
+	}
+
+	content, err := json.Marshal(verifyEmailDTO)
+	if err != nil {
+		logging.LogErrorContext(
+			ctx,
+			useCases.logger,
+			fmt.Sprintf(
+				"Error occurred while trying to encode data for email verification for User with ID=%d",
+				userID,
+			),
+			err,
+		)
+	}
+
+	if err = useCases.natsPublisher.Publish(useCases.natsConfig.Subjects.VerifyEmail, content); err != nil {
+		logging.LogErrorContext(
+			ctx,
+			useCases.logger,
+			fmt.Sprintf("Error occurred while trying send Verfiy Email message to User with ID=%d", userID),
+			err,
+		)
+	}
+
+	return userID, nil
 }
 
 func (useCases *CommonUseCases) LoginUser(

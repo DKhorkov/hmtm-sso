@@ -24,8 +24,8 @@ func (repo *MockedSsoRepository) RegisterUser(userData entities.RegisterUserDTO)
 		DisplayName: userData.DisplayName,
 		Email:       userData.Email,
 		Password:    userData.Password,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		CreatedAt:   time.Now().UTC(),
+		UpdatedAt:   time.Now().UTC(),
 	}
 
 	repo.UsersStorage[user.ID] = &user
@@ -66,7 +66,7 @@ func (repo *MockedSsoRepository) CreateRefreshToken(
 	ttl time.Duration,
 ) (uint64, error) {
 	for _, token := range repo.RefreshTokensStorage {
-		if token.Value == refreshToken && time.Now().Before(token.TTL) {
+		if token.Value == refreshToken && time.Now().UTC().Before(token.TTL) {
 			return 0, &customerrors.RefreshTokenAlreadyExistsError{}
 		}
 	}
@@ -74,9 +74,9 @@ func (repo *MockedSsoRepository) CreateRefreshToken(
 	token := entities.RefreshToken{
 		ID:        uint64(len(repo.UsersStorage) + 1),
 		Value:     refreshToken,
-		TTL:       time.Now().Add(ttl),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		TTL:       time.Now().UTC().Add(ttl),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
 		UserID:    userID,
 	}
 
@@ -97,7 +97,7 @@ func (repo *MockedSsoRepository) GetRefreshTokenByUserID(userID uint64) (*entiti
 func (repo *MockedSsoRepository) ExpireRefreshToken(refreshToken string) error {
 	for _, token := range repo.RefreshTokensStorage {
 		if token.Value == refreshToken {
-			token.TTL = time.Now().Add(time.Hour * time.Duration(-24))
+			token.TTL = time.Now().UTC().Add(time.Hour * time.Duration(-24))
 			repo.RefreshTokensStorage[token.ID] = token
 			return nil
 		}

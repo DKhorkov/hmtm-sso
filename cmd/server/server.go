@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 
+	"github.com/nats-io/nats.go"
+
 	"github.com/DKhorkov/hmtm-sso/internal/app"
 	"github.com/DKhorkov/hmtm-sso/internal/config"
 	grpccontroller "github.com/DKhorkov/hmtm-sso/internal/controllers/grpc"
@@ -11,6 +13,7 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/usecases"
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
+	customnats "github.com/DKhorkov/libs/nats"
 	"github.com/DKhorkov/libs/tracing"
 )
 
@@ -52,6 +55,21 @@ func main() {
 		}
 	}()
 
+	natsPublisher, err := customnats.NewCommonPublisher(
+		settings.NATS.ClientURL,
+		nats.Name(settings.NATS.Publisher.Name),
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		if err = natsPublisher.Close(); err != nil {
+			logging.LogError(logger, "Failed to close nats publisher", err)
+		}
+	}()
+
 	usersRepository := repositories.NewCommonUsersRepository(
 		dbConnector,
 		logger,
@@ -82,6 +100,9 @@ func main() {
 		usersService,
 		settings.Security,
 		settings.Validation,
+		natsPublisher,
+		settings.NATS,
+		logger,
 	)
 
 	controller := grpccontroller.New(
