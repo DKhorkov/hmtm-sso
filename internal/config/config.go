@@ -56,7 +56,7 @@ func New() Config {
 		},
 		Logging: logging.Config{
 			Level:       logging.Levels.DEBUG,
-			LogFilePath: fmt.Sprintf("logs/%s.log", time.Now().Format("02-01-2006")),
+			LogFilePath: fmt.Sprintf("logs/%s.log", time.Now().UTC().Format("02-01-2006")),
 		},
 		Validation: ValidationConfig{
 			EmailRegExp: loadenv.GetEnv("EMAIL_REGEXP", "^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,4}$"),
@@ -171,6 +171,19 @@ func New() Config {
 				},
 			},
 		},
+		NATS: NATSConfig{
+			ClientURL: fmt.Sprintf(
+				"nats://%s:%d",
+				loadenv.GetEnv("NATS_HOST", "0.0.0.0"),
+				loadenv.GetEnvAsInt("NATS_CLIENT_PORT", 4222),
+			),
+			Subjects: NATSSubjects{
+				VerifyEmail: loadenv.GetEnv("NATS_VERIFY_EMAIL_SUBJECT", "verify-email"),
+			},
+			Publisher: NATSPublisher{
+				Name: loadenv.GetEnv("NATS_PUBLISHER_NAME", "hmtm-sso-publisher"),
+			},
+		},
 	}
 }
 
@@ -200,6 +213,20 @@ type SpanRepositories struct {
 	Users tracing.SpanConfig
 }
 
+type NATSConfig struct {
+	ClientURL string
+	Subjects  NATSSubjects
+	Publisher NATSPublisher
+}
+
+type NATSSubjects struct {
+	VerifyEmail string
+}
+
+type NATSPublisher struct {
+	Name string
+}
+
 type Config struct {
 	HTTP        HTTPConfig
 	Security    security.Config
@@ -209,4 +236,5 @@ type Config struct {
 	Tracing     TracingConfig
 	Environment string
 	Version     string
+	NATS        NATSConfig
 }

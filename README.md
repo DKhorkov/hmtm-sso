@@ -94,3 +94,8 @@ task -d scripts migrations_status
 
 To see tracing open 
 next [link](http://localhost:16686) in browser.
+
+## NATS
+
+To see NATS monitoring open
+next [link](http://localhost:8222) in browser.

@@ -93,7 +93,7 @@ func (repo *CommonAuthRepository) CreateRefreshToken(
 		`,
 		userID,
 		refreshToken,
-		time.Now().Add(ttl),
+		time.Now().UTC().Add(ttl),
 	).Scan(&refreshTokenID)
 
 	if err != nil {
@@ -161,7 +161,7 @@ func (repo *CommonAuthRepository) ExpireRefreshToken(ctx context.Context, refres
 			SET ttl = $1
 			WHERE value = $2
 		`,
-		time.Now().Add(time.Hour*time.Duration(-24)),
+		time.Now().UTC().Add(time.Hour*time.Duration(-24)),
 		refreshToken,
 	)
 
