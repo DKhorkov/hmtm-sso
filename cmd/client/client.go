@@ -9,8 +9,9 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
 	"github.com/DKhorkov/libs/requestid"
+
+	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
 )
 
 type Client struct {

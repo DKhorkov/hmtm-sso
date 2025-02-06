@@ -5,16 +5,17 @@ import (
 
 	"github.com/nats-io/nats.go"
 
+	"github.com/DKhorkov/libs/db"
+	"github.com/DKhorkov/libs/logging"
+	customnats "github.com/DKhorkov/libs/nats"
+	"github.com/DKhorkov/libs/tracing"
+
 	"github.com/DKhorkov/hmtm-sso/internal/app"
 	"github.com/DKhorkov/hmtm-sso/internal/config"
 	grpccontroller "github.com/DKhorkov/hmtm-sso/internal/controllers/grpc"
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
 	"github.com/DKhorkov/hmtm-sso/internal/services"
 	"github.com/DKhorkov/hmtm-sso/internal/usecases"
-	"github.com/DKhorkov/libs/db"
-	"github.com/DKhorkov/libs/logging"
-	customnats "github.com/DKhorkov/libs/nats"
-	"github.com/DKhorkov/libs/tracing"
 )
 
 func main() {

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
-
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 )

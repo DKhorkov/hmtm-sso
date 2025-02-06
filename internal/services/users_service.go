@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/DKhorkov/hmtm-sso/internal/entities"
+	"github.com/DKhorkov/libs/logging"
 
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
-	"github.com/DKhorkov/libs/logging"
 )
 
 func NewCommonUsersService(usersRepository interfaces.UsersRepository, logger *slog.Logger) *CommonUsersService {

@@ -5,9 +5,10 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/tracing"
+
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
 )
 
 func NewCommonAuthRepository(

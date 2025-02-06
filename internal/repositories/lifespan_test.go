@@ -8,8 +8,9 @@ import (
 	"path"
 	"testing"
 
-	"github.com/DKhorkov/libs/db"
 	"github.com/pressly/goose/v3"
+
+	"github.com/DKhorkov/libs/db"
 )
 
 const (

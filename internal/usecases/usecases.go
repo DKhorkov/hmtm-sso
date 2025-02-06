@@ -7,13 +7,14 @@ import (
 	"log/slog"
 
 	notification "github.com/DKhorkov/hmtm-notifications/dto"
+	"github.com/DKhorkov/libs/logging"
+	customnats "github.com/DKhorkov/libs/nats"
+	"github.com/DKhorkov/libs/security"
+
 	"github.com/DKhorkov/hmtm-sso/internal/config"
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
-	"github.com/DKhorkov/libs/logging"
-	customnats "github.com/DKhorkov/libs/nats"
-	"github.com/DKhorkov/libs/security"
 )
 
 func NewCommonUseCases(
