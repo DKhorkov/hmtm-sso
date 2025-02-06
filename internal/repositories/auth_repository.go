@@ -5,9 +5,10 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/tracing"
+
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
 )
 
 func NewCommonAuthRepository(
@@ -36,6 +37,7 @@ func (repo *CommonAuthRepository) RegisterUser(ctx context.Context, userData ent
 	defer span.End()
 
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
@@ -61,7 +63,6 @@ func (repo *CommonAuthRepository) RegisterUser(ctx context.Context, userData ent
 		return 0, err
 	}
 
-	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return userID, nil
 }
 
@@ -75,6 +76,7 @@ func (repo *CommonAuthRepository) CreateRefreshToken(
 	defer span.End()
 
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
@@ -100,7 +102,6 @@ func (repo *CommonAuthRepository) CreateRefreshToken(
 		return 0, err
 	}
 
-	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return refreshTokenID, nil
 }
 
@@ -112,6 +113,7 @@ func (repo *CommonAuthRepository) GetRefreshTokenByUserID(
 	defer span.End()
 
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
@@ -137,7 +139,6 @@ func (repo *CommonAuthRepository) GetRefreshTokenByUserID(
 		return nil, err
 	}
 
-	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return refreshToken, nil
 }
 
@@ -146,6 +147,7 @@ func (repo *CommonAuthRepository) ExpireRefreshToken(ctx context.Context, refres
 	defer span.End()
 
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
@@ -165,7 +167,6 @@ func (repo *CommonAuthRepository) ExpireRefreshToken(ctx context.Context, refres
 		refreshToken,
 	)
 
-	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return err
 }
 

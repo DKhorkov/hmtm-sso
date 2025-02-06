@@ -6,16 +6,15 @@ import (
 	"context"
 	"testing"
 
-	tracingmock "github.com/DKhorkov/libs/tracing/mocks"
-	"go.uber.org/mock/gomock"
-
-	"github.com/DKhorkov/hmtm-sso/internal/entities"
-
-	"github.com/DKhorkov/hmtm-sso/internal/repositories"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
-	_ "github.com/mattn/go-sqlite3"
+	tracingmock "github.com/DKhorkov/libs/tracing/mocks"
+
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
+	"github.com/DKhorkov/hmtm-sso/internal/repositories"
 )
 
 const (

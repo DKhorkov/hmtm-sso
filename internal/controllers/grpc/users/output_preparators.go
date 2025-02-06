@@ -1,9 +1,10 @@
 package users
 
 import (
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func prepareUserOut(user entities.User) *sso.GetUserOut {

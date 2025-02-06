@@ -7,15 +7,16 @@ import (
 	"log/slog"
 	"testing"
 
-	"go.uber.org/mock/gomock"
-
-	"github.com/DKhorkov/hmtm-sso/internal/entities"
-	"github.com/DKhorkov/hmtm-sso/internal/repositories"
-	"github.com/DKhorkov/libs/tracing"
-	tracingmock "github.com/DKhorkov/libs/tracing/mocks"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
+
+	"github.com/DKhorkov/libs/tracing"
+	tracingmock "github.com/DKhorkov/libs/tracing/mocks"
+
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
+	"github.com/DKhorkov/hmtm-sso/internal/repositories"
 )
 
 var (

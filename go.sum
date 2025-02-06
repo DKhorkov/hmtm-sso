@@ -1,7 +1,7 @@
 github.com/DKhorkov/hmtm-notifications v1.0.0 h1:a0LQOb7gVmWw1a0PH0qDTTMrMvMOHv6hADCIedk3NVc=
 github.com/DKhorkov/hmtm-notifications v1.0.0/go.mod h1:2+FEnEugHOPnreyLr8p6qpX4ctnE6wpn3qejuoZJmHg=
-github.com/DKhorkov/libs v1.2.12 h1:eChWs9oBoUjJ9gov3o6JHLQlL5GRBco5ziYMRyj4GiU=
-github.com/DKhorkov/libs v1.2.12/go.mod h1:bG7YLEvPSks0MJcGJLtVj1K2PmeQBU++PC9PCt9Ft0U=
+github.com/DKhorkov/libs v1.2.13 h1:FK3CpCk1AEf3cKoIGae/aiXnCMQB8OGi0rO67ZL4xMw=
+github.com/DKhorkov/libs v1.2.13/go.mod h1:bG7YLEvPSks0MJcGJLtVj1K2PmeQBU++PC9PCt9Ft0U=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
