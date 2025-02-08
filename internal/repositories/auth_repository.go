@@ -170,6 +170,33 @@ func (repo *CommonAuthRepository) ExpireRefreshToken(ctx context.Context, refres
 	return err
 }
 
+func (repo *CommonAuthRepository) VerifyUserEmail(ctx context.Context, userID uint64) error {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
+
+	connection, err := repo.dbConnector.Connection(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer db.CloseConnectionContext(ctx, connection, repo.logger)
+
+	_, err = connection.ExecContext(
+		ctx,
+		`
+			UPDATE users
+			SET email_confirmed = true
+			WHERE id = $1
+		`,
+		userID,
+	)
+
+	return err
+}
+
 func (repo *CommonAuthRepository) Close() error {
 	return nil
 }

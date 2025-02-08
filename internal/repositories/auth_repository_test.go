@@ -110,6 +110,70 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 	})
 }
 
+func TestRepositoriesVerifyUserEmail(t *testing.T) {
+	t.Run("successful", func(t *testing.T) {
+		dbConnector := StartUp(t)
+		ctx := context.Background()
+		connection, err := dbConnector.Connection(ctx)
+		require.NoError(t, err)
+
+		defer func() {
+			if err = connection.Close(); err != nil {
+				t.Fatal(err)
+			}
+		}()
+
+		traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(t))
+		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
+			context.Background(),
+			tracingmock.NewMockSpan(),
+		).Times(1)
+
+		testUser := &entities.User{
+			ID:          testUserID,
+			DisplayName: "Display Name",
+			Email:       testUserEmail,
+			Password:    "password",
+		}
+
+		_, err = connection.ExecContext(
+			ctx,
+			`
+				INSERT INTO users (id, display_name, email, password) 
+				VALUES ($1, $2, $3, $4)
+			`,
+			testUser.ID,
+			testUser.DisplayName,
+			testUser.Email,
+			testUser.Password,
+		)
+
+		if err != nil {
+			t.Fatalf("failed to insert user: %v", err)
+		}
+
+		authRepository := repositories.NewCommonAuthRepository(dbConnector, logger, traceProvider, spanConfig)
+
+		// Error and zero userID due to returning nil ID after register.
+		// SQLite inner realization without AUTO_INCREMENT for SERIAL PRIMARY KEY
+		err = authRepository.VerifyUserEmail(ctx, testUserID)
+		require.NoError(t, err)
+
+		var emailConfirmed bool
+		err = connection.QueryRowContext(
+			ctx,
+			`
+				SELECT u.email_confirmed
+				FROM users AS u
+				WHERE u.id = $1
+			`,
+			testUserID,
+		).Scan(&emailConfirmed)
+		require.NoError(t, err)
+		assert.True(t, emailConfirmed)
+	})
+}
+
 func BenchmarkRepositoriesRegisterUser(b *testing.B) {
 	dbConnector := StartUp(b)
 	traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(b))

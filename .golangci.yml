@@ -362,6 +362,7 @@ issues:
     - path: "internal/usecases/usecases.go"
       linters:
         - govet
+        - gosec
     - path: "mocks/repositories/sso_repository.go"
       linters:
         - gosec

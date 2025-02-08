@@ -23,4 +23,5 @@ type AuthRepository interface {
 	) (refreshTokenID uint64, err error)
 	GetRefreshTokenByUserID(ctx context.Context, userID uint64) (*entities.RefreshToken, error)
 	ExpireRefreshToken(ctx context.Context, refreshToken string) error
+	VerifyUserEmail(ctx context.Context, userID uint64) error
 }

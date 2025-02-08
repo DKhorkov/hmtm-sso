@@ -4,12 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/DKhorkov/libs/requestid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/protobuf/types/known/emptypb"
-
-	"github.com/DKhorkov/libs/requestid"
 
 	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
 )
@@ -46,8 +44,8 @@ func main() {
 	//)
 	// fmt.Println(tokens, err)
 
-	users, err := client.GetUsers(ctx, &emptypb.Empty{})
-	fmt.Println(users, err)
+	// users, err := client.GetUsers(ctx, &emptypb.Empty{})
+	// fmt.Println(users, err)
 
 	// userID, err := client.Register(ctx, &sso.RegisterIn{
 	//	DisplayName: "test User",
@@ -56,15 +54,18 @@ func main() {
 	// })
 	// fmt.Println("Register: ", userID, err)
 
-	tokens, err := client.Login(ctx, &sso.LoginIn{
+	// tokens, err := client.Login(ctx, &sso.LoginIn{
+	//
+	//	Email:    "sometestemail2@yandex.ru",
+	//	Password: "test@Password2",
+	// })
+	// fmt.Println(tokens, err)
+	//
+	// _, logoutErr := client.Logout(ctx, &sso.LogoutIn{
+	//	AccessToken: tokens.GetAccessToken(),
+	// })
+	// fmt.Println(logoutErr)
 
-		Email:    "sometestemail2@yandex.ru",
-		Password: "test@Password2",
-	})
-	fmt.Println(tokens, err)
-
-	_, logoutErr := client.Logout(ctx, &sso.LogoutIn{
-		AccessToken: tokens.GetAccessToken(),
-	})
-	fmt.Println(logoutErr)
+	_, err = client.VerifyEmail(ctx, &sso.VerifyEmailIn{VerifyEmailToken: "MjM="})
+	fmt.Println(err)
 }

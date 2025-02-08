@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"strconv"
 
 	notification "github.com/DKhorkov/hmtm-notifications/dto"
 	"github.com/DKhorkov/libs/logging"
@@ -290,4 +291,19 @@ func (useCases *CommonUseCases) LogoutUser(ctx context.Context, accessToken stri
 	}
 
 	return useCases.authService.ExpireRefreshToken(ctx, refreshToken.Value)
+}
+
+func (useCases *CommonUseCases) VerifyUserEmail(ctx context.Context, verifyEmailToken string) error {
+	strUserID, err := security.Decode(verifyEmailToken)
+	if err != nil {
+		return err
+	}
+
+	intUserID, err := strconv.Atoi(string(strUserID))
+	if err != nil {
+		return err
+	}
+
+	userID := uint64(intUserID)
+	return useCases.authService.VerifyUserEmail(ctx, userID)
 }
