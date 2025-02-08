@@ -23,6 +23,7 @@ type AuthServiceClient interface {
 	Logout(ctx context.Context, in *LogoutIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Register(ctx context.Context, in *RegisterIn, opts ...grpc.CallOption) (*RegisterOut, error)
 	RefreshTokens(ctx context.Context, in *RefreshTokensIn, opts ...grpc.CallOption) (*LoginOut, error)
+	VerifyEmail(ctx context.Context, in *VerifyEmailIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type authServiceClient struct {
@@ -69,6 +70,15 @@ func (c *authServiceClient) RefreshTokens(ctx context.Context, in *RefreshTokens
 	return out, nil
 }
 
+func (c *authServiceClient) VerifyEmail(ctx context.Context, in *VerifyEmailIn, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/auth.AuthService/VerifyEmail", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility
@@ -77,6 +87,7 @@ type AuthServiceServer interface {
 	Logout(context.Context, *LogoutIn) (*emptypb.Empty, error)
 	Register(context.Context, *RegisterIn) (*RegisterOut, error)
 	RefreshTokens(context.Context, *RefreshTokensIn) (*LoginOut, error)
+	VerifyEmail(context.Context, *VerifyEmailIn) (*emptypb.Empty, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -95,6 +106,9 @@ func (UnimplementedAuthServiceServer) Register(context.Context, *RegisterIn) (*R
 }
 func (UnimplementedAuthServiceServer) RefreshTokens(context.Context, *RefreshTokensIn) (*LoginOut, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshTokens not implemented")
+}
+func (UnimplementedAuthServiceServer) VerifyEmail(context.Context, *VerifyEmailIn) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyEmail not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 
@@ -181,6 +195,24 @@ func _AuthService_RefreshTokens_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_VerifyEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyEmailIn)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).VerifyEmail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.AuthService/VerifyEmail",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).VerifyEmail(ctx, req.(*VerifyEmailIn))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -203,6 +235,10 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RefreshTokens",
 			Handler:    _AuthService_RefreshTokens_Handler,
+		},
+		{
+			MethodName: "VerifyEmail",
+			Handler:    _AuthService_VerifyEmail_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

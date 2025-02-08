@@ -12,6 +12,7 @@ service AuthService {
   rpc Logout(LogoutIn) returns (google.protobuf.Empty) {}
   rpc Register(RegisterIn) returns (RegisterOut) {}
   rpc RefreshTokens(RefreshTokensIn) returns (LoginOut) {}
+  rpc VerifyEmail(VerifyEmailIn) returns (google.protobuf.Empty) {}
 }
 
 message RefreshTokensIn {
@@ -40,4 +41,8 @@ message RegisterOut {
 
 message LogoutIn {
   string accessToken = 1;
+}
+
+message VerifyEmailIn {
+  string verifyEmailToken = 1;
 }

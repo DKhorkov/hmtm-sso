@@ -61,3 +61,7 @@ func (service *CommonAuthService) GetRefreshTokenByUserID(
 func (service *CommonAuthService) ExpireRefreshToken(ctx context.Context, refreshToken string) error {
 	return service.authRepository.ExpireRefreshToken(ctx, refreshToken)
 }
+
+func (service *CommonAuthService) VerifyUserEmail(ctx context.Context, userID uint64) error {
+	return service.authRepository.VerifyUserEmail(ctx, userID)
+}

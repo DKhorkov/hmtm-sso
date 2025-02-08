@@ -32,9 +32,16 @@ type ServerAPI struct {
 	logger   *slog.Logger
 }
 
+func (api *ServerAPI) VerifyEmail(ctx context.Context, in *sso.VerifyEmailIn) (*emptypb.Empty, error) {
+	if err := api.useCases.VerifyUserEmail(ctx, in.GetVerifyEmailToken()); err != nil {
+		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
 func (api *ServerAPI) Logout(ctx context.Context, in *sso.LogoutIn) (*emptypb.Empty, error) {
-	err := api.useCases.LogoutUser(ctx, in.GetAccessToken())
-	if err != nil {
+	if err := api.useCases.LogoutUser(ctx, in.GetAccessToken()); err != nil {
 		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
