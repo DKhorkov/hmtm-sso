@@ -12,23 +12,23 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 )
 
-func NewCommonUsersService(usersRepository interfaces.UsersRepository, logger *slog.Logger) *CommonUsersService {
-	return &CommonUsersService{
+func NewUsersService(usersRepository interfaces.UsersRepository, logger *slog.Logger) *UsersService {
+	return &UsersService{
 		usersRepository: usersRepository,
 		logger:          logger,
 	}
 }
 
-type CommonUsersService struct {
+type UsersService struct {
 	usersRepository interfaces.UsersRepository
 	logger          *slog.Logger
 }
 
-func (service *CommonUsersService) GetAllUsers(ctx context.Context) ([]entities.User, error) {
+func (service *UsersService) GetAllUsers(ctx context.Context) ([]entities.User, error) {
 	return service.usersRepository.GetAllUsers(ctx)
 }
 
-func (service *CommonUsersService) GetUserByID(ctx context.Context, id uint64) (*entities.User, error) {
+func (service *UsersService) GetUserByID(ctx context.Context, id uint64) (*entities.User, error) {
 	user, err := service.usersRepository.GetUserByID(ctx, id)
 	if err != nil {
 		logging.LogErrorContext(
@@ -44,7 +44,7 @@ func (service *CommonUsersService) GetUserByID(ctx context.Context, id uint64) (
 	return user, nil
 }
 
-func (service *CommonUsersService) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
+func (service *UsersService) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
 	user, err := service.usersRepository.GetUserByEmail(ctx, email)
 	if err != nil {
 		logging.LogErrorContext(

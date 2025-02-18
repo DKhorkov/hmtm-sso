@@ -56,7 +56,7 @@ func main() {
 		}
 	}()
 
-	natsPublisher, err := customnats.NewCommonPublisher(
+	natsPublisher, err := customnats.NewPublisher(
 		settings.NATS.ClientURL,
 		nats.Name(settings.NATS.Publisher.Name),
 	)
@@ -71,32 +71,32 @@ func main() {
 		}
 	}()
 
-	usersRepository := repositories.NewCommonUsersRepository(
+	usersRepository := repositories.NewUsersRepository(
 		dbConnector,
 		logger,
 		traceProvider,
 		settings.Tracing.Spans.Repositories.Users,
 	)
 
-	usersService := services.NewCommonUsersService(
+	usersService := services.NewUsersService(
 		usersRepository,
 		logger,
 	)
 
-	authRepository := repositories.NewCommonAuthRepository(
+	authRepository := repositories.NewAuthRepository(
 		dbConnector,
 		logger,
 		traceProvider,
 		settings.Tracing.Spans.Repositories.Auth,
 	)
 
-	authService := services.NewCommonAuthService(
+	authService := services.NewAuthService(
 		authRepository,
 		usersRepository,
 		logger,
 	)
 
-	useCases := usecases.NewCommonUseCases(
+	useCases := usecases.New(
 		authService,
 		usersService,
 		settings.Security,

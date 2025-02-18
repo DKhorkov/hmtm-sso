@@ -10,25 +10,25 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 )
 
-func NewCommonAuthService(
+func NewAuthService(
 	authRepository interfaces.AuthRepository,
 	usersRepository interfaces.UsersRepository,
 	logger *slog.Logger,
-) *CommonAuthService {
-	return &CommonAuthService{
+) *AuthService {
+	return &AuthService{
 		authRepository:  authRepository,
 		usersRepository: usersRepository,
 		logger:          logger,
 	}
 }
 
-type CommonAuthService struct {
+type AuthService struct {
 	authRepository  interfaces.AuthRepository
 	usersRepository interfaces.UsersRepository
 	logger          *slog.Logger
 }
 
-func (service *CommonAuthService) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
+func (service *AuthService) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
 	user, _ := service.usersRepository.GetUserByEmail(ctx, userData.Email)
 	if user != nil {
 		return 0, &customerrors.UserAlreadyExistsError{}
@@ -37,7 +37,7 @@ func (service *CommonAuthService) RegisterUser(ctx context.Context, userData ent
 	return service.authRepository.RegisterUser(ctx, userData)
 }
 
-func (service *CommonAuthService) CreateRefreshToken(
+func (service *AuthService) CreateRefreshToken(
 	ctx context.Context,
 	userID uint64,
 	refreshToken string,
@@ -51,17 +51,17 @@ func (service *CommonAuthService) CreateRefreshToken(
 	)
 }
 
-func (service *CommonAuthService) GetRefreshTokenByUserID(
+func (service *AuthService) GetRefreshTokenByUserID(
 	ctx context.Context,
 	userID uint64,
 ) (*entities.RefreshToken, error) {
 	return service.authRepository.GetRefreshTokenByUserID(ctx, userID)
 }
 
-func (service *CommonAuthService) ExpireRefreshToken(ctx context.Context, refreshToken string) error {
+func (service *AuthService) ExpireRefreshToken(ctx context.Context, refreshToken string) error {
 	return service.authRepository.ExpireRefreshToken(ctx, refreshToken)
 }
 
-func (service *CommonAuthService) VerifyUserEmail(ctx context.Context, userID uint64) error {
+func (service *AuthService) VerifyUserEmail(ctx context.Context, userID uint64) error {
 	return service.authRepository.VerifyUserEmail(ctx, userID)
 }
