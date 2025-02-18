@@ -32,13 +32,13 @@ var (
 func TestRepositoriesRegisterUser(t *testing.T) {
 	t.Run("successful registration", func(t *testing.T) {
 		dbConnector := StartUp(t)
-		traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(t))
+		traceProvider := tracingmock.NewMockProvider(gomock.NewController(t))
 		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
 			context.Background(),
 			tracingmock.NewMockSpan(),
 		).Times(1)
 
-		authRepository := repositories.NewCommonAuthRepository(dbConnector, logger, traceProvider, spanConfig)
+		authRepository := repositories.NewAuthRepository(dbConnector, logger, traceProvider, spanConfig)
 
 		// Error and zero userID due to returning nil ID after register.
 		// SQLite inner realization without AUTO_INCREMENT for SERIAL PRIMARY KEY
@@ -96,13 +96,13 @@ func TestRepositoriesRegisterUser(t *testing.T) {
 			t.Fatalf("failed to insert user: %v", err)
 		}
 
-		traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(t))
+		traceProvider := tracingmock.NewMockProvider(gomock.NewController(t))
 		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
 			context.Background(),
 			tracingmock.NewMockSpan(),
 		).Times(1)
 
-		authRepository := repositories.NewCommonAuthRepository(dbConnector, logger, traceProvider, spanConfig)
+		authRepository := repositories.NewAuthRepository(dbConnector, logger, traceProvider, spanConfig)
 
 		userID, err := authRepository.RegisterUser(ctx, testUserDTO)
 		require.Error(t, err)
@@ -123,7 +123,7 @@ func TestRepositoriesVerifyUserEmail(t *testing.T) {
 			}
 		}()
 
-		traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(t))
+		traceProvider := tracingmock.NewMockProvider(gomock.NewController(t))
 		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
 			context.Background(),
 			tracingmock.NewMockSpan(),
@@ -152,7 +152,7 @@ func TestRepositoriesVerifyUserEmail(t *testing.T) {
 			t.Fatalf("failed to insert user: %v", err)
 		}
 
-		authRepository := repositories.NewCommonAuthRepository(dbConnector, logger, traceProvider, spanConfig)
+		authRepository := repositories.NewAuthRepository(dbConnector, logger, traceProvider, spanConfig)
 
 		// Error and zero userID due to returning nil ID after register.
 		// SQLite inner realization without AUTO_INCREMENT for SERIAL PRIMARY KEY
@@ -176,13 +176,13 @@ func TestRepositoriesVerifyUserEmail(t *testing.T) {
 
 func BenchmarkRepositoriesRegisterUser(b *testing.B) {
 	dbConnector := StartUp(b)
-	traceProvider := tracingmock.NewMockTraceProvider(gomock.NewController(b))
+	traceProvider := tracingmock.NewMockProvider(gomock.NewController(b))
 	traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
 		context.Background(),
 		tracingmock.NewMockSpan(),
 	).AnyTimes()
 
-	authRepository := repositories.NewCommonAuthRepository(dbConnector, logger, traceProvider, spanConfig)
+	authRepository := repositories.NewAuthRepository(dbConnector, logger, traceProvider, spanConfig)
 
 	b.ResetTimer()
 	for range b.N {

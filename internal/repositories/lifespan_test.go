@@ -21,7 +21,7 @@ const (
 	gooseZeroVersion = 0
 )
 
-func StartUp(tb testing.TB) *db.CommonDBConnector {
+func StartUp(tb testing.TB) db.Connector {
 	dbConnector, err := db.New(dsn, driver, &slog.Logger{})
 	if err != nil {
 		tb.Fatal(err)

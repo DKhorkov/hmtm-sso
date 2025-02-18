@@ -18,7 +18,7 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 )
 
-func NewCommonUseCases(
+func New(
 	authService interfaces.AuthService,
 	usersService interfaces.UsersService,
 	securityConfig security.Config,
@@ -26,8 +26,8 @@ func NewCommonUseCases(
 	natsPublisher customnats.Publisher,
 	natsConfig config.NATSConfig,
 	logger *slog.Logger,
-) *CommonUseCases {
-	return &CommonUseCases{
+) *UseCases {
+	return &UseCases{
 		authService:      authService,
 		usersService:     usersService,
 		securityConfig:   securityConfig,
@@ -38,7 +38,7 @@ func NewCommonUseCases(
 	}
 }
 
-type CommonUseCases struct {
+type UseCases struct {
 	authService      interfaces.AuthService
 	usersService     interfaces.UsersService
 	securityConfig   security.Config
@@ -48,7 +48,7 @@ type CommonUseCases struct {
 	logger           *slog.Logger
 }
 
-func (useCases *CommonUseCases) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
+func (useCases *UseCases) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
 	if !validateValueByRule(userData.Email, useCases.validationConfig.EmailRegExp) {
 		return 0, &customerrors.InvalidEmailError{}
 	}
@@ -101,7 +101,7 @@ func (useCases *CommonUseCases) RegisterUser(ctx context.Context, userData entit
 	return userID, nil
 }
 
-func (useCases *CommonUseCases) LoginUser(
+func (useCases *UseCases) LoginUser(
 	ctx context.Context,
 	userData entities.LoginUserDTO,
 ) (*entities.TokensDTO, error) {
@@ -162,15 +162,15 @@ func (useCases *CommonUseCases) LoginUser(
 	}, nil
 }
 
-func (useCases *CommonUseCases) GetUserByID(ctx context.Context, id uint64) (*entities.User, error) {
+func (useCases *UseCases) GetUserByID(ctx context.Context, id uint64) (*entities.User, error) {
 	return useCases.usersService.GetUserByID(ctx, id)
 }
 
-func (useCases *CommonUseCases) GetAllUsers(ctx context.Context) ([]entities.User, error) {
+func (useCases *UseCases) GetAllUsers(ctx context.Context) ([]entities.User, error) {
 	return useCases.usersService.GetAllUsers(ctx)
 }
 
-func (useCases *CommonUseCases) GetMe(ctx context.Context, accessToken string) (*entities.User, error) {
+func (useCases *UseCases) GetMe(ctx context.Context, accessToken string) (*entities.User, error) {
 	accessTokenPayload, err := security.ParseJWT(accessToken, useCases.securityConfig.JWT.SecretKey)
 	if err != nil {
 		return nil, &security.InvalidJWTError{}
@@ -185,7 +185,7 @@ func (useCases *CommonUseCases) GetMe(ctx context.Context, accessToken string) (
 	return useCases.usersService.GetUserByID(ctx, userID)
 }
 
-func (useCases *CommonUseCases) RefreshTokens(ctx context.Context, refreshToken string) (*entities.TokensDTO, error) {
+func (useCases *UseCases) RefreshTokens(ctx context.Context, refreshToken string) (*entities.TokensDTO, error) {
 	// Decoding refresh token to get original JWT and compare its value with value in Database:
 	oldRefreshTokenBytes, err := security.Decode(refreshToken)
 	if err != nil {
@@ -273,7 +273,7 @@ func (useCases *CommonUseCases) RefreshTokens(ctx context.Context, refreshToken 
 	}, nil
 }
 
-func (useCases *CommonUseCases) LogoutUser(ctx context.Context, accessToken string) error {
+func (useCases *UseCases) LogoutUser(ctx context.Context, accessToken string) error {
 	accessTokenPayload, err := security.ParseJWT(accessToken, useCases.securityConfig.JWT.SecretKey)
 	if err != nil {
 		return &security.InvalidJWTError{}
@@ -293,7 +293,7 @@ func (useCases *CommonUseCases) LogoutUser(ctx context.Context, accessToken stri
 	return useCases.authService.ExpireRefreshToken(ctx, refreshToken.Value)
 }
 
-func (useCases *CommonUseCases) VerifyUserEmail(ctx context.Context, verifyEmailToken string) error {
+func (useCases *UseCases) VerifyUserEmail(ctx context.Context, verifyEmailToken string) error {
 	strUserID, err := security.Decode(verifyEmailToken)
 	if err != nil {
 		return err

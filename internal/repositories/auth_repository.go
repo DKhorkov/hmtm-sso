@@ -11,13 +11,13 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 )
 
-func NewCommonAuthRepository(
+func NewAuthRepository(
 	dbConnector db.Connector,
 	logger *slog.Logger,
-	traceProvider tracing.TraceProvider,
+	traceProvider tracing.Provider,
 	spanConfig tracing.SpanConfig,
-) *CommonAuthRepository {
-	return &CommonAuthRepository{
+) *AuthRepository {
+	return &AuthRepository{
 		dbConnector:   dbConnector,
 		logger:        logger,
 		traceProvider: traceProvider,
@@ -25,14 +25,14 @@ func NewCommonAuthRepository(
 	}
 }
 
-type CommonAuthRepository struct {
+type AuthRepository struct {
 	dbConnector   db.Connector
 	logger        *slog.Logger
-	traceProvider tracing.TraceProvider
+	traceProvider tracing.Provider
 	spanConfig    tracing.SpanConfig
 }
 
-func (repo *CommonAuthRepository) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
+func (repo *AuthRepository) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -66,7 +66,7 @@ func (repo *CommonAuthRepository) RegisterUser(ctx context.Context, userData ent
 	return userID, nil
 }
 
-func (repo *CommonAuthRepository) CreateRefreshToken(
+func (repo *AuthRepository) CreateRefreshToken(
 	ctx context.Context,
 	userID uint64,
 	refreshToken string,
@@ -105,7 +105,7 @@ func (repo *CommonAuthRepository) CreateRefreshToken(
 	return refreshTokenID, nil
 }
 
-func (repo *CommonAuthRepository) GetRefreshTokenByUserID(
+func (repo *AuthRepository) GetRefreshTokenByUserID(
 	ctx context.Context,
 	userID uint64,
 ) (*entities.RefreshToken, error) {
@@ -142,7 +142,7 @@ func (repo *CommonAuthRepository) GetRefreshTokenByUserID(
 	return refreshToken, nil
 }
 
-func (repo *CommonAuthRepository) ExpireRefreshToken(ctx context.Context, refreshToken string) error {
+func (repo *AuthRepository) ExpireRefreshToken(ctx context.Context, refreshToken string) error {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -170,7 +170,7 @@ func (repo *CommonAuthRepository) ExpireRefreshToken(ctx context.Context, refres
 	return err
 }
 
-func (repo *CommonAuthRepository) VerifyUserEmail(ctx context.Context, userID uint64) error {
+func (repo *AuthRepository) VerifyUserEmail(ctx context.Context, userID uint64) error {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -197,6 +197,6 @@ func (repo *CommonAuthRepository) VerifyUserEmail(ctx context.Context, userID ui
 	return err
 }
 
-func (repo *CommonAuthRepository) Close() error {
+func (repo *AuthRepository) Close() error {
 	return nil
 }

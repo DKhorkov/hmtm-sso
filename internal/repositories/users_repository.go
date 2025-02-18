@@ -11,13 +11,13 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 )
 
-func NewCommonUsersRepository(
+func NewUsersRepository(
 	dbConnector db.Connector,
 	logger *slog.Logger,
-	traceProvider tracing.TraceProvider,
+	traceProvider tracing.Provider,
 	spanConfig tracing.SpanConfig,
-) *CommonUsersRepository {
-	return &CommonUsersRepository{
+) *UsersRepository {
+	return &UsersRepository{
 		dbConnector:   dbConnector,
 		logger:        logger,
 		traceProvider: traceProvider,
@@ -25,14 +25,14 @@ func NewCommonUsersRepository(
 	}
 }
 
-type CommonUsersRepository struct {
+type UsersRepository struct {
 	dbConnector   db.Connector
 	logger        *slog.Logger
-	traceProvider tracing.TraceProvider
+	traceProvider tracing.Provider
 	spanConfig    tracing.SpanConfig
 }
 
-func (repo *CommonUsersRepository) GetUserByID(ctx context.Context, id uint64) (*entities.User, error) {
+func (repo *UsersRepository) GetUserByID(ctx context.Context, id uint64) (*entities.User, error) {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -65,7 +65,7 @@ func (repo *CommonUsersRepository) GetUserByID(ctx context.Context, id uint64) (
 	return user, nil
 }
 
-func (repo *CommonUsersRepository) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
+func (repo *UsersRepository) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -98,7 +98,7 @@ func (repo *CommonUsersRepository) GetUserByEmail(ctx context.Context, email str
 	return user, nil
 }
 
-func (repo *CommonUsersRepository) GetAllUsers(ctx context.Context) ([]entities.User, error) {
+func (repo *UsersRepository) GetAllUsers(ctx context.Context) ([]entities.User, error) {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -154,6 +154,6 @@ func (repo *CommonUsersRepository) GetAllUsers(ctx context.Context) ([]entities.
 	return users, nil
 }
 
-func (repo *CommonUsersRepository) Close() error {
+func (repo *UsersRepository) Close() error {
 	return nil
 }
