@@ -31,6 +31,27 @@ type ServerAPI struct {
 	logger   *slog.Logger
 }
 
+func (api *ServerAPI) GetUserByEmail(ctx context.Context, in *sso.GetUserByEmailIn) (*sso.GetUserOut, error) {
+	user, err := api.useCases.GetUserByEmail(ctx, in.GetEmail())
+	if err != nil {
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			fmt.Sprintf("Error occurred while trying to get User with Email=%s", in.GetEmail()),
+			err,
+		)
+
+		switch {
+		case errors.As(err, &customerrors.UserNotFoundError{}):
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
+	}
+
+	return prepareUserOut(*user), nil
+}
+
 // GetUser handler returns User according provided data.
 func (api *ServerAPI) GetUser(ctx context.Context, in *sso.GetUserIn) (*sso.GetUserOut, error) {
 	user, err := api.useCases.GetUserByID(ctx, in.GetID())

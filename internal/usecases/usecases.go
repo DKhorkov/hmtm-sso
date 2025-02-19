@@ -166,6 +166,10 @@ func (useCases *UseCases) GetUserByID(ctx context.Context, id uint64) (*entities
 	return useCases.usersService.GetUserByID(ctx, id)
 }
 
+func (useCases *UseCases) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
+	return useCases.usersService.GetUserByEmail(ctx, email)
+}
+
 func (useCases *UseCases) GetAllUsers(ctx context.Context) ([]entities.User, error) {
 	return useCases.usersService.GetAllUsers(ctx)
 }

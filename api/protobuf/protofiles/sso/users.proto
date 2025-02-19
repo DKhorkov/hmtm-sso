@@ -10,6 +10,7 @@ option go_package = "github.com/DKhorkov/hmtm-sso/api/protobuf/sso;sso";
 
 service UsersService {
   rpc GetUser(GetUserIn) returns (GetUserOut) {}
+  rpc GetUserByEmail(GetUserByEmailIn) returns (GetUserOut) {}
   rpc GetUsers(google.protobuf.Empty) returns (GetUsersOut) {}
   rpc GetMe(GetMeIn) returns (GetUserOut) {}
 }
@@ -40,3 +41,6 @@ message GetUsersOut {
   repeated GetUserOut users = 1;
 }
 
+message GetUserByEmailIn {
+  string email = 1;
+}
