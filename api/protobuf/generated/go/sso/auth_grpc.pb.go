@@ -24,6 +24,9 @@ type AuthServiceClient interface {
 	Register(ctx context.Context, in *RegisterIn, opts ...grpc.CallOption) (*RegisterOut, error)
 	RefreshTokens(ctx context.Context, in *RefreshTokensIn, opts ...grpc.CallOption) (*LoginOut, error)
 	VerifyEmail(ctx context.Context, in *VerifyEmailIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ChangePassword(ctx context.Context, in *ChangePasswordIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ForgetPassword(ctx context.Context, in *ForgetPasswordIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendVerifyEmailMessage(ctx context.Context, in *SendVerifyEmailMessageIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type authServiceClient struct {
@@ -79,6 +82,33 @@ func (c *authServiceClient) VerifyEmail(ctx context.Context, in *VerifyEmailIn, 
 	return out, nil
 }
 
+func (c *authServiceClient) ChangePassword(ctx context.Context, in *ChangePasswordIn, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/auth.AuthService/ChangePassword", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) ForgetPassword(ctx context.Context, in *ForgetPasswordIn, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/auth.AuthService/ForgetPassword", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) SendVerifyEmailMessage(ctx context.Context, in *SendVerifyEmailMessageIn, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/auth.AuthService/SendVerifyEmailMessage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility
@@ -88,6 +118,9 @@ type AuthServiceServer interface {
 	Register(context.Context, *RegisterIn) (*RegisterOut, error)
 	RefreshTokens(context.Context, *RefreshTokensIn) (*LoginOut, error)
 	VerifyEmail(context.Context, *VerifyEmailIn) (*emptypb.Empty, error)
+	ChangePassword(context.Context, *ChangePasswordIn) (*emptypb.Empty, error)
+	ForgetPassword(context.Context, *ForgetPasswordIn) (*emptypb.Empty, error)
+	SendVerifyEmailMessage(context.Context, *SendVerifyEmailMessageIn) (*emptypb.Empty, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -109,6 +142,15 @@ func (UnimplementedAuthServiceServer) RefreshTokens(context.Context, *RefreshTok
 }
 func (UnimplementedAuthServiceServer) VerifyEmail(context.Context, *VerifyEmailIn) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyEmail not implemented")
+}
+func (UnimplementedAuthServiceServer) ChangePassword(context.Context, *ChangePasswordIn) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangePassword not implemented")
+}
+func (UnimplementedAuthServiceServer) ForgetPassword(context.Context, *ForgetPasswordIn) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ForgetPassword not implemented")
+}
+func (UnimplementedAuthServiceServer) SendVerifyEmailMessage(context.Context, *SendVerifyEmailMessageIn) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendVerifyEmailMessage not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 
@@ -213,6 +255,60 @@ func _AuthService_VerifyEmail_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_ChangePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangePasswordIn)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).ChangePassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.AuthService/ChangePassword",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).ChangePassword(ctx, req.(*ChangePasswordIn))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_ForgetPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ForgetPasswordIn)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).ForgetPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.AuthService/ForgetPassword",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).ForgetPassword(ctx, req.(*ForgetPasswordIn))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_SendVerifyEmailMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendVerifyEmailMessageIn)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).SendVerifyEmailMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.AuthService/SendVerifyEmailMessage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).SendVerifyEmailMessage(ctx, req.(*SendVerifyEmailMessageIn))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -239,6 +335,18 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VerifyEmail",
 			Handler:    _AuthService_VerifyEmail_Handler,
+		},
+		{
+			MethodName: "ChangePassword",
+			Handler:    _AuthService_ChangePassword_Handler,
+		},
+		{
+			MethodName: "ForgetPassword",
+			Handler:    _AuthService_ForgetPassword_Handler,
+		},
+		{
+			MethodName: "SendVerifyEmailMessage",
+			Handler:    _AuthService_SendVerifyEmailMessage_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

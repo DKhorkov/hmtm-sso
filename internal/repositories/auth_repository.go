@@ -2,8 +2,12 @@ package repositories
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"log/slog"
 	"time"
+
+	"github.com/DKhorkov/libs/logging"
 
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/tracing"
@@ -191,6 +195,105 @@ func (repo *AuthRepository) VerifyUserEmail(ctx context.Context, userID uint64) 
 			SET email_confirmed = true
 			WHERE id = $1
 		`,
+		userID,
+	)
+
+	return err
+}
+
+func (repo *AuthRepository) ForgetPassword(ctx context.Context, userID uint64, newPassword string) error {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
+
+	transaction, err := repo.dbConnector.Transaction(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Rollback transaction according Go best practises https://go.dev/doc/database/execute-transactions.
+	defer func() {
+		if err = transaction.Rollback(); err != nil {
+			logging.LogErrorContext(ctx, repo.logger, "failed to rollback db transaction", err)
+		}
+	}()
+
+	_, err = transaction.ExecContext(
+		ctx,
+		`
+			UPDATE users
+			SET password = $1
+			WHERE id = $2
+		`,
+		newPassword,
+		userID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	// Getting refresh token for expiring:
+	refreshToken := &entities.RefreshToken{}
+	columns := db.GetEntityColumns(refreshToken)
+	err = transaction.QueryRowContext(
+		ctx,
+		`
+			SELECT * 
+			FROM refresh_tokens AS rt
+			WHERE rt.user_id = $1
+			  AND rt.ttl > CURRENT_TIMESTAMP
+		`,
+		userID,
+	).Scan(columns...)
+
+	switch {
+	case err != nil && !errors.Is(err, sql.ErrNoRows):
+		return err
+	case err == nil: // if active refresh token is found - expire it
+		_, err = transaction.ExecContext(
+			ctx,
+			`
+			UPDATE refresh_tokens
+			SET ttl = $1
+			WHERE value = $2
+		`,
+			time.Now().UTC().Add(time.Hour*time.Duration(-24)),
+			refreshToken.Value,
+		)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return transaction.Commit()
+}
+
+func (repo *AuthRepository) ChangePassword(ctx context.Context, userID uint64, newPassword string) error {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
+
+	connection, err := repo.dbConnector.Connection(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer db.CloseConnectionContext(ctx, connection, repo.logger)
+
+	_, err = connection.ExecContext(
+		ctx,
+		`
+			UPDATE users
+			SET password = $1
+			WHERE id = $2
+		`,
+		newPassword,
 		userID,
 	)
 

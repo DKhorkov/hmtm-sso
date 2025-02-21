@@ -178,7 +178,8 @@ func New() Config {
 				loadenv.GetEnvAsInt("NATS_CLIENT_PORT", 4222),
 			),
 			Subjects: NATSSubjects{
-				VerifyEmail: loadenv.GetEnv("NATS_VERIFY_EMAIL_SUBJECT", "verify-email"),
+				VerifyEmail:    loadenv.GetEnv("NATS_VERIFY_EMAIL_SUBJECT", "verify-email"),
+				ForgetPassword: loadenv.GetEnv("NATS_FORGET_PASSWORD_SUBJECT", "forget-password"),
 			},
 			Publisher: NATSPublisher{
 				Name: loadenv.GetEnv("NATS_PUBLISHER_NAME", "hmtm-sso-publisher"),
@@ -220,7 +221,8 @@ type NATSConfig struct {
 }
 
 type NATSSubjects struct {
-	VerifyEmail string
+	VerifyEmail    string
+	ForgetPassword string
 }
 
 type NATSPublisher struct {
