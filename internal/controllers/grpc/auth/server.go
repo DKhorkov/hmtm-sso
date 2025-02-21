@@ -32,6 +32,52 @@ type ServerAPI struct {
 	logger   *slog.Logger
 }
 
+func (api *ServerAPI) SendVerifyEmailMessage(
+	ctx context.Context,
+	in *sso.SendVerifyEmailMessageIn,
+) (*emptypb.Empty, error) {
+	if err := api.useCases.SendVerifyEmailMessage(ctx, in.GetEmail()); err != nil {
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			fmt.Sprintf("Error occurred while trying to login User with email=%s", in.GetEmail()),
+			err,
+		)
+
+		switch {
+		case errors.As(err, &customerrors.UserNotFoundError{}):
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		case errors.As(err, &customerrors.EmailAlreadyConfirmedError{}):
+			return nil, &customgrpc.BaseError{Status: codes.FailedPrecondition, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+func (api *ServerAPI) ChangePassword(ctx context.Context, in *sso.ChangePasswordIn) (*emptypb.Empty, error) {
+	if err := api.useCases.ChangePassword(
+		ctx,
+		in.GetAccessToken(),
+		in.GetOldPassword(),
+		in.GetNewPassword(),
+	); err != nil {
+		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+func (api *ServerAPI) ForgetPassword(ctx context.Context, in *sso.ForgetPasswordIn) (*emptypb.Empty, error) {
+	if err := api.useCases.ForgetPassword(ctx, in.GetAccessToken()); err != nil {
+		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
 func (api *ServerAPI) VerifyEmail(ctx context.Context, in *sso.VerifyEmailIn) (*emptypb.Empty, error) {
 	if err := api.useCases.VerifyUserEmail(ctx, in.GetVerifyEmailToken()); err != nil {
 		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}

@@ -155,3 +155,47 @@ func (e InvalidDisplayNameError) Error() string {
 func (e InvalidDisplayNameError) Unwrap() error {
 	return e.BaseErr
 }
+
+type EmailAlreadyConfirmedError struct {
+	Message string
+	BaseErr error
+}
+
+func (e EmailAlreadyConfirmedError) Error() string {
+	template := "provided email has been already confirmed"
+	if e.Message != "" {
+		template = e.Message
+	}
+
+	if e.BaseErr != nil {
+		return fmt.Sprintf(template+". Base error: %v", e.BaseErr)
+	}
+
+	return template
+}
+
+func (e EmailAlreadyConfirmedError) Unwrap() error {
+	return e.BaseErr
+}
+
+type EmailIsNotConfirmedError struct {
+	Message string
+	BaseErr error
+}
+
+func (e EmailIsNotConfirmedError) Error() string {
+	template := "provided email is not confirmed confirmed"
+	if e.Message != "" {
+		template = e.Message
+	}
+
+	if e.BaseErr != nil {
+		return fmt.Sprintf(template+". Base error: %v", e.BaseErr)
+	}
+
+	return template
+}
+
+func (e EmailIsNotConfirmedError) Unwrap() error {
+	return e.BaseErr
+}

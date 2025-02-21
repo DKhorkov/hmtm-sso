@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"strconv"
 
+	"github.com/dchest/uniuri"
+
 	notification "github.com/DKhorkov/hmtm-notifications/dto"
 	"github.com/DKhorkov/libs/logging"
 	customnats "github.com/DKhorkov/libs/nats"
@@ -109,6 +111,10 @@ func (useCases *UseCases) LoginUser(
 	user, err := useCases.usersService.GetUserByEmail(ctx, userData.Email)
 	if err != nil {
 		return nil, err
+	}
+
+	if !user.EmailConfirmed {
+		return nil, &customerrors.EmailIsNotConfirmedError{}
 	}
 
 	if !security.ValidateHash(userData.Password, user.Password) {
@@ -310,4 +316,139 @@ func (useCases *UseCases) VerifyUserEmail(ctx context.Context, verifyEmailToken 
 
 	userID := uint64(intUserID)
 	return useCases.authService.VerifyUserEmail(ctx, userID)
+}
+
+func (useCases *UseCases) ForgetPassword(ctx context.Context, accessToken string) error {
+	accessTokenPayload, err := security.ParseJWT(accessToken, useCases.securityConfig.JWT.SecretKey)
+	if err != nil {
+		return &security.InvalidJWTError{}
+	}
+
+	floatUserID, ok := accessTokenPayload.(float64)
+	if !ok {
+		return &security.InvalidJWTError{}
+	}
+
+	userID := uint64(floatUserID)
+
+	newPassword := uniuri.New()
+	hashedPassword, err := security.Hash(newPassword, useCases.securityConfig.HashCost)
+	if err != nil {
+		return err
+	}
+
+	if err = useCases.authService.ForgetPassword(ctx, userID, hashedPassword); err != nil {
+		return err
+	}
+
+	forgetPasswordDTO := &notification.ForgetPasswordDTO{
+		UserID:      userID,
+		NewPassword: newPassword,
+	}
+
+	content, err := json.Marshal(forgetPasswordDTO)
+	if err != nil {
+		logging.LogErrorContext(
+			ctx,
+			useCases.logger,
+			fmt.Sprintf(
+				"Error occurred while trying to encode data for forget password email for User with ID=%d",
+				userID,
+			),
+			err,
+		)
+	}
+
+	if err = useCases.natsPublisher.Publish(useCases.natsConfig.Subjects.ForgetPassword, content); err != nil {
+		logging.LogErrorContext(
+			ctx,
+			useCases.logger,
+			fmt.Sprintf("Error occurred while trying send Forget Password message to User with ID=%d", userID),
+			err,
+		)
+	}
+
+	return nil
+}
+
+func (useCases *UseCases) ChangePassword(
+	ctx context.Context,
+	accessToken string,
+	oldPassword string,
+	newPassword string,
+) error {
+	if oldPassword == newPassword {
+		return &customerrors.InvalidPasswordError{Message: "New password can not be equal old password"}
+	}
+
+	accessTokenPayload, err := security.ParseJWT(accessToken, useCases.securityConfig.JWT.SecretKey)
+	if err != nil {
+		return &security.InvalidJWTError{}
+	}
+
+	floatUserID, ok := accessTokenPayload.(float64)
+	if !ok {
+		return &security.InvalidJWTError{}
+	}
+
+	userID := uint64(floatUserID)
+
+	if !validateValueByRules(newPassword, useCases.validationConfig.PasswordRegExps) {
+		return &customerrors.InvalidPasswordError{}
+	}
+
+	user, err := useCases.usersService.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if !security.ValidateHash(oldPassword, user.Password) {
+		return &customerrors.WrongPasswordError{}
+	}
+
+	hashedPassword, err := security.Hash(newPassword, useCases.securityConfig.HashCost)
+	if err != nil {
+		return err
+	}
+
+	return useCases.authService.ChangePassword(ctx, userID, hashedPassword)
+}
+
+func (useCases *UseCases) SendVerifyEmailMessage(ctx context.Context, email string) error {
+	user, err := useCases.usersService.GetUserByEmail(ctx, email)
+	if err != nil {
+		return err
+	}
+
+	if user.EmailConfirmed {
+		return &customerrors.EmailAlreadyConfirmedError{}
+	}
+
+	verifyEmailDTO := &notification.VerifyEmailDTO{
+		UserID: user.ID,
+	}
+
+	content, err := json.Marshal(verifyEmailDTO)
+	if err != nil {
+		logging.LogErrorContext(
+			ctx,
+			useCases.logger,
+			fmt.Sprintf(
+				"Error occurred while trying to encode data for email verification for User with ID=%d",
+				user.ID,
+			),
+			err,
+		)
+	}
+
+	if err = useCases.natsPublisher.Publish(useCases.natsConfig.Subjects.VerifyEmail, content); err != nil {
+		logging.LogErrorContext(
+			ctx,
+			useCases.logger,
+			fmt.Sprintf("Error occurred while trying send Verfiy Email message to User with ID=%d", user.ID),
+			err,
+		)
+	}
+
+	return nil
 }

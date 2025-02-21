@@ -47,25 +47,41 @@ func main() {
 	// users, err := client.GetUsers(ctx, &emptypb.Empty{})
 	// fmt.Println(users, err)
 
-	// userID, err := client.Register(ctx, &sso.RegisterIn{
-	//	DisplayName: "test User",
-	//	Email:       "sometestemail2@yandex.ru",
-	//	Password:    "test@Password2",
-	// })
-	// fmt.Println("Register: ", userID, err)
+	userID, err := client.Register(ctx, &sso.RegisterIn{
+		DisplayName: "test User",
+		Email:       "alexqwerty35@yandex.ru",
+		Password:    "Qwer1234@",
+	})
+	fmt.Println("Register: ", userID, err)
 
-	// tokens, err := client.Login(ctx, &sso.LoginIn{
-	//
-	//	Email:    "sometestemail2@yandex.ru",
-	//	Password: "test@Password2",
-	// })
-	// fmt.Println(tokens, err)
+	tokens, err := client.Login(ctx, &sso.LoginIn{
+		Email:    "alexqwerty35@yandex.ru",
+		Password: "Qwer1234@",
+	})
+	fmt.Println(tokens, err)
+
 	//
 	// _, logoutErr := client.Logout(ctx, &sso.LogoutIn{
 	//	AccessToken: tokens.GetAccessToken(),
 	// })
 	// fmt.Println(logoutErr)
 
-	_, err = client.VerifyEmail(ctx, &sso.VerifyEmailIn{VerifyEmailToken: "MjM="})
+	// _, err = client.VerifyEmail(ctx, &sso.VerifyEmailIn{VerifyEmailToken: "MjM="})
+	// fmt.Println(err)
+
+	// _, err = client.SendVerifyEmailMessage(ctx, &sso.SendVerifyEmailMessageIn{Email: "alexqwerty35@yandex.ru"})
+	// fmt.Printf("%v\n", err)
+
+	// _, err = client.ChangePassword(
+	//	ctx,
+	//	&sso.ChangePasswordIn{
+	//		AccessToken: tokens.AccessToken,
+	//		OldPassword: "K8NXoxwVE0vCEjJC",
+	//		NewPassword: "Qwer1234@",
+	//	},
+	//)
+	// fmt.Println(err)
+
+	_, err = client.ForgetPassword(ctx, &sso.ForgetPasswordIn{AccessToken: tokens.GetAccessToken()})
 	fmt.Println(err)
 }

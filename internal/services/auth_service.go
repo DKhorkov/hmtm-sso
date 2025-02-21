@@ -65,3 +65,11 @@ func (service *AuthService) ExpireRefreshToken(ctx context.Context, refreshToken
 func (service *AuthService) VerifyUserEmail(ctx context.Context, userID uint64) error {
 	return service.authRepository.VerifyUserEmail(ctx, userID)
 }
+
+func (service *AuthService) ForgetPassword(ctx context.Context, userID uint64, newPassword string) error {
+	return service.authRepository.ForgetPassword(ctx, userID, newPassword)
+}
+
+func (service *AuthService) ChangePassword(ctx context.Context, userID uint64, newPassword string) error {
+	return service.authRepository.ChangePassword(ctx, userID, newPassword)
+}
