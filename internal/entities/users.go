@@ -16,3 +16,19 @@ type User struct {
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
 }
+
+type RawUpdateUserProfileDTO struct {
+	AccessToken string `json:"access_token"`
+	DisplayName string `json:"display_name"`
+	Phone       string `json:"phone"`
+	Telegram    string `json:"telegram"`
+	Avatar      string `json:"avatar"`
+}
+
+type UpdateUserProfileDTO struct {
+	UserID      uint64 `json:"user_id"`
+	DisplayName string `json:"display_name"`
+	Phone       string `json:"phone"`
+	Telegram    string `json:"telegram"`
+	Avatar      string `json:"avatar"`
+}

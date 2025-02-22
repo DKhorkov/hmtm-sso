@@ -199,3 +199,47 @@ func (e EmailIsNotConfirmedError) Error() string {
 func (e EmailIsNotConfirmedError) Unwrap() error {
 	return e.BaseErr
 }
+
+type InvalidPhoneError struct {
+	Message string
+	BaseErr error
+}
+
+func (e InvalidPhoneError) Error() string {
+	template := "phone not meet the requirements"
+	if e.Message != "" {
+		template = e.Message
+	}
+
+	if e.BaseErr != nil {
+		return fmt.Sprintf(template+". Base error: %v", e.BaseErr)
+	}
+
+	return template
+}
+
+func (e InvalidPhoneError) Unwrap() error {
+	return e.BaseErr
+}
+
+type InvalidTelegramError struct {
+	Message string
+	BaseErr error
+}
+
+func (e InvalidTelegramError) Error() string {
+	template := "telegram not meet the requirements"
+	if e.Message != "" {
+		template = e.Message
+	}
+
+	if e.BaseErr != nil {
+		return fmt.Sprintf(template+". Base error: %v", e.BaseErr)
+	}
+
+	return template
+}
+
+func (e InvalidTelegramError) Unwrap() error {
+	return e.BaseErr
+}

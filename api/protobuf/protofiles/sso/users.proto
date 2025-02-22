@@ -13,6 +13,7 @@ service UsersService {
   rpc GetUserByEmail(GetUserByEmailIn) returns (GetUserOut) {}
   rpc GetUsers(google.protobuf.Empty) returns (GetUsersOut) {}
   rpc GetMe(GetMeIn) returns (GetUserOut) {}
+  rpc UpdateUserProfile(UpdateUserProfileIn) returns (google.protobuf.Empty) {}
 }
 
 message GetMeIn {
@@ -43,4 +44,12 @@ message GetUsersOut {
 
 message GetUserByEmailIn {
   string email = 1;
+}
+
+message UpdateUserProfileIn {
+  string accessToken = 1;
+  optional string displayName = 2;
+  optional string phone = 3;
+  optional string telegram = 4;
+  optional string avatar = 5;
 }

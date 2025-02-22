@@ -23,6 +23,7 @@ type UsersServiceClient interface {
 	GetUserByEmail(ctx context.Context, in *GetUserByEmailIn, opts ...grpc.CallOption) (*GetUserOut, error)
 	GetUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetUsersOut, error)
 	GetMe(ctx context.Context, in *GetMeIn, opts ...grpc.CallOption) (*GetUserOut, error)
+	UpdateUserProfile(ctx context.Context, in *UpdateUserProfileIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type usersServiceClient struct {
@@ -69,6 +70,15 @@ func (c *usersServiceClient) GetMe(ctx context.Context, in *GetMeIn, opts ...grp
 	return out, nil
 }
 
+func (c *usersServiceClient) UpdateUserProfile(ctx context.Context, in *UpdateUserProfileIn, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/users.UsersService/UpdateUserProfile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UsersServiceServer is the server API for UsersService service.
 // All implementations must embed UnimplementedUsersServiceServer
 // for forward compatibility
@@ -77,6 +87,7 @@ type UsersServiceServer interface {
 	GetUserByEmail(context.Context, *GetUserByEmailIn) (*GetUserOut, error)
 	GetUsers(context.Context, *emptypb.Empty) (*GetUsersOut, error)
 	GetMe(context.Context, *GetMeIn) (*GetUserOut, error)
+	UpdateUserProfile(context.Context, *UpdateUserProfileIn) (*emptypb.Empty, error)
 	mustEmbedUnimplementedUsersServiceServer()
 }
 
@@ -95,6 +106,9 @@ func (UnimplementedUsersServiceServer) GetUsers(context.Context, *emptypb.Empty)
 }
 func (UnimplementedUsersServiceServer) GetMe(context.Context, *GetMeIn) (*GetUserOut, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMe not implemented")
+}
+func (UnimplementedUsersServiceServer) UpdateUserProfile(context.Context, *UpdateUserProfileIn) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserProfile not implemented")
 }
 func (UnimplementedUsersServiceServer) mustEmbedUnimplementedUsersServiceServer() {}
 
@@ -181,6 +195,24 @@ func _UsersService_GetMe_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UsersService_UpdateUserProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateUserProfileIn)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UsersServiceServer).UpdateUserProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/users.UsersService/UpdateUserProfile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UsersServiceServer).UpdateUserProfile(ctx, req.(*UpdateUserProfileIn))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UsersService_ServiceDesc is the grpc.ServiceDesc for UsersService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -203,6 +235,10 @@ var UsersService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetMe",
 			Handler:    _UsersService_GetMe_Handler,
+		},
+		{
+			MethodName: "UpdateUserProfile",
+			Handler:    _UsersService_UpdateUserProfile_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

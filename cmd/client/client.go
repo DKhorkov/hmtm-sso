@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/DKhorkov/libs/requestid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/DKhorkov/libs/pointers"
+	"github.com/DKhorkov/libs/requestid"
 
 	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
 )
@@ -82,6 +84,15 @@ func main() {
 	//)
 	// fmt.Println(err)
 
-	_, err = client.ForgetPassword(ctx, &sso.ForgetPasswordIn{AccessToken: tokens.GetAccessToken()})
-	fmt.Println(err)
+	// _, err = client.ForgetPassword(ctx, &sso.ForgetPasswordIn{AccessToken: tokens.GetAccessToken()})
+	// fmt.Println(err)
+
+	_, err = client.UpdateUserProfile(ctx, &sso.UpdateUserProfileIn{
+		AccessToken: tokens.GetAccessToken(),
+		DisplayName: pointers.Pointer("Demos"),
+		Phone:       pointers.Pointer("89516696701"),
+		Telegram:    pointers.Pointer("@D3M0S666"),
+		Avatar:      pointers.Pointer("url to avatar"),
+	})
+	fmt.Println("UpdateUserProfile: ", err)
 }

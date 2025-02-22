@@ -180,6 +180,49 @@ func (useCases *UseCases) GetAllUsers(ctx context.Context) ([]entities.User, err
 	return useCases.usersService.GetAllUsers(ctx)
 }
 
+func (useCases *UseCases) UpdateUserProfile(
+	ctx context.Context,
+	rawUserProfileData entities.RawUpdateUserProfileDTO,
+) error {
+	if !validateValueByRules(rawUserProfileData.DisplayName, useCases.validationConfig.DisplayNameRegExps) {
+		return &customerrors.InvalidDisplayNameError{}
+	}
+
+	if !validateValueByRules(rawUserProfileData.Phone, useCases.validationConfig.PhoneRegExps) {
+		return &customerrors.InvalidPhoneError{}
+	}
+
+	if !validateValueByRules(rawUserProfileData.Telegram, useCases.validationConfig.TelegramRegExps) {
+		return &customerrors.InvalidTelegramError{}
+	}
+
+	accessTokenPayload, err := security.ParseJWT(rawUserProfileData.AccessToken, useCases.securityConfig.JWT.SecretKey)
+	if err != nil {
+		return &security.InvalidJWTError{}
+	}
+
+	floatUserID, ok := accessTokenPayload.(float64)
+	if !ok {
+		return &security.InvalidJWTError{}
+	}
+
+	userID := uint64(floatUserID)
+	user, err := useCases.usersService.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	userProfileData := entities.UpdateUserProfileDTO{
+		UserID:      user.ID,
+		DisplayName: rawUserProfileData.DisplayName,
+		Phone:       rawUserProfileData.Phone,
+		Telegram:    rawUserProfileData.Telegram,
+		Avatar:      rawUserProfileData.Avatar,
+	}
+
+	return useCases.usersService.UpdateUserProfile(ctx, userProfileData)
+}
+
 func (useCases *UseCases) GetMe(ctx context.Context, accessToken string) (*entities.User, error) {
 	accessTokenPayload, err := security.ParseJWT(accessToken, useCases.securityConfig.JWT.SecretKey)
 	if err != nil {

@@ -4,6 +4,8 @@ import (
 	"context"
 	"log/slog"
 
+	sq "github.com/Masterminds/squirrel"
+
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/tracing"
@@ -152,6 +154,63 @@ func (repo *UsersRepository) GetAllUsers(ctx context.Context) ([]entities.User, 
 	}
 
 	return users, nil
+}
+
+func (repo *UsersRepository) UpdateUserProfile(
+	ctx context.Context,
+	userProfileData entities.UpdateUserProfileDTO,
+) error {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
+
+	// No fields to update:
+	if userProfileData.DisplayName == "" &&
+		userProfileData.Phone == "" &&
+		userProfileData.Telegram == "" &&
+		userProfileData.Avatar == "" {
+		return nil
+	}
+
+	connection, err := repo.dbConnector.Connection(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer db.CloseConnectionContext(ctx, connection, repo.logger)
+
+	builder := sq.Update("users").Where(sq.Eq{"id": userProfileData.UserID})
+	if userProfileData.DisplayName != "" {
+		builder = builder.Set("display_name", userProfileData.DisplayName)
+	}
+
+	if userProfileData.Phone != "" {
+		builder = builder.Set("phone", userProfileData.Phone)
+	}
+
+	if userProfileData.Telegram != "" {
+		builder = builder.Set("telegram", userProfileData.Telegram)
+	}
+
+	if userProfileData.Avatar != "" {
+		builder = builder.Set("avatar", userProfileData.Avatar)
+	}
+
+	// pq postgres driver works only with $ placeholders:
+	stmt, params, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return err
+	}
+
+	_, err = connection.ExecContext(
+		ctx,
+		stmt,
+		params...,
+	)
+
+	return err
 }
 
 func (repo *UsersRepository) Close() error {
