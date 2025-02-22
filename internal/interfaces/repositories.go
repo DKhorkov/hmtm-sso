@@ -11,6 +11,7 @@ type UsersRepository interface {
 	GetUserByID(ctx context.Context, id uint64) (*entities.User, error)
 	GetAllUsers(ctx context.Context) ([]entities.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*entities.User, error)
+	UpdateUserProfile(ctx context.Context, userProfileData entities.UpdateUserProfileDTO) error
 }
 
 type AuthRepository interface {

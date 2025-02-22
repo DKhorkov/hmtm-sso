@@ -7,9 +7,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/DKhorkov/libs/logging"
-
 	"github.com/DKhorkov/libs/db"
+	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/tracing"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"

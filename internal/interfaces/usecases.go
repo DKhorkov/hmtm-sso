@@ -7,8 +7,11 @@ import (
 )
 
 type UseCases interface {
-	UsersService
+	GetUserByID(ctx context.Context, id uint64) (*entities.User, error)
+	GetAllUsers(ctx context.Context) ([]entities.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*entities.User, error)
 	GetMe(ctx context.Context, accessToken string) (*entities.User, error)
+	UpdateUserProfile(ctx context.Context, rawUserProfileData entities.RawUpdateUserProfileDTO) error
 
 	RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (userID uint64, err error)
 	LoginUser(ctx context.Context, userData entities.LoginUserDTO) (*entities.TokensDTO, error)

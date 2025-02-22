@@ -80,6 +80,20 @@ func New() Config {
 				},
 				";",
 			),
+			PhoneRegExps: loadenv.GetEnvAsSlice(
+				"PHONE_REGEXPS",
+				[]string{
+					"^(\\+7|8) ?(\\(495\\)|\\(499\\)|\\(812\\)|\\d{3}[ \\-]?) ?\\d{3}[ \\-]?\\d{2}[ \\-]?\\d{2}$",
+				},
+				";",
+			),
+			TelegramRegExps: loadenv.GetEnvAsSlice(
+				"TELEGRAM_REGEXPS",
+				[]string{
+					"^@([a-zA-Z0-9_]){5,32}$",
+				},
+				";",
+			),
 		},
 		Tracing: TracingConfig{
 			Server: tracing.Config{
@@ -197,6 +211,8 @@ type ValidationConfig struct {
 	EmailRegExp        string
 	PasswordRegExps    []string // since Go's regex doesn't support backtracking.
 	DisplayNameRegExps []string
+	PhoneRegExps       []string
+	TelegramRegExps    []string
 }
 
 type TracingConfig struct {

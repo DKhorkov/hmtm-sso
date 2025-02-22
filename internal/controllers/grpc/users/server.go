@@ -15,6 +15,7 @@ import (
 	"github.com/DKhorkov/libs/security"
 
 	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 )
@@ -29,6 +30,36 @@ type ServerAPI struct {
 	sso.UnimplementedUsersServiceServer
 	useCases interfaces.UseCases
 	logger   *slog.Logger
+}
+
+func (api *ServerAPI) UpdateUserProfile(ctx context.Context, in *sso.UpdateUserProfileIn) (*emptypb.Empty, error) {
+	userProfileData := entities.RawUpdateUserProfileDTO{
+		AccessToken: in.GetAccessToken(),
+		DisplayName: in.GetDisplayName(),
+		Phone:       in.GetPhone(),
+		Telegram:    in.GetTelegram(),
+		Avatar:      in.GetAvatar(),
+	}
+
+	if err := api.useCases.UpdateUserProfile(ctx, userProfileData); err != nil {
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			fmt.Sprintf("Error occurred while trying to update User profile with AccessToken=%s", in.GetAccessToken()),
+			err,
+		)
+
+		switch {
+		case errors.As(err, &security.InvalidJWTError{}):
+			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
+		case errors.As(err, &customerrors.UserNotFoundError{}):
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
+	}
+
+	return &emptypb.Empty{}, nil
 }
 
 func (api *ServerAPI) GetUserByEmail(ctx context.Context, in *sso.GetUserByEmailIn) (*sso.GetUserOut, error) {

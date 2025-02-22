@@ -59,3 +59,10 @@ func (service *UsersService) GetUserByEmail(ctx context.Context, email string) (
 
 	return user, nil
 }
+
+func (service *UsersService) UpdateUserProfile(
+	ctx context.Context,
+	userProfileData entities.UpdateUserProfileDTO,
+) error {
+	return service.usersRepository.UpdateUserProfile(ctx, userProfileData)
+}
