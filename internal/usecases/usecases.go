@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/dchest/uniuri"
+	"github.com/golang-jwt/jwt/v5"
 
 	notification "github.com/DKhorkov/hmtm-notifications/dto"
 	"github.com/DKhorkov/libs/logging"
@@ -258,7 +259,12 @@ func (useCases *UseCases) RefreshTokens(ctx context.Context, refreshToken string
 	}
 
 	// Retrieving access token payload to get user ID:
-	accessTokenPayload, err := security.ParseJWT(oldAccessToken, useCases.securityConfig.JWT.SecretKey)
+	accessTokenPayload, err := security.ParseJWT(
+		oldAccessToken,
+		useCases.securityConfig.JWT.SecretKey,
+		jwt.WithoutClaimsValidation(), // not validating claims due to expiration of JWT TTL
+	)
+
 	if err != nil {
 		return nil, &security.InvalidJWTError{}
 	}
