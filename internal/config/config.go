@@ -75,8 +75,6 @@ func New() Config {
 				"DISPLAY_NAME_REGEXPS",
 				[]string{
 					".{4,}",
-					"[a-z]",
-					"[A-Z]",
 				},
 				";",
 			),
