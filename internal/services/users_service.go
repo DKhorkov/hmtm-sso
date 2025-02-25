@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"github.com/DKhorkov/libs/logging"
 
@@ -12,7 +11,7 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 )
 
-func NewUsersService(usersRepository interfaces.UsersRepository, logger *slog.Logger) *UsersService {
+func NewUsersService(usersRepository interfaces.UsersRepository, logger logging.Logger) *UsersService {
 	return &UsersService{
 		usersRepository: usersRepository,
 		logger:          logger,
@@ -21,7 +20,7 @@ func NewUsersService(usersRepository interfaces.UsersRepository, logger *slog.Lo
 
 type UsersService struct {
 	usersRepository interfaces.UsersRepository
-	logger          *slog.Logger
+	logger          logging.Logger
 }
 
 func (service *UsersService) GetAllUsers(ctx context.Context) ([]entities.User, error) {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log/slog"
 	"time"
 
 	"github.com/DKhorkov/libs/db"
@@ -16,7 +15,7 @@ import (
 
 func NewAuthRepository(
 	dbConnector db.Connector,
-	logger *slog.Logger,
+	logger logging.Logger,
 	traceProvider tracing.Provider,
 	spanConfig tracing.SpanConfig,
 ) *AuthRepository {
@@ -30,7 +29,7 @@ func NewAuthRepository(
 
 type AuthRepository struct {
 	dbConnector   db.Connector
-	logger        *slog.Logger
+	logger        logging.Logger
 	traceProvider tracing.Provider
 	spanConfig    tracing.SpanConfig
 }

@@ -2,8 +2,9 @@ package services
 
 import (
 	"context"
-	"log/slog"
 	"time"
+
+	"github.com/DKhorkov/libs/logging"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
@@ -13,7 +14,7 @@ import (
 func NewAuthService(
 	authRepository interfaces.AuthRepository,
 	usersRepository interfaces.UsersRepository,
-	logger *slog.Logger,
+	logger logging.Logger,
 ) *AuthService {
 	return &AuthService{
 		authRepository:  authRepository,
@@ -25,7 +26,7 @@ func NewAuthService(
 type AuthService struct {
 	authRepository  interfaces.AuthRepository
 	usersRepository interfaces.UsersRepository
-	logger          *slog.Logger
+	logger          logging.Logger
 }
 
 func (service *AuthService) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
