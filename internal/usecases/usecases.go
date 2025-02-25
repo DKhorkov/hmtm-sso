@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"strconv"
 
 	"github.com/dchest/uniuri"
@@ -28,7 +27,7 @@ func New(
 	validationConfig config.ValidationConfig,
 	natsPublisher customnats.Publisher,
 	natsConfig config.NATSConfig,
-	logger *slog.Logger,
+	logger logging.Logger,
 ) *UseCases {
 	return &UseCases{
 		authService:      authService,
@@ -48,7 +47,7 @@ type UseCases struct {
 	validationConfig config.ValidationConfig
 	natsPublisher    customnats.Publisher
 	natsConfig       config.NATSConfig
-	logger           *slog.Logger
+	logger           logging.Logger
 }
 
 func (useCases *UseCases) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {

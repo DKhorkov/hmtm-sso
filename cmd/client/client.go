@@ -89,10 +89,10 @@ func main() {
 
 	_, err = client.UpdateUserProfile(ctx, &sso.UpdateUserProfileIn{
 		AccessToken: tokens.GetAccessToken(),
-		DisplayName: pointers.Pointer("Demos"),
-		Phone:       pointers.Pointer("89516696701"),
-		Telegram:    pointers.Pointer("@D3M0S666"),
-		Avatar:      pointers.Pointer("url to avatar"),
+		DisplayName: pointers.New("Demos"),
+		Phone:       pointers.New("89516696701"),
+		Telegram:    pointers.New("@D3M0S666"),
+		Avatar:      pointers.New("url to avatar"),
 	})
 	fmt.Println("UpdateUserProfile: ", err)
 }

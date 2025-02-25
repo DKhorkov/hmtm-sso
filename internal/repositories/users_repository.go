@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"log/slog"
 
 	sq "github.com/Masterminds/squirrel"
 
@@ -15,7 +14,7 @@ import (
 
 func NewUsersRepository(
 	dbConnector db.Connector,
-	logger *slog.Logger,
+	logger logging.Logger,
 	traceProvider tracing.Provider,
 	spanConfig tracing.SpanConfig,
 ) *UsersRepository {
@@ -29,7 +28,7 @@ func NewUsersRepository(
 
 type UsersRepository struct {
 	dbConnector   db.Connector
-	logger        *slog.Logger
+	logger        logging.Logger
 	traceProvider tracing.Provider
 	spanConfig    tracing.SpanConfig
 }
