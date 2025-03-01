@@ -4,254 +4,233 @@ package repositories_test
 
 import (
 	"context"
+	"database/sql"
+	"os"
+	"path"
 	"testing"
 
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/stretchr/testify/assert"
+	"github.com/pressly/goose/v3"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/DKhorkov/libs/db"
+	loggermock "github.com/DKhorkov/libs/logging/mocks"
+	"github.com/DKhorkov/libs/tracing"
 	tracingmock "github.com/DKhorkov/libs/tracing/mocks"
 
-	"github.com/DKhorkov/hmtm-sso/internal/entities"
+	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
 )
 
-const (
-	testUserID    = 1
-	testUserEmail = "user@example.com"
-)
-
-func TestRepositoriesGetUserByID(t *testing.T) {
-	t.Run("get existing user", func(t *testing.T) {
-		dbConnector := StartUp(t)
-		ctx := context.Background()
-		connection, err := dbConnector.Connection(ctx)
-		require.NoError(t, err)
-
-		defer func() {
-			if err = connection.Close(); err != nil {
-				t.Fatal(err)
-			}
-		}()
-
-		testUser := &entities.User{
-			ID:          testUserID,
-			DisplayName: "Display Name",
-			Email:       testUserEmail,
-			Password:    "password",
-		}
-
-		_, err = connection.ExecContext(
-			ctx,
-			`
-				INSERT INTO users (id, display_name, email, password) 
-				VALUES ($1, $2, $3, $4)
-			`,
-			testUser.ID,
-			testUser.DisplayName,
-			testUser.Email,
-			testUser.Password,
-		)
-
-		if err != nil {
-			t.Fatalf("failed to insert user: %v", err)
-		}
-
-		traceProvider := tracingmock.NewMockProvider(gomock.NewController(t))
-		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
-			context.Background(),
-			tracingmock.NewMockSpan(),
-		).Times(1)
-
-		usersRepository := repositories.NewUsersRepository(dbConnector, logger, traceProvider, spanConfig)
-
-		user, err := usersRepository.GetUserByID(ctx, testUser.ID)
-		require.NoError(t, err)
-		assert.Equal(t, testUser.ID, user.ID)
-		assert.Equal(t, testUser.Email, user.Email)
-	})
-
-	t.Run("get non existing user failure", func(t *testing.T) {
-		dbConnector := StartUp(t)
-		traceProvider := tracingmock.NewMockProvider(gomock.NewController(t))
-		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
-			context.Background(),
-			tracingmock.NewMockSpan(),
-		).Times(1)
-
-		usersRepository := repositories.NewUsersRepository(dbConnector, logger, traceProvider, spanConfig)
-
-		user, err := usersRepository.GetUserByID(context.Background(), testUserID)
-		require.Error(t, err)
-		assert.Nil(t, user)
-	})
+func TestUsersTestSuite(t *testing.T) {
+	suite.Run(t, new(UsersTestSuite))
 }
 
-func TestRepositoriesGetUserByEmail(t *testing.T) {
-	t.Run("get existing user", func(t *testing.T) {
-		dbConnector := StartUp(t)
-		ctx := context.Background()
-		connection, err := dbConnector.Connection(ctx)
-		require.NoError(t, err)
+type UsersTestSuite struct {
+	suite.Suite
 
-		defer func() {
-			if err = connection.Close(); err != nil {
-				t.Fatal(err)
-			}
-		}()
-
-		testUser := &entities.User{
-			ID:       testUserID,
-			Email:    testUserEmail,
-			Password: "password",
-		}
-
-		_, err = connection.ExecContext(
-			ctx,
-			`
-				INSERT INTO users (id, display_name, email, password) 
-				VALUES ($1, $2, $3, $4)
-			`,
-			testUser.ID,
-			testUser.DisplayName,
-			testUser.Email,
-			testUser.Password,
-		)
-
-		if err != nil {
-			t.Fatalf("failed to insert user: %v", err)
-		}
-
-		traceProvider := tracingmock.NewMockProvider(gomock.NewController(t))
-		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
-			context.Background(),
-			tracingmock.NewMockSpan(),
-		).Times(1)
-
-		usersRepository := repositories.NewUsersRepository(dbConnector, logger, traceProvider, spanConfig)
-
-		user, err := usersRepository.GetUserByEmail(ctx, testUser.Email)
-		require.NoError(t, err)
-		assert.Equal(t, testUser.ID, user.ID)
-		assert.Equal(t, testUser.Email, user.Email)
-	})
-
-	t.Run("get non existing user failure", func(t *testing.T) {
-		dbConnector := StartUp(t)
-		traceProvider := tracingmock.NewMockProvider(gomock.NewController(t))
-		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
-			context.Background(),
-			tracingmock.NewMockSpan(),
-		).Times(1)
-
-		usersRepository := repositories.NewUsersRepository(dbConnector, logger, traceProvider, spanConfig)
-
-		user, err := usersRepository.GetUserByEmail(context.Background(), testUserEmail)
-		require.Error(t, err)
-		assert.Nil(t, user)
-	})
+	cwd             string
+	ctx             context.Context
+	dbConnector     db.Connector
+	connection      *sql.Conn
+	usersRepository interfaces.UsersRepository
+	logger          *loggermock.MockLogger
+	traceProvider   *tracingmock.MockProvider
+	spanConfig      tracing.SpanConfig
 }
 
-func TestRepositoriesGetAllUsers(t *testing.T) {
-	t.Run("get users with existing users", func(t *testing.T) {
-		dbConnector := StartUp(t)
-		ctx := context.Background()
-		connection, err := dbConnector.Connection(ctx)
-		require.NoError(t, err)
+func (s *UsersTestSuite) SetupSuite() {
+	s.NoError(goose.SetDialect(driver))
 
-		defer func() {
-			if err = connection.Close(); err != nil {
-				t.Fatal(err)
-			}
-		}()
+	ctrl := gomock.NewController(s.T())
+	s.ctx = context.Background()
+	s.logger = loggermock.NewMockLogger(ctrl)
+	dbConnector, err := db.New(dsn, driver, s.logger)
+	s.NoError(err)
 
-		testUser := &entities.User{
-			ID:       1,
-			Email:    "user@example.com",
-			Password: "password",
-		}
+	cwd, err := os.Getwd()
+	s.NoError(err)
 
-		_, err = connection.ExecContext(
-			ctx,
-			`
-				INSERT INTO users (id, display_name, email, password) 
-				VALUES ($1, $2, $3, $4)
-			`,
-			testUser.ID,
-			testUser.DisplayName,
-			testUser.Email,
-			testUser.Password,
-		)
-
-		if err != nil {
-			t.Fatalf("failed to insert user: %v", err)
-		}
-
-		traceProvider := tracingmock.NewMockProvider(gomock.NewController(t))
-		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
-			context.Background(),
-			tracingmock.NewMockSpan(),
-		).Times(1)
-
-		usersRepository := repositories.NewUsersRepository(dbConnector, logger, traceProvider, spanConfig)
-
-		users, err := usersRepository.GetAllUsers(ctx)
-		require.NoError(t, err)
-		assert.IsType(t, []entities.User{}, users)
-		assert.NotEmpty(t, users)
-		assert.Len(t, users, 1)
-	})
-
-	t.Run("get users without existing users", func(t *testing.T) {
-		dbConnector := StartUp(t)
-		traceProvider := tracingmock.NewMockProvider(gomock.NewController(t))
-		traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
-			context.Background(),
-			tracingmock.NewMockSpan(),
-		).Times(1)
-
-		usersRepository := repositories.NewUsersRepository(dbConnector, logger, traceProvider, spanConfig)
-
-		users, err := usersRepository.GetAllUsers(context.Background())
-		require.NoError(t, err)
-		assert.Empty(t, users)
-	})
+	s.cwd = cwd
+	s.dbConnector = dbConnector
+	s.traceProvider = tracingmock.NewMockProvider(ctrl)
+	s.spanConfig = tracing.SpanConfig{}
+	s.usersRepository = repositories.NewUsersRepository(s.dbConnector, s.logger, s.traceProvider, s.spanConfig)
 }
 
-func BenchmarkRepositoriesGetUserByID(b *testing.B) {
-	dbConnector := StartUp(b)
+func (s *UsersTestSuite) SetupTest() {
+	s.NoError(
+		goose.Up(
+			s.dbConnector.Pool(),
+			path.Dir(
+				path.Dir(s.cwd),
+			)+migrationsDir,
+		),
+	)
+
+	connection, err := s.dbConnector.Connection(s.ctx)
+	s.NoError(err)
+
+	s.connection = connection
+}
+
+func (s *UsersTestSuite) TearDownTest() {
+	s.NoError(
+		goose.DownTo(
+			s.dbConnector.Pool(),
+			path.Dir(
+				path.Dir(s.cwd),
+			)+migrationsDir,
+			gooseZeroVersion,
+		),
+	)
+
+	s.NoError(s.connection.Close())
+}
+
+func (s *UsersTestSuite) TearDownSuite() {
+	s.NoError(s.dbConnector.Close())
+}
+
+func (s *UsersTestSuite) TestRepositoriesGetExistingUserByID() {
 	ctx := context.Background()
-	connection, err := dbConnector.Connection(ctx)
-	require.NoError(b, err)
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
 
-	defer func() {
-		if err = connection.Close(); err != nil {
-			b.Fatal(err)
-		}
-	}()
-
-	_, err = connection.ExecContext(
+	_, err := s.connection.ExecContext(
 		ctx,
 		`
 				INSERT INTO users (id, display_name, email, password) 
 				VALUES ($1, $2, $3, $4)
 			`,
 		testUserID,
-		"Display Name",
-		testUserEmail,
-		"testUserPassword",
+		testUserDTO.DisplayName,
+		testUserDTO.Email,
+		testUserDTO.Password,
 	)
 
-	if err != nil {
-		b.Fatalf("failed to insert user: %v", err)
-	}
+	s.NoError(err)
 
-	traceProvider := tracingmock.NewMockProvider(gomock.NewController(b))
-	traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
-		context.Background(),
-		tracingmock.NewMockSpan(),
-	).AnyTimes()
+	user, err := s.usersRepository.GetUserByID(ctx, testUserID)
+	s.NoError(err)
+	s.NotNil(user)
+}
+
+func (s *UsersTestSuite) TestRepositoriesGetNonExistingUserByID() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	user, err := s.usersRepository.GetUserByID(ctx, testUserID)
+	s.Error(err)
+	s.Nil(user)
+}
+
+func (s *UsersTestSuite) TestRepositoriesGetExistingUserByEmail() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	_, err := s.connection.ExecContext(
+		ctx,
+		`
+				INSERT INTO users (id, display_name, email, password) 
+				VALUES ($1, $2, $3, $4)
+			`,
+		testUserID,
+		testUserDTO.DisplayName,
+		testUserDTO.Email,
+		testUserDTO.Password,
+	)
+
+	s.NoError(err)
+
+	user, err := s.usersRepository.GetUserByEmail(ctx, testUserEmail)
+	s.NoError(err)
+	s.NotNil(user)
+}
+
+func (s *UsersTestSuite) TestRepositoriesGetNonExistingUserByEmail() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	user, err := s.usersRepository.GetUserByEmail(ctx, testUserEmail)
+	s.Error(err)
+	s.Nil(user)
+}
+
+func (s *UsersTestSuite) TestRepositoriesGetAllUserWithExistingUsers() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	_, err := s.connection.ExecContext(
+		ctx,
+		`
+				INSERT INTO users (id, display_name, email, password) 
+				VALUES ($1, $2, $3, $4)
+			`,
+		testUserID,
+		testUserDTO.DisplayName,
+		testUserDTO.Email,
+		testUserDTO.Password,
+	)
+
+	s.NoError(err)
+
+	users, err := s.usersRepository.GetAllUsers(ctx)
+	s.NoError(err)
+	s.NotEmpty(users)
+}
+
+func (s *UsersTestSuite) TestRepositoriesGetAllUserWithoutExistingUsers() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	users, err := s.usersRepository.GetAllUsers(ctx)
+	s.NoError(err)
+	s.Empty(users)
+}
+
+func BenchmarkRepositoriesGetUserByID(b *testing.B) {
+	spanConfig := tracing.SpanConfig{}
+	ctx := context.Background()
+	ctrl := gomock.NewController(b)
+	logger := loggermock.NewMockLogger(ctrl)
+	dbConnector, err := db.New(dsn, driver, logger)
+	require.NoError(b, err)
+
+	defer func() {
+		require.NoError(b, dbConnector.Close())
+	}()
+
+	traceProvider := tracingmock.NewMockProvider(ctrl)
+	traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(ctx, tracingmock.NewMockSpan()).
+		AnyTimes()
 
 	usersRepository := repositories.NewUsersRepository(dbConnector, logger, traceProvider, spanConfig)
 
@@ -265,38 +244,23 @@ func BenchmarkRepositoriesGetUserByID(b *testing.B) {
 }
 
 func BenchmarkRepositoriesGetUserByEmail(b *testing.B) {
-	dbConnector := StartUp(b)
+	spanConfig := tracing.SpanConfig{}
 	ctx := context.Background()
-	connection, err := dbConnector.Connection(ctx)
+	ctrl := gomock.NewController(b)
+	logger := loggermock.NewMockLogger(ctrl)
+	dbConnector, err := db.New(dsn, driver, logger)
+	require.NoError(b, err)
 
 	defer func() {
-		if err = connection.Close(); err != nil {
-			b.Fatal(err)
-		}
+		require.NoError(b, dbConnector.Close())
 	}()
 
-	require.NoError(b, err)
-	_, err = connection.ExecContext(
-		ctx,
-		`
-				INSERT INTO users (id, display_name, email, password) 
-				VALUES ($1, $2, $3, $4)
-			`,
-		testUserID,
-		"Display Name",
-		testUserEmail,
-		"testUserPassword",
-	)
-
-	if err != nil {
-		b.Fatalf("failed to insert user: %v", err)
-	}
-
-	traceProvider := tracingmock.NewMockProvider(gomock.NewController(b))
-	traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
-		context.Background(),
-		tracingmock.NewMockSpan(),
-	).AnyTimes()
+	traceProvider := tracingmock.NewMockProvider(ctrl)
+	traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(ctx, tracingmock.NewMockSpan()).
+		AnyTimes()
 
 	usersRepository := repositories.NewUsersRepository(dbConnector, logger, traceProvider, spanConfig)
 
@@ -310,38 +274,23 @@ func BenchmarkRepositoriesGetUserByEmail(b *testing.B) {
 }
 
 func BenchmarkRepositoriesGetAllUsers(b *testing.B) {
-	dbConnector := StartUp(b)
+	spanConfig := tracing.SpanConfig{}
 	ctx := context.Background()
-	connection, err := dbConnector.Connection(ctx)
+	ctrl := gomock.NewController(b)
+	logger := loggermock.NewMockLogger(ctrl)
+	dbConnector, err := db.New(dsn, driver, logger)
+	require.NoError(b, err)
 
 	defer func() {
-		if err = connection.Close(); err != nil {
-			b.Fatal(err)
-		}
+		require.NoError(b, dbConnector.Close())
 	}()
 
-	require.NoError(b, err)
-	_, err = connection.ExecContext(
-		ctx,
-		`
-				INSERT INTO users (id, display_name, email, password) 
-				VALUES ($1, $2, $3, $4)
-			`,
-		testUserID,
-		"Display Name",
-		testUserEmail,
-		"testUserPassword",
-	)
-
-	if err != nil {
-		b.Fatalf("failed to insert user: %v", err)
-	}
-
-	traceProvider := tracingmock.NewMockProvider(gomock.NewController(b))
-	traceProvider.EXPECT().Span(gomock.Any(), gomock.Any()).Return(
-		context.Background(),
-		tracingmock.NewMockSpan(),
-	).AnyTimes()
+	traceProvider := tracingmock.NewMockProvider(ctrl)
+	traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(ctx, tracingmock.NewMockSpan()).
+		AnyTimes()
 
 	usersRepository := repositories.NewUsersRepository(dbConnector, logger, traceProvider, spanConfig)
 
