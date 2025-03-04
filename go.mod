@@ -6,7 +6,7 @@ toolchain go1.23.6
 
 require (
 	github.com/DKhorkov/hmtm-notifications v1.1.0
-	github.com/DKhorkov/libs v1.5.1
+	github.com/DKhorkov/libs v1.5.2
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/dchest/uniuri v1.2.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
