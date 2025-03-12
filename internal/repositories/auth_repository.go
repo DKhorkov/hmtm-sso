@@ -19,7 +19,7 @@ import (
 const (
 	refreshTokensTableName      = "refresh_tokens"
 	refreshTokenValueColumnName = "value"
-	refreshTokenTTlColumnName   = "ttl"
+	refreshTokenTTLColumnName   = "ttl"
 	createdAtColumnName         = "created_at"
 	updatedAtColumnName         = "updated_at"
 	returningIDSuffix           = "RETURNING id"
@@ -113,7 +113,7 @@ func (repo *AuthRepository) CreateRefreshToken(
 		Columns(
 			userIDColumnName,
 			refreshTokenValueColumnName,
-			refreshTokenTTlColumnName,
+			refreshTokenTTLColumnName,
 		).
 		Values(
 			userID,
@@ -161,7 +161,7 @@ func (repo *AuthRepository) GetRefreshTokenByUserID(
 			sq.Expr(
 				fmt.Sprintf(
 					"%s > CURRENT_TIMESTAMP",
-					refreshTokenTTlColumnName,
+					refreshTokenTTLColumnName,
 				),
 			),
 		).
@@ -199,7 +199,7 @@ func (repo *AuthRepository) ExpireRefreshToken(ctx context.Context, refreshToken
 		Update(refreshTokensTableName).
 		Where(sq.Eq{refreshTokenValueColumnName: refreshToken}).
 		Set(
-			refreshTokenTTlColumnName,
+			refreshTokenTTLColumnName,
 			time.Now().UTC().Add(time.Hour*time.Duration(-24)),
 		).
 		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
@@ -294,7 +294,7 @@ func (repo *AuthRepository) ForgetPassword(ctx context.Context, userID uint64, n
 			sq.Expr(
 				fmt.Sprintf(
 					"%s > CURRENT_TIMESTAMP",
-					refreshTokenTTlColumnName,
+					refreshTokenTTLColumnName,
 				),
 			),
 		).
@@ -317,7 +317,7 @@ func (repo *AuthRepository) ForgetPassword(ctx context.Context, userID uint64, n
 			Update(refreshTokensTableName).
 			Where(sq.Eq{refreshTokenValueColumnName: refreshToken}).
 			Set(
-				refreshTokenTTlColumnName,
+				refreshTokenTTLColumnName,
 				time.Now().UTC().Add(time.Hour*time.Duration(-24)),
 			).
 			PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
