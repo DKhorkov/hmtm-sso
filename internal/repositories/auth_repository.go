@@ -4,13 +4,26 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
+
+	sq "github.com/Masterminds/squirrel"
 
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/tracing"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
+)
+
+const (
+	refreshTokensTableName      = "refresh_tokens"
+	refreshTokenValueColumnName = "value"
+	refreshTokenTTlColumnName   = "ttl"
+	createdAtColumnName         = "created_at"
+	updatedAtColumnName         = "updated_at"
+	returningIDSuffix           = "RETURNING id"
+	userIDColumnName            = "user_id"
 )
 
 func NewAuthRepository(
@@ -48,20 +61,28 @@ func (repo *AuthRepository) RegisterUser(ctx context.Context, userData entities.
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
-	var userID uint64
-	err = connection.QueryRowContext(
-		ctx,
-		`
-			INSERT INTO users (display_name, email, password) 
-			VALUES ($1, $2, $3)
-			RETURNING users.id
-		`,
-		userData.DisplayName,
-		userData.Email,
-		userData.Password,
-	).Scan(&userID)
+	stmt, params, err := sq.
+		Insert(usersTableName).
+		Columns(
+			userDisplayNameColumnName,
+			userEmailColumnName,
+			userPasswordColumnName,
+		).
+		Values(
+			userData.DisplayName,
+			userData.Email,
+			userData.Password,
+		).
+		Suffix(returningIDSuffix).
+		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
+		ToSql()
 
 	if err != nil {
+		return 0, err
+	}
+
+	var userID uint64
+	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(&userID); err != nil {
 		return 0, err
 	}
 
@@ -87,20 +108,28 @@ func (repo *AuthRepository) CreateRefreshToken(
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
-	var refreshTokenID uint64
-	err = connection.QueryRowContext(
-		ctx,
-		`
-			INSERT INTO refresh_tokens (user_id, value, ttl) 
-			VALUES ($1, $2, $3)
-			RETURNING refresh_tokens.id
-		`,
-		userID,
-		refreshToken,
-		time.Now().UTC().Add(ttl),
-	).Scan(&refreshTokenID)
+	stmt, params, err := sq.
+		Insert(refreshTokensTableName).
+		Columns(
+			userIDColumnName,
+			refreshTokenValueColumnName,
+			refreshTokenTTlColumnName,
+		).
+		Values(
+			userID,
+			refreshToken,
+			time.Now().UTC().Add(ttl),
+		).
+		Suffix(returningIDSuffix).
+		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
+		ToSql()
 
 	if err != nil {
+		return 0, err
+	}
+
+	var refreshTokenID uint64
+	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(&refreshTokenID); err != nil {
 		return 0, err
 	}
 
@@ -124,20 +153,28 @@ func (repo *AuthRepository) GetRefreshTokenByUserID(
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
-	refreshToken := &entities.RefreshToken{}
-	columns := db.GetEntityColumns(refreshToken)
-	err = connection.QueryRowContext(
-		ctx,
-		`
-			SELECT * 
-			FROM refresh_tokens AS rt
-			WHERE rt.user_id = $1
-			  AND rt.ttl > CURRENT_TIMESTAMP
-		`,
-		userID,
-	).Scan(columns...)
+	stmt, params, err := sq.
+		Select(selectAllColumns).
+		From(refreshTokensTableName).
+		Where(sq.Eq{userIDColumnName: userID}).
+		Where(
+			sq.Expr(
+				fmt.Sprintf(
+					"%s > CURRENT_TIMESTAMP",
+					refreshTokenTTlColumnName,
+				),
+			),
+		).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
 
 	if err != nil {
+		return nil, err
+	}
+
+	refreshToken := &entities.RefreshToken{}
+	columns := db.GetEntityColumns(refreshToken)
+	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(columns...); err != nil {
 		return nil, err
 	}
 
@@ -158,15 +195,24 @@ func (repo *AuthRepository) ExpireRefreshToken(ctx context.Context, refreshToken
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
+	stmt, params, err := sq.
+		Update(refreshTokensTableName).
+		Where(sq.Eq{refreshTokenValueColumnName: refreshToken}).
+		Set(
+			refreshTokenTTlColumnName,
+			time.Now().UTC().Add(time.Hour*time.Duration(-24)),
+		).
+		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
+		ToSql()
+
+	if err != nil {
+		return err
+	}
+
 	_, err = connection.ExecContext(
 		ctx,
-		`
-			UPDATE refresh_tokens
-			SET ttl = $1
-			WHERE value = $2
-		`,
-		time.Now().UTC().Add(time.Hour*time.Duration(-24)),
-		refreshToken,
+		stmt,
+		params...,
 	)
 
 	return err
@@ -186,14 +232,21 @@ func (repo *AuthRepository) VerifyUserEmail(ctx context.Context, userID uint64) 
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
+	stmt, params, err := sq.
+		Update(usersTableName).
+		Where(sq.Eq{idColumnName: userID}).
+		Set(userEmailConfirmedColumnName, true).
+		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
+		ToSql()
+
+	if err != nil {
+		return err
+	}
+
 	_, err = connection.ExecContext(
 		ctx,
-		`
-			UPDATE users
-			SET email_confirmed = true
-			WHERE id = $1
-		`,
-		userID,
+		stmt,
+		params...,
 	)
 
 	return err
@@ -218,16 +271,35 @@ func (repo *AuthRepository) ForgetPassword(ctx context.Context, userID uint64, n
 		}
 	}()
 
-	_, err = transaction.ExecContext(
-		ctx,
-		`
-			UPDATE users
-			SET password = $1
-			WHERE id = $2
-		`,
-		newPassword,
-		userID,
-	)
+	stmt, params, err := sq.
+		Update(usersTableName).
+		Where(sq.Eq{idColumnName: userID}).
+		Set(userPasswordColumnName, newPassword).
+		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
+		ToSql()
+
+	if err != nil {
+		return err
+	}
+
+	if _, err = transaction.ExecContext(ctx, stmt, params...); err != nil {
+		return err
+	}
+
+	stmt, params, err = sq.
+		Select(selectAllColumns).
+		From(refreshTokensTableName).
+		Where(sq.Eq{userIDColumnName: userID}).
+		Where(
+			sq.Expr(
+				fmt.Sprintf(
+					"%s > CURRENT_TIMESTAMP",
+					refreshTokenTTlColumnName,
+				),
+			),
+		).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
 
 	if err != nil {
 		return err
@@ -236,33 +308,26 @@ func (repo *AuthRepository) ForgetPassword(ctx context.Context, userID uint64, n
 	// Getting refresh token for expiring:
 	refreshToken := &entities.RefreshToken{}
 	columns := db.GetEntityColumns(refreshToken)
-	err = transaction.QueryRowContext(
-		ctx,
-		`
-			SELECT * 
-			FROM refresh_tokens AS rt
-			WHERE rt.user_id = $1
-			  AND rt.ttl > CURRENT_TIMESTAMP
-		`,
-		userID,
-	).Scan(columns...)
-
+	err = transaction.QueryRowContext(ctx, stmt, params...).Scan(columns...)
 	switch {
 	case err != nil && !errors.Is(err, sql.ErrNoRows):
 		return err
 	case err == nil: // if active refresh token is found - expire it
-		_, err = transaction.ExecContext(
-			ctx,
-			`
-			UPDATE refresh_tokens
-			SET ttl = $1
-			WHERE value = $2
-		`,
-			time.Now().UTC().Add(time.Hour*time.Duration(-24)),
-			refreshToken.Value,
-		)
+		stmt, params, err = sq.
+			Update(refreshTokensTableName).
+			Where(sq.Eq{refreshTokenValueColumnName: refreshToken}).
+			Set(
+				refreshTokenTTlColumnName,
+				time.Now().UTC().Add(time.Hour*time.Duration(-24)),
+			).
+			PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
+			ToSql()
 
 		if err != nil {
+			return err
+		}
+
+		if _, err = transaction.ExecContext(ctx, stmt, params...); err != nil {
 			return err
 		}
 	}
@@ -284,15 +349,21 @@ func (repo *AuthRepository) ChangePassword(ctx context.Context, userID uint64, n
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
+	stmt, params, err := sq.
+		Update(usersTableName).
+		Where(sq.Eq{idColumnName: userID}).
+		Set(userPasswordColumnName, newPassword).
+		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
+		ToSql()
+
+	if err != nil {
+		return err
+	}
+
 	_, err = connection.ExecContext(
 		ctx,
-		`
-			UPDATE users
-			SET password = $1
-			WHERE id = $2
-		`,
-		newPassword,
-		userID,
+		stmt,
+		params...,
 	)
 
 	return err
