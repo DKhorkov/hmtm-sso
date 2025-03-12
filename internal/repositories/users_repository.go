@@ -12,6 +12,21 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 )
 
+const (
+	selectAllColumns                = "*"
+	usersTableName                  = "users"
+	idColumnName                    = "id"
+	userDisplayNameColumnName       = "display_name"
+	userEmailColumnName             = "email"
+	userEmailConfirmedColumnName    = "email_confirmed"
+	userPasswordColumnName          = "password"
+	userPhoneColumnName             = "phone"
+	userPhoneConfirmedColumnName    = "phone_confirmed"
+	userTelegramColumnName          = "telegram"
+	userTelegramConfirmedColumnName = "telegram_confirmed"
+	userAvatarColumnName            = "avatar"
+)
+
 func NewUsersRepository(
 	dbConnector db.Connector,
 	logger logging.Logger,
@@ -47,19 +62,20 @@ func (repo *UsersRepository) GetUserByID(ctx context.Context, id uint64) (*entit
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
-	user := &entities.User{}
-	columns := db.GetEntityColumns(user)
-	err = connection.QueryRowContext(
-		ctx,
-		`
-			SELECT * 
-			FROM users AS u
-			WHERE u.id = $1
-		`,
-		id,
-	).Scan(columns...)
+	stmt, params, err := sq.
+		Select(selectAllColumns).
+		From(usersTableName).
+		Where(sq.Eq{idColumnName: id}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
 
 	if err != nil {
+		return nil, err
+	}
+
+	user := &entities.User{}
+	columns := db.GetEntityColumns(user)
+	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(columns...); err != nil {
 		return nil, err
 	}
 
@@ -80,19 +96,20 @@ func (repo *UsersRepository) GetUserByEmail(ctx context.Context, email string) (
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
-	user := &entities.User{}
-	columns := db.GetEntityColumns(user)
-	err = connection.QueryRowContext(
-		ctx,
-		`
-			SELECT * 
-			FROM users AS u
-			WHERE u.email = $1
-		`,
-		email,
-	).Scan(columns...)
+	stmt, params, err := sq.
+		Select(selectAllColumns).
+		From(usersTableName).
+		Where(sq.Eq{userEmailColumnName: email}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
 
 	if err != nil {
+		return nil, err
+	}
+
+	user := &entities.User{}
+	columns := db.GetEntityColumns(user)
+	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(columns...); err != nil {
 		return nil, err
 	}
 
@@ -113,12 +130,20 @@ func (repo *UsersRepository) GetAllUsers(ctx context.Context) ([]entities.User, 
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
+	stmt, params, err := sq.
+		Select(selectAllColumns).
+		From(usersTableName).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	if err != nil {
+		return nil, err
+	}
+
 	rows, err := connection.QueryContext(
 		ctx,
-		`
-			SELECT * 
-			FROM users
-		`,
+		stmt,
+		params...,
 	)
 
 	if err != nil {
@@ -180,21 +205,21 @@ func (repo *UsersRepository) UpdateUserProfile(
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
-	builder := sq.Update("users").Where(sq.Eq{"id": userProfileData.UserID})
+	builder := sq.Update(usersTableName).Where(sq.Eq{idColumnName: userProfileData.UserID})
 	if userProfileData.DisplayName != "" {
-		builder = builder.Set("display_name", userProfileData.DisplayName)
+		builder = builder.Set(userDisplayNameColumnName, userProfileData.DisplayName)
 	}
 
 	if userProfileData.Phone != "" {
-		builder = builder.Set("phone", userProfileData.Phone)
+		builder = builder.Set(userPhoneColumnName, userProfileData.Phone)
 	}
 
 	if userProfileData.Telegram != "" {
-		builder = builder.Set("telegram", userProfileData.Telegram)
+		builder = builder.Set(userTelegramColumnName, userProfileData.Telegram)
 	}
 
 	if userProfileData.Avatar != "" {
-		builder = builder.Set("avatar", userProfileData.Avatar)
+		builder = builder.Set(userAvatarColumnName, userProfileData.Avatar)
 	}
 
 	// pq postgres driver works only with $ placeholders:
