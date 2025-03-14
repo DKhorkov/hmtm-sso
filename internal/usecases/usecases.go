@@ -188,11 +188,19 @@ func (useCases *UseCases) UpdateUserProfile(
 		return &customerrors.InvalidDisplayNameError{}
 	}
 
-	if !validateValueByRules(rawUserProfileData.Phone, useCases.validationConfig.PhoneRegExps) {
+	if rawUserProfileData.Phone != nil &&
+		!validateValueByRules(
+			*rawUserProfileData.Phone,
+			useCases.validationConfig.PhoneRegExps,
+		) {
 		return &customerrors.InvalidPhoneError{}
 	}
 
-	if !validateValueByRules(rawUserProfileData.Telegram, useCases.validationConfig.TelegramRegExps) {
+	if rawUserProfileData.Telegram != nil &&
+		!validateValueByRules(
+			*rawUserProfileData.Telegram,
+			useCases.validationConfig.TelegramRegExps,
+		) {
 		return &customerrors.InvalidTelegramError{}
 	}
 
@@ -352,7 +360,7 @@ func (useCases *UseCases) LogoutUser(ctx context.Context, accessToken string) er
 }
 
 func (useCases *UseCases) VerifyUserEmail(ctx context.Context, verifyEmailToken string) error {
-	strUserID, err := security.Decode(verifyEmailToken)
+	strUserID, err := security.RawDecode(verifyEmailToken)
 	if err != nil {
 		return err
 	}
