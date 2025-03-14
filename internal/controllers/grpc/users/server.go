@@ -35,9 +35,9 @@ func (api *ServerAPI) UpdateUserProfile(ctx context.Context, in *sso.UpdateUserP
 	userProfileData := entities.RawUpdateUserProfileDTO{
 		AccessToken: in.GetAccessToken(),
 		DisplayName: in.GetDisplayName(),
-		Phone:       in.GetPhone(),
-		Telegram:    in.GetTelegram(),
-		Avatar:      in.GetAvatar(),
+		Phone:       in.Phone,
+		Telegram:    in.Telegram,
+		Avatar:      in.Avatar,
 	}
 
 	if err := api.useCases.UpdateUserProfile(ctx, userProfileData); err != nil {

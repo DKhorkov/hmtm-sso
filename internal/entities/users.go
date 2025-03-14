@@ -18,17 +18,17 @@ type User struct {
 }
 
 type RawUpdateUserProfileDTO struct {
-	AccessToken string `json:"access_token"`
-	DisplayName string `json:"display_name"`
-	Phone       string `json:"phone"`
-	Telegram    string `json:"telegram"`
-	Avatar      string `json:"avatar"`
+	AccessToken string  `json:"access_token"`
+	DisplayName string  `json:"display_name"`
+	Phone       *string `json:"phone,omitempty"`
+	Telegram    *string `json:"telegram,omitempty"`
+	Avatar      *string `json:"avatar,omitempty"`
 }
 
 type UpdateUserProfileDTO struct {
-	UserID      uint64 `json:"user_id"`
-	DisplayName string `json:"display_name"`
-	Phone       string `json:"phone"`
-	Telegram    string `json:"telegram"`
-	Avatar      string `json:"avatar"`
+	UserID      uint64  `json:"user_id"`
+	DisplayName string  `json:"display_name"`
+	Phone       *string `json:"phone,omitempty"`
+	Telegram    *string `json:"telegram,omitempty"`
+	Avatar      *string `json:"avatar,omitempty"`
 }

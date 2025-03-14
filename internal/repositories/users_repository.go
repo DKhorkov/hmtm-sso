@@ -190,14 +190,6 @@ func (repo *UsersRepository) UpdateUserProfile(
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
 	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
-	// No fields to update:
-	if userProfileData.DisplayName == "" &&
-		userProfileData.Phone == "" &&
-		userProfileData.Telegram == "" &&
-		userProfileData.Avatar == "" {
-		return nil
-	}
-
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
 		return err
@@ -205,25 +197,16 @@ func (repo *UsersRepository) UpdateUserProfile(
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
-	builder := sq.Update(usersTableName).Where(sq.Eq{idColumnName: userProfileData.UserID})
-	if userProfileData.DisplayName != "" {
-		builder = builder.Set(userDisplayNameColumnName, userProfileData.DisplayName)
-	}
+	stmt, params, err := sq.
+		Update(usersTableName).
+		Where(sq.Eq{idColumnName: userProfileData.UserID}).
+		Set(userDisplayNameColumnName, userProfileData.DisplayName).
+		Set(userPhoneColumnName, userProfileData.Phone).
+		Set(userTelegramColumnName, userProfileData.Telegram).
+		Set(userAvatarColumnName, userProfileData.Avatar).
+		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders:
+		ToSql()
 
-	if userProfileData.Phone != "" {
-		builder = builder.Set(userPhoneColumnName, userProfileData.Phone)
-	}
-
-	if userProfileData.Telegram != "" {
-		builder = builder.Set(userTelegramColumnName, userProfileData.Telegram)
-	}
-
-	if userProfileData.Avatar != "" {
-		builder = builder.Set(userAvatarColumnName, userProfileData.Avatar)
-	}
-
-	// pq postgres driver works only with $ placeholders:
-	stmt, params, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		return err
 	}
