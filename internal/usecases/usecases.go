@@ -9,7 +9,7 @@ import (
 	"github.com/dchest/uniuri"
 	"github.com/golang-jwt/jwt/v5"
 
-	notification "github.com/DKhorkov/hmtm-notifications/dto"
+	notifications "github.com/DKhorkov/hmtm-notifications/dto"
 	"github.com/DKhorkov/libs/logging"
 	customnats "github.com/DKhorkov/libs/nats"
 	"github.com/DKhorkov/libs/security"
@@ -74,7 +74,7 @@ func (useCases *UseCases) RegisterUser(ctx context.Context, userData entities.Re
 		return 0, err
 	}
 
-	verifyEmailDTO := &notification.VerifyEmailDTO{
+	verifyEmailDTO := &notifications.VerifyEmailDTO{
 		UserID: userID,
 	}
 
@@ -397,7 +397,7 @@ func (useCases *UseCases) ForgetPassword(ctx context.Context, accessToken string
 		return err
 	}
 
-	forgetPasswordDTO := &notification.ForgetPasswordDTO{
+	forgetPasswordDTO := &notifications.ForgetPasswordDTO{
 		UserID:      userID,
 		NewPassword: newPassword,
 	}
@@ -413,6 +413,8 @@ func (useCases *UseCases) ForgetPassword(ctx context.Context, accessToken string
 			),
 			err,
 		)
+
+		return err
 	}
 
 	if err = useCases.natsPublisher.Publish(useCases.natsConfig.Subjects.ForgetPassword, content); err != nil {
@@ -422,6 +424,8 @@ func (useCases *UseCases) ForgetPassword(ctx context.Context, accessToken string
 			fmt.Sprintf("Error occurred while trying send Forget Password message to User with ID=%d", userID),
 			err,
 		)
+
+		return err
 	}
 
 	return nil
@@ -480,7 +484,7 @@ func (useCases *UseCases) SendVerifyEmailMessage(ctx context.Context, email stri
 		return &customerrors.EmailAlreadyConfirmedError{}
 	}
 
-	verifyEmailDTO := &notification.VerifyEmailDTO{
+	verifyEmailDTO := &notifications.VerifyEmailDTO{
 		UserID: user.ID,
 	}
 
@@ -495,6 +499,8 @@ func (useCases *UseCases) SendVerifyEmailMessage(ctx context.Context, email stri
 			),
 			err,
 		)
+
+		return err
 	}
 
 	if err = useCases.natsPublisher.Publish(useCases.natsConfig.Subjects.VerifyEmail, content); err != nil {
@@ -504,6 +510,8 @@ func (useCases *UseCases) SendVerifyEmailMessage(ctx context.Context, email stri
 			fmt.Sprintf("Error occurred while trying send Verfiy Email message to User with ID=%d", user.ID),
 			err,
 		)
+
+		return err
 	}
 
 	return nil
