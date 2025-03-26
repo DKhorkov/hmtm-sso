@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
-
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/loadenv"
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/security"
 	"github.com/DKhorkov/libs/tracing"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func New() Config {
@@ -59,7 +58,10 @@ func New() Config {
 			LogFilePath: fmt.Sprintf("logs/%s.log", time.Now().UTC().Format("02-01-2006")),
 		},
 		Validation: ValidationConfig{
-			EmailRegExp: loadenv.GetEnv("EMAIL_REGEXP", "^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,4}$"),
+			EmailRegExp: loadenv.GetEnv(
+				"EMAIL_REGEXP",
+				"^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,4}$",
+			),
 			PasswordRegExps: loadenv.GetEnvAsSlice(
 				"PASSWORD_REGEXPS",
 				[]string{
@@ -74,7 +76,7 @@ func New() Config {
 			DisplayNameRegExps: loadenv.GetEnvAsSlice(
 				"DISPLAY_NAME_REGEXPS",
 				[]string{
-					".{4,}",
+					"^.{4,70}$",
 				},
 				";",
 			),
@@ -115,7 +117,10 @@ func New() Config {
 							Name: "Calling handler",
 							Opts: []trace.EventOption{
 								trace.WithAttributes(
-									attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+									attribute.String(
+										"Environment",
+										loadenv.GetEnv("ENVIRONMENT", "local"),
+									),
 								),
 							},
 						},
@@ -123,7 +128,10 @@ func New() Config {
 							Name: "Received response from handler",
 							Opts: []trace.EventOption{
 								trace.WithAttributes(
-									attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+									attribute.String(
+										"Environment",
+										loadenv.GetEnv("ENVIRONMENT", "local"),
+									),
 								),
 							},
 						},
@@ -133,7 +141,10 @@ func New() Config {
 					Auth: tracing.SpanConfig{
 						Opts: []trace.SpanStartOption{
 							trace.WithAttributes(
-								attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+								attribute.String(
+									"Environment",
+									loadenv.GetEnv("ENVIRONMENT", "local"),
+								),
 							),
 						},
 						Events: tracing.SpanEventsConfig{
@@ -141,7 +152,10 @@ func New() Config {
 								Name: "Calling database",
 								Opts: []trace.EventOption{
 									trace.WithAttributes(
-										attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+										attribute.String(
+											"Environment",
+											loadenv.GetEnv("ENVIRONMENT", "local"),
+										),
 									),
 								},
 							},
@@ -149,7 +163,10 @@ func New() Config {
 								Name: "Received response from database",
 								Opts: []trace.EventOption{
 									trace.WithAttributes(
-										attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+										attribute.String(
+											"Environment",
+											loadenv.GetEnv("ENVIRONMENT", "local"),
+										),
 									),
 								},
 							},
@@ -158,7 +175,10 @@ func New() Config {
 					Users: tracing.SpanConfig{
 						Opts: []trace.SpanStartOption{
 							trace.WithAttributes(
-								attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+								attribute.String(
+									"Environment",
+									loadenv.GetEnv("ENVIRONMENT", "local"),
+								),
 							),
 						},
 						Events: tracing.SpanEventsConfig{
@@ -166,7 +186,10 @@ func New() Config {
 								Name: "Calling database",
 								Opts: []trace.EventOption{
 									trace.WithAttributes(
-										attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+										attribute.String(
+											"Environment",
+											loadenv.GetEnv("ENVIRONMENT", "local"),
+										),
 									),
 								},
 							},
@@ -174,7 +197,10 @@ func New() Config {
 								Name: "Received response from database",
 								Opts: []trace.EventOption{
 									trace.WithAttributes(
-										attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+										attribute.String(
+											"Environment",
+											loadenv.GetEnv("ENVIRONMENT", "local"),
+										),
 									),
 								},
 							},

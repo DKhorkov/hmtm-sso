@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/security"
 	"github.com/dchest/uniuri"
 	"github.com/golang-jwt/jwt/v5"
 
 	notifications "github.com/DKhorkov/hmtm-notifications/dto"
-	"github.com/DKhorkov/libs/logging"
 	customnats "github.com/DKhorkov/libs/nats"
-	"github.com/DKhorkov/libs/security"
 
 	"github.com/DKhorkov/hmtm-sso/internal/config"
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
@@ -50,7 +50,10 @@ type UseCases struct {
 	logger           logging.Logger
 }
 
-func (useCases *UseCases) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
+func (useCases *UseCases) RegisterUser(
+	ctx context.Context,
+	userData entities.RegisterUserDTO,
+) (uint64, error) {
 	if !validateValueByRule(userData.Email, useCases.validationConfig.EmailRegExp) {
 		return 0, &customerrors.InvalidEmailError{}
 	}
@@ -95,7 +98,10 @@ func (useCases *UseCases) RegisterUser(ctx context.Context, userData entities.Re
 		logging.LogErrorContext(
 			ctx,
 			useCases.logger,
-			fmt.Sprintf("Error occurred while trying send Verfiy Email message to User with ID=%d", userID),
+			fmt.Sprintf(
+				"Error occurred while trying send Verfiy Email message to User with ID=%d",
+				userID,
+			),
 			err,
 		)
 	}
@@ -108,7 +114,7 @@ func (useCases *UseCases) LoginUser(
 	userData entities.LoginUserDTO,
 ) (*entities.TokensDTO, error) {
 	// Check if user with provided email exists and password is valid:
-	user, err := useCases.usersService.GetUserByEmail(ctx, userData.Email)
+	user, err := useCases.GetUserByEmail(ctx, userData.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +140,6 @@ func (useCases *UseCases) LoginUser(
 		useCases.securityConfig.JWT.AccessTokenTTL,
 		useCases.securityConfig.JWT.Algorithm,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +150,6 @@ func (useCases *UseCases) LoginUser(
 		useCases.securityConfig.JWT.RefreshTokenTTL,
 		useCases.securityConfig.JWT.Algorithm,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +176,10 @@ func (useCases *UseCases) GetUserByID(ctx context.Context, id uint64) (*entities
 	return useCases.usersService.GetUserByID(ctx, id)
 }
 
-func (useCases *UseCases) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
+func (useCases *UseCases) GetUserByEmail(
+	ctx context.Context,
+	email string,
+) (*entities.User, error) {
 	return useCases.usersService.GetUserByEmail(ctx, email)
 }
 
@@ -184,7 +191,10 @@ func (useCases *UseCases) UpdateUserProfile(
 	ctx context.Context,
 	rawUserProfileData entities.RawUpdateUserProfileDTO,
 ) error {
-	if !validateValueByRules(rawUserProfileData.DisplayName, useCases.validationConfig.DisplayNameRegExps) {
+	if !validateValueByRules(
+		rawUserProfileData.DisplayName,
+		useCases.validationConfig.DisplayNameRegExps,
+	) {
 		return &customerrors.InvalidDisplayNameError{}
 	}
 
@@ -204,7 +214,10 @@ func (useCases *UseCases) UpdateUserProfile(
 		return &customerrors.InvalidTelegramError{}
 	}
 
-	accessTokenPayload, err := security.ParseJWT(rawUserProfileData.AccessToken, useCases.securityConfig.JWT.SecretKey)
+	accessTokenPayload, err := security.ParseJWT(
+		rawUserProfileData.AccessToken,
+		useCases.securityConfig.JWT.SecretKey,
+	)
 	if err != nil {
 		return &security.InvalidJWTError{}
 	}
@@ -215,7 +228,7 @@ func (useCases *UseCases) UpdateUserProfile(
 	}
 
 	userID := uint64(floatUserID)
-	user, err := useCases.usersService.GetUserByID(ctx, userID)
+	user, err := useCases.GetUserByID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -246,7 +259,10 @@ func (useCases *UseCases) GetMe(ctx context.Context, accessToken string) (*entit
 	return useCases.usersService.GetUserByID(ctx, userID)
 }
 
-func (useCases *UseCases) RefreshTokens(ctx context.Context, refreshToken string) (*entities.TokensDTO, error) {
+func (useCases *UseCases) RefreshTokens(
+	ctx context.Context,
+	refreshToken string,
+) (*entities.TokensDTO, error) {
 	// Decoding refresh token to get original JWT and compare its value with value in Database:
 	oldRefreshTokenBytes, err := security.Decode(refreshToken)
 	if err != nil {
@@ -255,7 +271,10 @@ func (useCases *UseCases) RefreshTokens(ctx context.Context, refreshToken string
 
 	// Retrieving refresh token payload to get access token from refresh token:
 	oldRefreshToken := string(oldRefreshTokenBytes)
-	refreshTokenPayload, err := security.ParseJWT(oldRefreshToken, useCases.securityConfig.JWT.SecretKey)
+	refreshTokenPayload, err := security.ParseJWT(
+		oldRefreshToken,
+		useCases.securityConfig.JWT.SecretKey,
+	)
 	if err != nil {
 		return nil, &security.InvalidJWTError{}
 	}
@@ -271,7 +290,6 @@ func (useCases *UseCases) RefreshTokens(ctx context.Context, refreshToken string
 		useCases.securityConfig.JWT.SecretKey,
 		jwt.WithoutClaimsValidation(), // not validating claims due to expiration of JWT TTL
 	)
-
 	if err != nil {
 		return nil, &security.InvalidJWTError{}
 	}
@@ -305,7 +323,6 @@ func (useCases *UseCases) RefreshTokens(ctx context.Context, refreshToken string
 		useCases.securityConfig.JWT.AccessTokenTTL,
 		useCases.securityConfig.JWT.Algorithm,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -316,7 +333,6 @@ func (useCases *UseCases) RefreshTokens(ctx context.Context, refreshToken string
 		useCases.securityConfig.JWT.RefreshTokenTTL,
 		useCases.securityConfig.JWT.Algorithm,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -421,7 +437,10 @@ func (useCases *UseCases) ForgetPassword(ctx context.Context, accessToken string
 		logging.LogErrorContext(
 			ctx,
 			useCases.logger,
-			fmt.Sprintf("Error occurred while trying send Forget Password message to User with ID=%d", userID),
+			fmt.Sprintf(
+				"Error occurred while trying send Forget Password message to User with ID=%d",
+				userID,
+			),
 			err,
 		)
 
@@ -438,7 +457,9 @@ func (useCases *UseCases) ChangePassword(
 	newPassword string,
 ) error {
 	if oldPassword == newPassword {
-		return &customerrors.InvalidPasswordError{Message: "New password can not be equal old password"}
+		return &customerrors.InvalidPasswordError{
+			Message: "New password can not be equal old password",
+		}
 	}
 
 	accessTokenPayload, err := security.ParseJWT(accessToken, useCases.securityConfig.JWT.SecretKey)
@@ -457,7 +478,7 @@ func (useCases *UseCases) ChangePassword(
 		return &customerrors.InvalidPasswordError{}
 	}
 
-	user, err := useCases.usersService.GetUserByID(ctx, userID)
+	user, err := useCases.GetUserByID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -475,7 +496,7 @@ func (useCases *UseCases) ChangePassword(
 }
 
 func (useCases *UseCases) SendVerifyEmailMessage(ctx context.Context, email string) error {
-	user, err := useCases.usersService.GetUserByEmail(ctx, email)
+	user, err := useCases.GetUserByEmail(ctx, email)
 	if err != nil {
 		return err
 	}
@@ -507,7 +528,10 @@ func (useCases *UseCases) SendVerifyEmailMessage(ctx context.Context, email stri
 		logging.LogErrorContext(
 			ctx,
 			useCases.logger,
-			fmt.Sprintf("Error occurred while trying send Verfiy Email message to User with ID=%d", user.ID),
+			fmt.Sprintf(
+				"Error occurred while trying send Verfiy Email message to User with ID=%d",
+				user.ID,
+			),
 			err,
 		)
 

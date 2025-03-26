@@ -29,7 +29,10 @@ type AuthService struct {
 	logger          logging.Logger
 }
 
-func (service *AuthService) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
+func (service *AuthService) RegisterUser(
+	ctx context.Context,
+	userData entities.RegisterUserDTO,
+) (uint64, error) {
 	user, _ := service.usersRepository.GetUserByEmail(ctx, userData.Email)
 	if user != nil {
 		return 0, &customerrors.UserAlreadyExistsError{}
@@ -67,10 +70,18 @@ func (service *AuthService) VerifyUserEmail(ctx context.Context, userID uint64) 
 	return service.authRepository.VerifyUserEmail(ctx, userID)
 }
 
-func (service *AuthService) ForgetPassword(ctx context.Context, userID uint64, newPassword string) error {
+func (service *AuthService) ForgetPassword(
+	ctx context.Context,
+	userID uint64,
+	newPassword string,
+) error {
 	return service.authRepository.ForgetPassword(ctx, userID, newPassword)
 }
 
-func (service *AuthService) ChangePassword(ctx context.Context, userID uint64, newPassword string) error {
+func (service *AuthService) ChangePassword(
+	ctx context.Context,
+	userID uint64,
+	newPassword string,
+) error {
 	return service.authRepository.ChangePassword(ctx, userID, newPassword)
 }

@@ -11,7 +11,10 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 )
 
-func NewUsersService(usersRepository interfaces.UsersRepository, logger logging.Logger) *UsersService {
+func NewUsersService(
+	usersRepository interfaces.UsersRepository,
+	logger logging.Logger,
+) *UsersService {
 	return &UsersService{
 		usersRepository: usersRepository,
 		logger:          logger,
@@ -43,7 +46,10 @@ func (service *UsersService) GetUserByID(ctx context.Context, id uint64) (*entit
 	return user, nil
 }
 
-func (service *UsersService) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
+func (service *UsersService) GetUserByEmail(
+	ctx context.Context,
+	email string,
+) (*entities.User, error) {
 	user, err := service.usersRepository.GetUserByEmail(ctx, email)
 	if err != nil {
 		logging.LogErrorContext(

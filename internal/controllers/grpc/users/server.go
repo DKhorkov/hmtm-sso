@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/security"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	customgrpc "github.com/DKhorkov/libs/grpc"
-	"github.com/DKhorkov/libs/logging"
-	"github.com/DKhorkov/libs/security"
 
 	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
@@ -31,7 +31,10 @@ type ServerAPI struct {
 	logger   logging.Logger
 }
 
-func (api *ServerAPI) UpdateUserProfile(ctx context.Context, in *sso.UpdateUserProfileIn) (*emptypb.Empty, error) {
+func (api *ServerAPI) UpdateUserProfile(
+	ctx context.Context,
+	in *sso.UpdateUserProfileIn,
+) (*emptypb.Empty, error) {
 	userProfileData := entities.RawUpdateUserProfileDTO{
 		AccessToken: in.GetAccessToken(),
 		DisplayName: in.GetDisplayName(),
@@ -44,7 +47,10 @@ func (api *ServerAPI) UpdateUserProfile(ctx context.Context, in *sso.UpdateUserP
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf("Error occurred while trying to update User profile with AccessToken=%s", in.GetAccessToken()),
+			fmt.Sprintf(
+				"Error occurred while trying to update User profile with AccessToken=%s",
+				in.GetAccessToken(),
+			),
 			err,
 		)
 
@@ -61,7 +67,10 @@ func (api *ServerAPI) UpdateUserProfile(ctx context.Context, in *sso.UpdateUserP
 	return &emptypb.Empty{}, nil
 }
 
-func (api *ServerAPI) GetUserByEmail(ctx context.Context, in *sso.GetUserByEmailIn) (*sso.GetUserOut, error) {
+func (api *ServerAPI) GetUserByEmail(
+	ctx context.Context,
+	in *sso.GetUserByEmailIn,
+) (*sso.GetUserOut, error) {
 	user, err := api.useCases.GetUserByEmail(ctx, in.GetEmail())
 	if err != nil {
 		logging.LogErrorContext(
@@ -108,7 +117,12 @@ func (api *ServerAPI) GetUser(ctx context.Context, in *sso.GetUserIn) (*sso.GetU
 func (api *ServerAPI) GetUsers(ctx context.Context, _ *emptypb.Empty) (*sso.GetUsersOut, error) {
 	users, err := api.useCases.GetAllUsers(ctx)
 	if err != nil {
-		logging.LogErrorContext(ctx, api.logger, "Error occurred while trying to get all Users", err)
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			"Error occurred while trying to get all Users",
+			err,
+		)
 		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
@@ -127,7 +141,10 @@ func (api *ServerAPI) GetMe(ctx context.Context, in *sso.GetMeIn) (*sso.GetUserO
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf("Error occurred while trying to get User with AccessToken=%s", in.GetAccessToken()),
+			fmt.Sprintf(
+				"Error occurred while trying to get User with AccessToken=%s",
+				in.GetAccessToken(),
+			),
 			err,
 		)
 

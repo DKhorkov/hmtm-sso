@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/security"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	customgrpc "github.com/DKhorkov/libs/grpc"
-	"github.com/DKhorkov/libs/logging"
-	"github.com/DKhorkov/libs/security"
 
 	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
@@ -47,7 +47,10 @@ func (api *ServerAPI) SendVerifyEmailMessage(
 		case errors.As(err, &customerrors.UserNotFoundError{}):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		case errors.As(err, &customerrors.EmailAlreadyConfirmedError{}):
-			return nil, &customgrpc.BaseError{Status: codes.FailedPrecondition, Message: err.Error()}
+			return nil, &customgrpc.BaseError{
+				Status:  codes.FailedPrecondition,
+				Message: err.Error(),
+			}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 		}
@@ -56,7 +59,10 @@ func (api *ServerAPI) SendVerifyEmailMessage(
 	return &emptypb.Empty{}, nil
 }
 
-func (api *ServerAPI) ChangePassword(ctx context.Context, in *sso.ChangePasswordIn) (*emptypb.Empty, error) {
+func (api *ServerAPI) ChangePassword(
+	ctx context.Context,
+	in *sso.ChangePasswordIn,
+) (*emptypb.Empty, error) {
 	if err := api.useCases.ChangePassword(
 		ctx,
 		in.GetAccessToken(),
@@ -69,7 +75,10 @@ func (api *ServerAPI) ChangePassword(ctx context.Context, in *sso.ChangePassword
 	return &emptypb.Empty{}, nil
 }
 
-func (api *ServerAPI) ForgetPassword(ctx context.Context, in *sso.ForgetPasswordIn) (*emptypb.Empty, error) {
+func (api *ServerAPI) ForgetPassword(
+	ctx context.Context,
+	in *sso.ForgetPasswordIn,
+) (*emptypb.Empty, error) {
 	if err := api.useCases.ForgetPassword(ctx, in.GetAccessToken()); err != nil {
 		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
@@ -77,7 +86,10 @@ func (api *ServerAPI) ForgetPassword(ctx context.Context, in *sso.ForgetPassword
 	return &emptypb.Empty{}, nil
 }
 
-func (api *ServerAPI) VerifyEmail(ctx context.Context, in *sso.VerifyEmailIn) (*emptypb.Empty, error) {
+func (api *ServerAPI) VerifyEmail(
+	ctx context.Context,
+	in *sso.VerifyEmailIn,
+) (*emptypb.Empty, error) {
 	if err := api.useCases.VerifyUserEmail(ctx, in.GetVerifyEmailToken()); err != nil {
 		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
@@ -103,12 +115,20 @@ func (api *ServerAPI) Register(ctx context.Context, in *sso.RegisterIn) (*sso.Re
 
 	userID, err := api.useCases.RegisterUser(ctx, userData)
 	if err != nil {
-		logging.LogErrorContext(ctx, api.logger, "Error occurred while trying to register User", err)
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			"Error occurred while trying to register User",
+			err,
+		)
 
 		switch {
 		case errors.As(err, &customerrors.InvalidEmailError{}),
 			errors.As(err, &customerrors.InvalidPasswordError{}):
-			return nil, &customgrpc.BaseError{Status: codes.FailedPrecondition, Message: err.Error()}
+			return nil, &customgrpc.BaseError{
+				Status:  codes.FailedPrecondition,
+				Message: err.Error(),
+			}
 		case errors.As(err, &customerrors.UserAlreadyExistsError{}):
 			return nil, &customgrpc.BaseError{Status: codes.AlreadyExists, Message: err.Error()}
 		default:
@@ -152,13 +172,19 @@ func (api *ServerAPI) Login(ctx context.Context, in *sso.LoginIn) (*sso.LoginOut
 }
 
 // RefreshTokens handler updates User auth tokens.
-func (api *ServerAPI) RefreshTokens(ctx context.Context, in *sso.RefreshTokensIn) (*sso.LoginOut, error) {
+func (api *ServerAPI) RefreshTokens(
+	ctx context.Context,
+	in *sso.RefreshTokensIn,
+) (*sso.LoginOut, error) {
 	tokensDTO, err := api.useCases.RefreshTokens(ctx, in.GetRefreshToken())
 	if err != nil {
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf("Error occurred while trying to refresh tokens with RefreshToken=%s", in.GetRefreshToken()),
+			fmt.Sprintf(
+				"Error occurred while trying to refresh tokens with RefreshToken=%s",
+				in.GetRefreshToken(),
+			),
 			err,
 		)
 

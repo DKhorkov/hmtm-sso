@@ -3,11 +3,11 @@ package repositories
 import (
 	"context"
 
-	sq "github.com/Masterminds/squirrel"
-
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/tracing"
+
+	sq "github.com/Masterminds/squirrel"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 )
@@ -68,7 +68,6 @@ func (repo *UsersRepository) GetUserByID(ctx context.Context, id uint64) (*entit
 		Where(sq.Eq{idColumnName: id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +81,10 @@ func (repo *UsersRepository) GetUserByID(ctx context.Context, id uint64) (*entit
 	return user, nil
 }
 
-func (repo *UsersRepository) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
+func (repo *UsersRepository) GetUserByEmail(
+	ctx context.Context,
+	email string,
+) (*entities.User, error) {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -102,7 +104,6 @@ func (repo *UsersRepository) GetUserByEmail(ctx context.Context, email string) (
 		Where(sq.Eq{userEmailColumnName: email}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +136,6 @@ func (repo *UsersRepository) GetAllUsers(ctx context.Context) ([]entities.User, 
 		From(usersTableName).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,6 @@ func (repo *UsersRepository) GetAllUsers(ctx context.Context) ([]entities.User, 
 		stmt,
 		params...,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +205,6 @@ func (repo *UsersRepository) UpdateUserProfile(
 		Set(userAvatarColumnName, userProfileData.Avatar).
 		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders:
 		ToSql()
-
 	if err != nil {
 		return err
 	}

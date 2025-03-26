@@ -2,7 +2,7 @@ package usecases
 
 import "regexp"
 
-func validateValueByRule(value string, rule string) bool {
+func validateValueByRule(value, rule string) bool {
 	pattern := regexp.MustCompile(rule)
 	return pattern.MatchString(value)
 }

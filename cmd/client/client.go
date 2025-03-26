@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/DKhorkov/libs/pointers"
+	"github.com/DKhorkov/libs/requestid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/emptypb"
-
-	"github.com/DKhorkov/libs/pointers"
-	"github.com/DKhorkov/libs/requestid"
 
 	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
 )
@@ -27,7 +26,6 @@ func main() {
 			insecure.NewCredentials(),
 		),
 	)
-
 	if err != nil {
 		panic(err)
 	}
@@ -63,7 +61,10 @@ func main() {
 	_, err = client.VerifyEmail(ctx, &sso.VerifyEmailIn{VerifyEmailToken: "MjM="})
 	fmt.Println(err)
 
-	_, err = client.SendVerifyEmailMessage(ctx, &sso.SendVerifyEmailMessageIn{Email: "alexqwerty35@yandex.ru"})
+	_, err = client.SendVerifyEmailMessage(
+		ctx,
+		&sso.SendVerifyEmailMessageIn{Email: "alexqwerty35@yandex.ru"},
+	)
 	fmt.Printf("%v\n", err)
 
 	_, err = client.ChangePassword(

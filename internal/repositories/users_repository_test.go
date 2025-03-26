@@ -23,11 +23,11 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
 )
 
-func TestUsersTestSuite(t *testing.T) {
-	suite.Run(t, new(UsersTestSuite))
+func TestUsersRepositoryTestSuite(t *testing.T) {
+	suite.Run(t, new(UsersRepositoryTestSuite))
 }
 
-type UsersTestSuite struct {
+type UsersRepositoryTestSuite struct {
 	suite.Suite
 
 	cwd             string
@@ -40,7 +40,7 @@ type UsersTestSuite struct {
 	spanConfig      tracing.SpanConfig
 }
 
-func (s *UsersTestSuite) SetupSuite() {
+func (s *UsersRepositoryTestSuite) SetupSuite() {
 	s.NoError(goose.SetDialect(driver))
 
 	ctrl := gomock.NewController(s.T())
@@ -59,7 +59,7 @@ func (s *UsersTestSuite) SetupSuite() {
 	s.usersRepository = repositories.NewUsersRepository(s.dbConnector, s.logger, s.traceProvider, s.spanConfig)
 }
 
-func (s *UsersTestSuite) SetupTest() {
+func (s *UsersRepositoryTestSuite) SetupTest() {
 	s.NoError(
 		goose.Up(
 			s.dbConnector.Pool(),
@@ -75,7 +75,7 @@ func (s *UsersTestSuite) SetupTest() {
 	s.connection = connection
 }
 
-func (s *UsersTestSuite) TearDownTest() {
+func (s *UsersRepositoryTestSuite) TearDownTest() {
 	s.NoError(
 		goose.DownTo(
 			s.dbConnector.Pool(),
@@ -89,11 +89,11 @@ func (s *UsersTestSuite) TearDownTest() {
 	s.NoError(s.connection.Close())
 }
 
-func (s *UsersTestSuite) TearDownSuite() {
+func (s *UsersRepositoryTestSuite) TearDownSuite() {
 	s.NoError(s.dbConnector.Close())
 }
 
-func (s *UsersTestSuite) TestRepositoriesGetExistingUserByID() {
+func (s *UsersRepositoryTestSuite) TestGetExistingUserByID() {
 	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
@@ -120,7 +120,7 @@ func (s *UsersTestSuite) TestRepositoriesGetExistingUserByID() {
 	s.NotNil(user)
 }
 
-func (s *UsersTestSuite) TestRepositoriesGetNonExistingUserByID() {
+func (s *UsersRepositoryTestSuite) TestGetNonExistingUserByID() {
 	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
@@ -133,7 +133,7 @@ func (s *UsersTestSuite) TestRepositoriesGetNonExistingUserByID() {
 	s.Nil(user)
 }
 
-func (s *UsersTestSuite) TestRepositoriesGetExistingUserByEmail() {
+func (s *UsersRepositoryTestSuite) TestGetExistingUserByEmail() {
 	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
@@ -160,7 +160,7 @@ func (s *UsersTestSuite) TestRepositoriesGetExistingUserByEmail() {
 	s.NotNil(user)
 }
 
-func (s *UsersTestSuite) TestRepositoriesGetNonExistingUserByEmail() {
+func (s *UsersRepositoryTestSuite) TestGetNonExistingUserByEmail() {
 	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
@@ -173,7 +173,7 @@ func (s *UsersTestSuite) TestRepositoriesGetNonExistingUserByEmail() {
 	s.Nil(user)
 }
 
-func (s *UsersTestSuite) TestRepositoriesGetAllUserWithExistingUsers() {
+func (s *UsersRepositoryTestSuite) TestGetAllUsersWithExistingUsers() {
 	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
@@ -200,7 +200,7 @@ func (s *UsersTestSuite) TestRepositoriesGetAllUserWithExistingUsers() {
 	s.NotEmpty(users)
 }
 
-func (s *UsersTestSuite) TestRepositoriesGetAllUserWithoutExistingUsers() {
+func (s *UsersRepositoryTestSuite) TestGetAllUsersWithoutExistingUsers() {
 	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
@@ -213,7 +213,7 @@ func (s *UsersTestSuite) TestRepositoriesGetAllUserWithoutExistingUsers() {
 	s.Empty(users)
 }
 
-func BenchmarkRepositoriesGetUserByID(b *testing.B) {
+func BenchmarkUsersRepository_GetUserByID(b *testing.B) {
 	spanConfig := tracing.SpanConfig{}
 	ctx := context.Background()
 	ctrl := gomock.NewController(b)
@@ -243,7 +243,7 @@ func BenchmarkRepositoriesGetUserByID(b *testing.B) {
 	}
 }
 
-func BenchmarkRepositoriesGetUserByEmail(b *testing.B) {
+func BenchmarkUsersRepository_GetUserByEmail(b *testing.B) {
 	spanConfig := tracing.SpanConfig{}
 	ctx := context.Background()
 	ctrl := gomock.NewController(b)
@@ -273,7 +273,7 @@ func BenchmarkRepositoriesGetUserByEmail(b *testing.B) {
 	}
 }
 
-func BenchmarkRepositoriesGetAllUsers(b *testing.B) {
+func BenchmarkUsersRepository_GetAllUsers(b *testing.B) {
 	spanConfig := tracing.SpanConfig{}
 	ctx := context.Background()
 	ctrl := gomock.NewController(b)

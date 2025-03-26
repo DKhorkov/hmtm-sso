@@ -43,11 +43,11 @@ var (
 	}
 )
 
-func TestAuthTestSuite(t *testing.T) {
-	suite.Run(t, new(AuthTestSuite))
+func TestAuthRepositoryTestSuite(t *testing.T) {
+	suite.Run(t, new(AuthRepositoryTestSuite))
 }
 
-type AuthTestSuite struct {
+type AuthRepositoryTestSuite struct {
 	suite.Suite
 
 	cwd            string
@@ -60,7 +60,7 @@ type AuthTestSuite struct {
 	spanConfig     tracing.SpanConfig
 }
 
-func (s *AuthTestSuite) SetupSuite() {
+func (s *AuthRepositoryTestSuite) SetupSuite() {
 	s.NoError(goose.SetDialect(driver))
 
 	ctrl := gomock.NewController(s.T())
@@ -79,7 +79,7 @@ func (s *AuthTestSuite) SetupSuite() {
 	s.authRepository = repositories.NewAuthRepository(s.dbConnector, s.logger, s.traceProvider, s.spanConfig)
 }
 
-func (s *AuthTestSuite) SetupTest() {
+func (s *AuthRepositoryTestSuite) SetupTest() {
 	s.NoError(
 		goose.Up(
 			s.dbConnector.Pool(),
@@ -95,7 +95,7 @@ func (s *AuthTestSuite) SetupTest() {
 	s.connection = connection
 }
 
-func (s *AuthTestSuite) TearDownTest() {
+func (s *AuthRepositoryTestSuite) TearDownTest() {
 	s.NoError(
 		goose.DownTo(
 			s.dbConnector.Pool(),
@@ -109,11 +109,11 @@ func (s *AuthTestSuite) TearDownTest() {
 	s.NoError(s.connection.Close())
 }
 
-func (s *AuthTestSuite) TearDownSuite() {
+func (s *AuthRepositoryTestSuite) TearDownSuite() {
 	s.NoError(s.dbConnector.Close())
 }
 
-func (s *AuthTestSuite) TestRepositoriesRegisterUserSuccess() {
+func (s *AuthRepositoryTestSuite) TestRegisterUserSuccess() {
 	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
@@ -128,7 +128,7 @@ func (s *AuthTestSuite) TestRepositoriesRegisterUserSuccess() {
 	s.Equal(uint64(0), userID)
 }
 
-func (s *AuthTestSuite) TestRepositoriesRegisterUserFailEmailAlreadyExists() {
+func (s *AuthRepositoryTestSuite) TestRegisterUserFailEmailAlreadyExists() {
 	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
@@ -155,7 +155,7 @@ func (s *AuthTestSuite) TestRepositoriesRegisterUserFailEmailAlreadyExists() {
 	s.Zero(userID)
 }
 
-func (s *AuthTestSuite) TestRepositoriesVerifyUserEmailSuccess() {
+func (s *AuthRepositoryTestSuite) TestVerifyUserEmailSuccess() {
 	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
@@ -181,7 +181,7 @@ func (s *AuthTestSuite) TestRepositoriesVerifyUserEmailSuccess() {
 	s.NoError(err)
 }
 
-func (s *AuthTestSuite) TestRepositoriesVerifyUserEmailUserDoesNotExist() {
+func (s *AuthRepositoryTestSuite) TestVerifyUserEmailUserDoesNotExist() {
 	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
@@ -193,7 +193,7 @@ func (s *AuthTestSuite) TestRepositoriesVerifyUserEmailUserDoesNotExist() {
 	s.NoError(err)
 }
 
-func BenchmarkRepositoriesRegisterUser(b *testing.B) {
+func BenchmarkAuthRepository_RegisterUser(b *testing.B) {
 	spanConfig := tracing.SpanConfig{}
 	ctx := context.Background()
 	ctrl := gomock.NewController(b)
