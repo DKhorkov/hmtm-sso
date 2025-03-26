@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"time"
 
-	sq "github.com/Masterminds/squirrel"
-
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/tracing"
+
+	sq "github.com/Masterminds/squirrel"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 )
@@ -47,7 +47,10 @@ type AuthRepository struct {
 	spanConfig    tracing.SpanConfig
 }
 
-func (repo *AuthRepository) RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (uint64, error) {
+func (repo *AuthRepository) RegisterUser(
+	ctx context.Context,
+	userData entities.RegisterUserDTO,
+) (uint64, error) {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -76,7 +79,6 @@ func (repo *AuthRepository) RegisterUser(ctx context.Context, userData entities.
 		Suffix(returningIDSuffix).
 		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
 		ToSql()
-
 	if err != nil {
 		return 0, err
 	}
@@ -123,7 +125,6 @@ func (repo *AuthRepository) CreateRefreshToken(
 		Suffix(returningIDSuffix).
 		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
 		ToSql()
-
 	if err != nil {
 		return 0, err
 	}
@@ -167,7 +168,6 @@ func (repo *AuthRepository) GetRefreshTokenByUserID(
 		).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +204,6 @@ func (repo *AuthRepository) ExpireRefreshToken(ctx context.Context, refreshToken
 		).
 		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
 		ToSql()
-
 	if err != nil {
 		return err
 	}
@@ -238,7 +237,6 @@ func (repo *AuthRepository) VerifyUserEmail(ctx context.Context, userID uint64) 
 		Set(userEmailConfirmedColumnName, true).
 		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
 		ToSql()
-
 	if err != nil {
 		return err
 	}
@@ -252,7 +250,11 @@ func (repo *AuthRepository) VerifyUserEmail(ctx context.Context, userID uint64) 
 	return err
 }
 
-func (repo *AuthRepository) ForgetPassword(ctx context.Context, userID uint64, newPassword string) error {
+func (repo *AuthRepository) ForgetPassword(
+	ctx context.Context,
+	userID uint64,
+	newPassword string,
+) error {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -277,7 +279,6 @@ func (repo *AuthRepository) ForgetPassword(ctx context.Context, userID uint64, n
 		Set(userPasswordColumnName, newPassword).
 		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
 		ToSql()
-
 	if err != nil {
 		return err
 	}
@@ -300,7 +301,6 @@ func (repo *AuthRepository) ForgetPassword(ctx context.Context, userID uint64, n
 		).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return err
 	}
@@ -322,7 +322,6 @@ func (repo *AuthRepository) ForgetPassword(ctx context.Context, userID uint64, n
 			).
 			PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
 			ToSql()
-
 		if err != nil {
 			return err
 		}
@@ -335,7 +334,11 @@ func (repo *AuthRepository) ForgetPassword(ctx context.Context, userID uint64, n
 	return transaction.Commit()
 }
 
-func (repo *AuthRepository) ChangePassword(ctx context.Context, userID uint64, newPassword string) error {
+func (repo *AuthRepository) ChangePassword(
+	ctx context.Context,
+	userID uint64,
+	newPassword string,
+) error {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -355,7 +358,6 @@ func (repo *AuthRepository) ChangePassword(ctx context.Context, userID uint64, n
 		Set(userPasswordColumnName, newPassword).
 		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
 		ToSql()
-
 	if err != nil {
 		return err
 	}
