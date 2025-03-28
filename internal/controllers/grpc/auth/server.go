@@ -19,6 +19,17 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 )
 
+var (
+	userNotFoundError                           = &customerrors.UserNotFoundError{}
+	userAlreadyExistsError                      = &customerrors.UserAlreadyExistsError{}
+	emailAlreadyConfirmedError                  = &customerrors.EmailAlreadyConfirmedError{}
+	invalidEmailError                           = &customerrors.InvalidEmailError{}
+	invalidPasswordError                        = &customerrors.InvalidPasswordError{}
+	invalidJWTError                             = &security.InvalidJWTError{}
+	wrongPasswordError                          = &customerrors.WrongPasswordError{}
+	accessTokenDoesNotBelongToRefreshTokenError = &customerrors.AccessTokenDoesNotBelongToRefreshTokenError{}
+)
+
 // RegisterServer handler (serverAPI) for AuthServer to gRPC server:.
 func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger logging.Logger) {
 	sso.RegisterAuthServiceServer(gRPCServer, &ServerAPI{useCases: useCases, logger: logger})
@@ -44,9 +55,9 @@ func (api *ServerAPI) SendVerifyEmailMessage(
 		)
 
 		switch {
-		case errors.As(err, &customerrors.UserNotFoundError{}):
+		case errors.As(err, &userNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
-		case errors.As(err, &customerrors.EmailAlreadyConfirmedError{}):
+		case errors.As(err, &emailAlreadyConfirmedError):
 			return nil, &customgrpc.BaseError{
 				Status:  codes.FailedPrecondition,
 				Message: err.Error(),
@@ -123,13 +134,13 @@ func (api *ServerAPI) Register(ctx context.Context, in *sso.RegisterIn) (*sso.Re
 		)
 
 		switch {
-		case errors.As(err, &customerrors.InvalidEmailError{}),
-			errors.As(err, &customerrors.InvalidPasswordError{}):
+		case errors.As(err, &invalidEmailError),
+			errors.As(err, &invalidPasswordError):
 			return nil, &customgrpc.BaseError{
 				Status:  codes.FailedPrecondition,
 				Message: err.Error(),
 			}
-		case errors.As(err, &customerrors.UserAlreadyExistsError{}):
+		case errors.As(err, &userAlreadyExistsError):
 			return nil, &customgrpc.BaseError{Status: codes.AlreadyExists, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
@@ -156,9 +167,9 @@ func (api *ServerAPI) Login(ctx context.Context, in *sso.LoginIn) (*sso.LoginOut
 		)
 
 		switch {
-		case errors.As(err, &customerrors.UserNotFoundError{}):
+		case errors.As(err, &userNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
-		case errors.As(err, &customerrors.WrongPasswordError{}):
+		case errors.As(err, &wrongPasswordError):
 			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
@@ -189,10 +200,10 @@ func (api *ServerAPI) RefreshTokens(
 		)
 
 		switch {
-		case errors.As(err, &security.InvalidJWTError{}),
-			errors.As(err, &customerrors.AccessTokenDoesNotBelongToRefreshTokenError{}):
+		case errors.As(err, &invalidJWTError),
+			errors.As(err, &accessTokenDoesNotBelongToRefreshTokenError):
 			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
-		case errors.As(err, &customerrors.UserNotFoundError{}):
+		case errors.As(err, &userNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
