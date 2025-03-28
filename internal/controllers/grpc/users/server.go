@@ -19,6 +19,11 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 )
 
+var (
+	userNotFoundError = &customerrors.UserNotFoundError{}
+	invalidJWTError   = &security.InvalidJWTError{}
+)
+
 // RegisterServer handler (serverAPI) for UsersServer to gRPC server:.
 func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger logging.Logger) {
 	sso.RegisterUsersServiceServer(gRPCServer, &ServerAPI{useCases: useCases, logger: logger})
@@ -55,9 +60,9 @@ func (api *ServerAPI) UpdateUserProfile(
 		)
 
 		switch {
-		case errors.As(err, &security.InvalidJWTError{}):
+		case errors.As(err, &invalidJWTError):
 			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
-		case errors.As(err, &customerrors.UserNotFoundError{}):
+		case errors.As(err, &userNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
@@ -81,7 +86,7 @@ func (api *ServerAPI) GetUserByEmail(
 		)
 
 		switch {
-		case errors.As(err, &customerrors.UserNotFoundError{}):
+		case errors.As(err, &userNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
@@ -103,7 +108,7 @@ func (api *ServerAPI) GetUser(ctx context.Context, in *sso.GetUserIn) (*sso.GetU
 		)
 
 		switch {
-		case errors.As(err, &customerrors.UserNotFoundError{}):
+		case errors.As(err, &userNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
@@ -149,9 +154,9 @@ func (api *ServerAPI) GetMe(ctx context.Context, in *sso.GetMeIn) (*sso.GetUserO
 		)
 
 		switch {
-		case errors.As(err, &security.InvalidJWTError{}):
+		case errors.As(err, &invalidJWTError):
 			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
-		case errors.As(err, &customerrors.UserNotFoundError{}):
+		case errors.As(err, &userNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
