@@ -7,7 +7,7 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 )
 
-func prepareUserOut(user entities.User) *sso.GetUserOut {
+func mapUserToOut(user entities.User) *sso.GetUserOut {
 	return &sso.GetUserOut{
 		ID:                user.ID,
 		DisplayName:       user.DisplayName,

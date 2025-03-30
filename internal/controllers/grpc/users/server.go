@@ -93,7 +93,7 @@ func (api *ServerAPI) GetUserByEmail(
 		}
 	}
 
-	return prepareUserOut(*user), nil
+	return mapUserToOut(*user), nil
 }
 
 // GetUser handler returns User according provided data.
@@ -115,7 +115,7 @@ func (api *ServerAPI) GetUser(ctx context.Context, in *sso.GetUserIn) (*sso.GetU
 		}
 	}
 
-	return prepareUserOut(*user), nil
+	return mapUserToOut(*user), nil
 }
 
 // GetUsers handler returns all Users.
@@ -133,7 +133,7 @@ func (api *ServerAPI) GetUsers(ctx context.Context, _ *emptypb.Empty) (*sso.GetU
 
 	processedUsers := make([]*sso.GetUserOut, len(users))
 	for i, user := range users {
-		processedUsers[i] = prepareUserOut(user)
+		processedUsers[i] = mapUserToOut(user)
 	}
 
 	return &sso.GetUsersOut{Users: processedUsers}, nil
@@ -163,5 +163,5 @@ func (api *ServerAPI) GetMe(ctx context.Context, in *sso.GetMeIn) (*sso.GetUserO
 		}
 	}
 
-	return prepareUserOut(*user), nil
+	return mapUserToOut(*user), nil
 }
