@@ -19,6 +19,7 @@ import (
 	"github.com/DKhorkov/libs/tracing"
 	tracingmock "github.com/DKhorkov/libs/tracing/mocks"
 
+	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 	"github.com/DKhorkov/hmtm-sso/internal/repositories"
 )
@@ -107,7 +108,7 @@ func (s *UsersRepositoryTestSuite) TestGetExistingUserByID() {
 				INSERT INTO users (id, display_name, email, password) 
 				VALUES ($1, $2, $3, $4)
 			`,
-		testUserID,
+		userID,
 		testUserDTO.DisplayName,
 		testUserDTO.Email,
 		testUserDTO.Password,
@@ -115,7 +116,7 @@ func (s *UsersRepositoryTestSuite) TestGetExistingUserByID() {
 
 	s.NoError(err)
 
-	user, err := s.usersRepository.GetUserByID(ctx, testUserID)
+	user, err := s.usersRepository.GetUserByID(ctx, userID)
 	s.NoError(err)
 	s.NotNil(user)
 }
@@ -128,7 +129,7 @@ func (s *UsersRepositoryTestSuite) TestGetNonExistingUserByID() {
 		Return(context.Background(), tracingmock.NewMockSpan()).
 		Times(1)
 
-	user, err := s.usersRepository.GetUserByID(ctx, testUserID)
+	user, err := s.usersRepository.GetUserByID(ctx, userID)
 	s.Error(err)
 	s.Nil(user)
 }
@@ -147,7 +148,7 @@ func (s *UsersRepositoryTestSuite) TestGetExistingUserByEmail() {
 				INSERT INTO users (id, display_name, email, password) 
 				VALUES ($1, $2, $3, $4)
 			`,
-		testUserID,
+		userID,
 		testUserDTO.DisplayName,
 		testUserDTO.Email,
 		testUserDTO.Password,
@@ -155,7 +156,7 @@ func (s *UsersRepositoryTestSuite) TestGetExistingUserByEmail() {
 
 	s.NoError(err)
 
-	user, err := s.usersRepository.GetUserByEmail(ctx, testUserEmail)
+	user, err := s.usersRepository.GetUserByEmail(ctx, email)
 	s.NoError(err)
 	s.NotNil(user)
 }
@@ -168,7 +169,7 @@ func (s *UsersRepositoryTestSuite) TestGetNonExistingUserByEmail() {
 		Return(context.Background(), tracingmock.NewMockSpan()).
 		Times(1)
 
-	user, err := s.usersRepository.GetUserByEmail(ctx, testUserEmail)
+	user, err := s.usersRepository.GetUserByEmail(ctx, email)
 	s.Error(err)
 	s.Nil(user)
 }
@@ -187,7 +188,7 @@ func (s *UsersRepositoryTestSuite) TestGetAllUsersWithExistingUsers() {
 				INSERT INTO users (id, display_name, email, password) 
 				VALUES ($1, $2, $3, $4)
 			`,
-		testUserID,
+		userID,
 		testUserDTO.DisplayName,
 		testUserDTO.Email,
 		testUserDTO.Password,
@@ -211,6 +212,63 @@ func (s *UsersRepositoryTestSuite) TestGetAllUsersWithoutExistingUsers() {
 	users, err := s.usersRepository.GetAllUsers(ctx)
 	s.NoError(err)
 	s.Empty(users)
+}
+
+func (s *UsersRepositoryTestSuite) TestUpdateUserProfileSuccess() {
+	ctx := context.Background()
+
+	_, err := s.connection.ExecContext(
+		ctx,
+		`
+				INSERT INTO users (id, display_name, email, password) 
+				VALUES ($1, $2, $3, $4)
+			`,
+		userID,
+		testUserDTO.DisplayName,
+		testUserDTO.Email,
+		testUserDTO.Password,
+	)
+
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	err = s.usersRepository.UpdateUserProfile(
+		ctx,
+		entities.UpdateUserProfileDTO{
+			UserID:      testUser.ID,
+			DisplayName: testUser.DisplayName,
+			Phone:       testUser.Phone,
+			Telegram:    testUser.Telegram,
+			Avatar:      testUser.Avatar,
+		},
+	)
+
+	s.NoError(err)
+}
+
+func (s *UsersRepositoryTestSuite) TestUpdateUserProfileUserDoesNotExists() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	err := s.usersRepository.UpdateUserProfile(
+		ctx,
+		entities.UpdateUserProfileDTO{
+			UserID:      testUser.ID,
+			DisplayName: testUser.DisplayName,
+			Phone:       testUser.Phone,
+			Telegram:    testUser.Telegram,
+			Avatar:      testUser.Avatar,
+		},
+	)
+
+	s.NoError(err)
 }
 
 func BenchmarkUsersRepository_GetUserByID(b *testing.B) {
@@ -238,7 +296,7 @@ func BenchmarkUsersRepository_GetUserByID(b *testing.B) {
 	for range b.N {
 		_, _ = usersRepository.GetUserByID(
 			ctx,
-			testUserID,
+			userID,
 		)
 	}
 }
@@ -268,7 +326,7 @@ func BenchmarkUsersRepository_GetUserByEmail(b *testing.B) {
 	for range b.N {
 		_, _ = usersRepository.GetUserByEmail(
 			ctx,
-			testUserEmail,
+			email,
 		)
 	}
 }

@@ -315,7 +315,7 @@ func (repo *AuthRepository) ForgetPassword(
 	case err == nil: // if active refresh token is found - expire it
 		stmt, params, err = sq.
 			Update(refreshTokensTableName).
-			Where(sq.Eq{refreshTokenValueColumnName: refreshToken}).
+			Where(sq.Eq{refreshTokenValueColumnName: refreshToken.Value}).
 			Set(
 				refreshTokenTTLColumnName,
 				time.Now().UTC().Add(time.Hour*time.Duration(-24)),
@@ -369,8 +369,4 @@ func (repo *AuthRepository) ChangePassword(
 	)
 
 	return err
-}
-
-func (repo *AuthRepository) Close() error {
-	return nil
 }

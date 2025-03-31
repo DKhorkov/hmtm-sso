@@ -20,8 +20,11 @@ import (
 )
 
 var (
-	userNotFoundError = &customerrors.UserNotFoundError{}
-	invalidJWTError   = &security.InvalidJWTError{}
+	userNotFoundError  = &customerrors.UserNotFoundError{}
+	invalidJWTError    = &security.InvalidJWTError{}
+	invalidDisplayName = &customerrors.InvalidDisplayNameError{}
+	invalidPhone       = &customerrors.InvalidPhoneError{}
+	invalidTelegramErr = &customerrors.InvalidTelegramError{}
 )
 
 // RegisterServer handler (serverAPI) for UsersServer to gRPC server:.
@@ -60,6 +63,10 @@ func (api *ServerAPI) UpdateUserProfile(
 		)
 
 		switch {
+		case errors.As(err, &invalidPhone),
+			errors.As(err, &invalidTelegramErr),
+			errors.As(err, &invalidDisplayName):
+			return nil, &customgrpc.BaseError{Status: codes.FailedPrecondition, Message: err.Error()}
 		case errors.As(err, &invalidJWTError):
 			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
 		case errors.As(err, &userNotFoundError):

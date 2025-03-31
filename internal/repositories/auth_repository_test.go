@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"testing"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pressly/goose/v3"
@@ -31,15 +32,31 @@ const (
 	dsn              = "../../test.db"
 	migrationsDir    = "/migrations"
 	gooseZeroVersion = 0
-	testUserID       = 1
-	testUserEmail    = "user@example.com"
+	userID           = 1
+	email            = "user@example.com"
+	refreshTokenID   = 1
 )
 
 var (
 	testUserDTO = entities.RegisterUserDTO{
 		DisplayName: "test User",
-		Email:       testUserEmail,
+		Email:       email,
 		Password:    "password",
+	}
+
+	testUser = &entities.User{
+		ID:          userID,
+		DisplayName: testUserDTO.DisplayName,
+		Email:       testUserDTO.Email,
+		Password:    testUserDTO.Password,
+	}
+
+	ttl          = 1 * time.Hour
+	refreshToken = &entities.RefreshToken{
+		ID:     refreshTokenID,
+		UserID: userID,
+		Value:  "refresh_token",
+		TTL:    time.Now().UTC().Add(ttl),
 	}
 )
 
@@ -142,7 +159,7 @@ func (s *AuthRepositoryTestSuite) TestRegisterUserFailEmailAlreadyExists() {
 				INSERT INTO users (id, display_name, email, password) 
 				VALUES ($1, $2, $3, $4)
 			`,
-		testUserID,
+		userID,
 		testUserDTO.DisplayName,
 		testUserDTO.Email,
 		testUserDTO.Password,
@@ -169,7 +186,7 @@ func (s *AuthRepositoryTestSuite) TestVerifyUserEmailSuccess() {
 				INSERT INTO users (id, display_name, email, password) 
 				VALUES ($1, $2, $3, $4)
 			`,
-		testUserID,
+		userID,
 		testUserDTO.DisplayName,
 		testUserDTO.Email,
 		testUserDTO.Password,
@@ -190,6 +207,269 @@ func (s *AuthRepositoryTestSuite) TestVerifyUserEmailUserDoesNotExist() {
 		Times(1)
 
 	err := s.authRepository.VerifyUserEmail(ctx, uint64(1))
+	s.NoError(err)
+}
+
+func (s *AuthRepositoryTestSuite) TestCreateRefreshTokenSuccess() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	// Error and zero userID due to returning nil ID after register.
+	// SQLite inner realization without AUTO_INCREMENT for SERIAL PRIMARY KEY
+	refreshTokenID, err := s.authRepository.CreateRefreshToken(
+		ctx,
+		userID,
+		refreshToken.Value,
+		ttl,
+	)
+
+	s.Error(err)
+	s.Zero(refreshTokenID)
+}
+
+func (s *AuthRepositoryTestSuite) TestCreateRefreshTokenAlreadyExists() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	_, err := s.connection.ExecContext(
+		ctx,
+		`
+				INSERT INTO refresh_tokens (id, user_id, value, ttl) 
+				VALUES ($1, $2, $3, $4)
+			`,
+		refreshTokenID,
+		userID,
+		refreshToken.Value,
+		refreshToken.TTL,
+	)
+
+	s.NoError(err)
+
+	refreshTokenID, err := s.authRepository.CreateRefreshToken(
+		ctx,
+		userID,
+		refreshToken.Value,
+		ttl,
+	)
+
+	s.Error(err)
+	s.Zero(refreshTokenID)
+}
+
+func (s *AuthRepositoryTestSuite) TestGetRefreshTokenByUserIDSuccess() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	_, err := s.connection.ExecContext(
+		ctx,
+		`
+				INSERT INTO refresh_tokens (id, user_id, value, ttl) 
+				VALUES ($1, $2, $3, $4)
+			`,
+		refreshTokenID,
+		userID,
+		refreshToken.Value,
+		refreshToken.TTL,
+	)
+
+	s.NoError(err)
+
+	refreshToken, err := s.authRepository.GetRefreshTokenByUserID(ctx, userID)
+	s.NoError(err)
+	s.NotNil(refreshToken)
+}
+
+func (s *AuthRepositoryTestSuite) TestGetRefreshTokenByUserIDNotFound() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	refreshToken, err := s.authRepository.GetRefreshTokenByUserID(ctx, userID)
+	s.Error(err)
+	s.Nil(refreshToken)
+}
+
+func (s *AuthRepositoryTestSuite) TestExpireRefreshTokenSuccess() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	_, err := s.connection.ExecContext(
+		ctx,
+		`
+				INSERT INTO refresh_tokens (id, user_id, value, ttl) 
+				VALUES ($1, $2, $3, $4)
+			`,
+		refreshTokenID,
+		userID,
+		refreshToken.Value,
+		refreshToken.TTL,
+	)
+
+	s.NoError(err)
+
+	err = s.authRepository.ExpireRefreshToken(ctx, refreshToken.Value)
+	s.NoError(err)
+}
+
+func (s *AuthRepositoryTestSuite) TestExpireRefreshTokenDoesNotExist() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	err := s.authRepository.ExpireRefreshToken(ctx, refreshToken.Value)
+	s.NoError(err)
+}
+
+func (s *AuthRepositoryTestSuite) TestChangePasswordSuccess() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	_, err := s.connection.ExecContext(
+		ctx,
+		`
+				INSERT INTO users (id, display_name, email, password) 
+				VALUES ($1, $2, $3, $4)
+			`,
+		userID,
+		testUserDTO.DisplayName,
+		testUserDTO.Email,
+		testUserDTO.Password,
+	)
+
+	s.NoError(err)
+
+	err = s.authRepository.ChangePassword(ctx, userID, "new password")
+	s.NoError(err)
+}
+
+func (s *AuthRepositoryTestSuite) TestChangePasswordUserDoesNotExist() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	err := s.authRepository.ChangePassword(ctx, userID, "new password")
+	s.NoError(err)
+}
+
+func (s *AuthRepositoryTestSuite) TestForgetPasswordSuccess() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	s.logger.
+		EXPECT().
+		ErrorContext(gomock.Any(), gomock.Any(), gomock.Any()).
+		Times(1)
+
+	_, err := s.connection.ExecContext(
+		ctx,
+		`
+				INSERT INTO users (id, display_name, email, password) 
+				VALUES ($1, $2, $3, $4)
+			`,
+		userID,
+		testUserDTO.DisplayName,
+		testUserDTO.Email,
+		testUserDTO.Password,
+	)
+
+	s.NoError(err)
+
+	_, err = s.connection.ExecContext(
+		ctx,
+		`
+				INSERT INTO refresh_tokens (id, user_id, value, ttl) 
+				VALUES ($1, $2, $3, $4)
+			`,
+		refreshTokenID,
+		userID,
+		refreshToken.Value,
+		refreshToken.TTL,
+	)
+
+	s.NoError(err)
+
+	err = s.authRepository.ForgetPassword(ctx, userID, "new password")
+	s.NoError(err)
+}
+
+func (s *AuthRepositoryTestSuite) TestForgetPasswordNoActiveRefreshToken() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	s.logger.
+		EXPECT().
+		ErrorContext(gomock.Any(), gomock.Any(), gomock.Any()).
+		Times(1)
+
+	_, err := s.connection.ExecContext(
+		ctx,
+		`
+				INSERT INTO users (id, display_name, email, password) 
+				VALUES ($1, $2, $3, $4)
+			`,
+		userID,
+		testUserDTO.DisplayName,
+		testUserDTO.Email,
+		testUserDTO.Password,
+	)
+
+	s.NoError(err)
+
+	err = s.authRepository.ForgetPassword(ctx, userID, "new password")
+	s.NoError(err)
+}
+
+func (s *AuthRepositoryTestSuite) TestForgetPasswordUserWithProvidedIDDoesNotExist() {
+	ctx := context.Background()
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), tracingmock.NewMockSpan()).
+		Times(1)
+
+	s.logger.
+		EXPECT().
+		ErrorContext(gomock.Any(), gomock.Any(), gomock.Any()).
+		Times(1)
+
+	err := s.authRepository.ForgetPassword(ctx, userID, "new password")
 	s.NoError(err)
 }
 

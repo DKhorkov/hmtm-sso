@@ -217,7 +217,3 @@ func (repo *UsersRepository) UpdateUserProfile(
 
 	return err
 }
-
-func (repo *UsersRepository) Close() error {
-	return nil
-}
