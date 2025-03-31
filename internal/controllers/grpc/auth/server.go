@@ -25,6 +25,7 @@ var (
 	emailAlreadyConfirmedError                  = &customerrors.EmailAlreadyConfirmedError{}
 	invalidEmailError                           = &customerrors.InvalidEmailError{}
 	invalidPasswordError                        = &customerrors.InvalidPasswordError{}
+	invalidDisplayName                          = &customerrors.InvalidDisplayNameError{}
 	invalidJWTError                             = &security.InvalidJWTError{}
 	wrongPasswordError                          = &customerrors.WrongPasswordError{}
 	accessTokenDoesNotBelongToRefreshTokenError = &customerrors.AccessTokenDoesNotBelongToRefreshTokenError{}
@@ -135,11 +136,9 @@ func (api *ServerAPI) Register(ctx context.Context, in *sso.RegisterIn) (*sso.Re
 
 		switch {
 		case errors.As(err, &invalidEmailError),
-			errors.As(err, &invalidPasswordError):
-			return nil, &customgrpc.BaseError{
-				Status:  codes.FailedPrecondition,
-				Message: err.Error(),
-			}
+			errors.As(err, &invalidPasswordError),
+			errors.As(err, &invalidDisplayName):
+			return nil, &customgrpc.BaseError{Status: codes.FailedPrecondition, Message: err.Error()}
 		case errors.As(err, &userAlreadyExistsError):
 			return nil, &customgrpc.BaseError{Status: codes.AlreadyExists, Message: err.Error()}
 		default:
