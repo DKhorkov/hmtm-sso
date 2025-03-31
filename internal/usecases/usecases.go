@@ -165,7 +165,7 @@ func (useCases *UseCases) LoginUser(
 	}
 
 	// Encoding refresh token for secure usage via internet:
-	encodedRefreshToken := security.Encode([]byte(refreshToken))
+	encodedRefreshToken := security.RawEncode([]byte(refreshToken))
 	return &entities.TokensDTO{
 		AccessToken:  accessToken,
 		RefreshToken: encodedRefreshToken,
@@ -264,7 +264,7 @@ func (useCases *UseCases) RefreshTokens(
 	refreshToken string,
 ) (*entities.TokensDTO, error) {
 	// Decoding refresh token to get original JWT and compare its value with value in Database:
-	oldRefreshTokenBytes, err := security.Decode(refreshToken)
+	oldRefreshTokenBytes, err := security.RawDecode(refreshToken)
 	if err != nil {
 		return nil, &security.InvalidJWTError{}
 	}
@@ -348,7 +348,7 @@ func (useCases *UseCases) RefreshTokens(
 	}
 
 	// Encoding refresh token for secure usage via internet:
-	encodedRefreshToken := security.Encode([]byte(newRefreshToken))
+	encodedRefreshToken := security.RawEncode([]byte(newRefreshToken))
 	return &entities.TokensDTO{
 		AccessToken:  newAccessToken,
 		RefreshToken: encodedRefreshToken,
