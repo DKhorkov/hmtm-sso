@@ -393,9 +393,16 @@ func (useCases *UseCases) VerifyUserEmail(ctx context.Context, verifyEmailToken 
 		return err
 	}
 
-	userID := uint64(intUserID)
+	user, err := useCases.GetUserByID(ctx, uint64(intUserID))
+	if err != nil {
+		return err
+	}
 
-	return useCases.authService.VerifyUserEmail(ctx, userID)
+	if user.EmailConfirmed {
+		return &customerrors.EmailAlreadyConfirmedError{}
+	}
+
+	return useCases.authService.VerifyUserEmail(ctx, user.ID)
 }
 
 func (useCases *UseCases) ForgetPassword(ctx context.Context, forgetPasswordToken, newPassword string) error {
