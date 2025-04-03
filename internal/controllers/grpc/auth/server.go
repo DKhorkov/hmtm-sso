@@ -124,8 +124,8 @@ func (api *ServerAPI) ForgetPassword(
 		switch {
 		case errors.As(err, &userNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
-		case errors.As(err, &wrongPasswordError):
-			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
+		case errors.As(err, &invalidPasswordError):
+			return nil, &customgrpc.BaseError{Status: codes.FailedPrecondition, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 		}
