@@ -4,6 +4,7 @@ import "regexp"
 
 func validateValueByRule(value, rule string) bool {
 	pattern := regexp.MustCompile(rule)
+
 	return pattern.MatchString(value)
 }
 

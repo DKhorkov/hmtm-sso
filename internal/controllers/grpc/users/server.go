@@ -55,10 +55,7 @@ func (api *ServerAPI) UpdateUserProfile(
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf(
-				"Error occurred while trying to update User profile with AccessToken=%s",
-				in.GetAccessToken(),
-			),
+			"Error occurred while trying to update User profile with AccessToken="+in.GetAccessToken(),
 			err,
 		)
 
@@ -88,7 +85,7 @@ func (api *ServerAPI) GetUserByEmail(
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf("Error occurred while trying to get User with Email=%s", in.GetEmail()),
+			"Error occurred while trying to get User with Email="+in.GetEmail(),
 			err,
 		)
 
@@ -135,6 +132,7 @@ func (api *ServerAPI) GetUsers(ctx context.Context, _ *emptypb.Empty) (*sso.GetU
 			"Error occurred while trying to get all Users",
 			err,
 		)
+
 		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
@@ -153,10 +151,7 @@ func (api *ServerAPI) GetMe(ctx context.Context, in *sso.GetMeIn) (*sso.GetUserO
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf(
-				"Error occurred while trying to get User with AccessToken=%s",
-				in.GetAccessToken(),
-			),
+			"Error occurred while trying to get User with AccessToken="+in.GetAccessToken(),
 			err,
 		)
 

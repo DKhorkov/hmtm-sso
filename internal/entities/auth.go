@@ -4,11 +4,11 @@ import "time"
 
 type RefreshToken struct {
 	ID        uint64    `json:"id"`
-	UserID    uint64    `json:"user_id"`
+	UserID    uint64    `json:"userId"`
 	TTL       time.Time `json:"ttl"`
 	Value     string    `json:"value"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type LoginUserDTO struct {
@@ -17,12 +17,12 @@ type LoginUserDTO struct {
 }
 
 type RegisterUserDTO struct {
-	DisplayName string `json:"display_name"`
+	DisplayName string `json:"displayName"`
 	Email       string `json:"email"`
 	Password    string `json:"password"`
 }
 
 type TokensDTO struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 }

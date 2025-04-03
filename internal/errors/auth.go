@@ -184,7 +184,7 @@ type EmailIsNotConfirmedError struct {
 }
 
 func (e EmailIsNotConfirmedError) Error() string {
-	template := "provided email is not confirmed confirmed"
+	template := "provided email is not confirmed"
 	if e.Message != "" {
 		template = e.Message
 	}

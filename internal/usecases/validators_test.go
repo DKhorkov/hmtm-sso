@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidateEmail(t *testing.T) {
+func TestValidateValueByRule(t *testing.T) {
 	const commonRule = "^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,4}$"
 
 	testCases := []struct {
@@ -61,7 +61,7 @@ func TestValidateEmail(t *testing.T) {
 	}
 }
 
-func TestValidatePassword(t *testing.T) {
+func TestValidateValueByRules(t *testing.T) {
 	var commonRules = []string{
 		".{8,}",
 		"[a-z]",

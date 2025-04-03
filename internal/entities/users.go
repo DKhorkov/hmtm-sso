@@ -4,30 +4,30 @@ import "time"
 
 type User struct {
 	ID                uint64    `json:"id"`
-	DisplayName       string    `json:"display_name"`
+	DisplayName       string    `json:"displayName"`
 	Email             string    `json:"email"`
-	EmailConfirmed    bool      `json:"email_confirmed"`
+	EmailConfirmed    bool      `json:"emailConfirmed"`
 	Password          string    `json:"password"`
 	Phone             *string   `json:"phone,omitempty"`
-	PhoneConfirmed    bool      `json:"phone_confirmed"`
+	PhoneConfirmed    bool      `json:"phoneConfirmed"`
 	Telegram          *string   `json:"telegram,omitempty"`
-	TelegramConfirmed bool      `json:"telegram_confirmed"`
+	TelegramConfirmed bool      `json:"telegramConfirmed"`
 	Avatar            *string   `json:"avatar,omitempty"`
-	CreatedAt         time.Time `json:"created_at"`
-	UpdatedAt         time.Time `json:"updated_at"`
+	CreatedAt         time.Time `json:"createdAt"`
+	UpdatedAt         time.Time `json:"updatedAt"`
 }
 
 type RawUpdateUserProfileDTO struct {
-	AccessToken string  `json:"access_token"`
-	DisplayName string  `json:"display_name"`
+	AccessToken string  `json:"accessToken"`
+	DisplayName string  `json:"displayName"`
 	Phone       *string `json:"phone,omitempty"`
 	Telegram    *string `json:"telegram,omitempty"`
 	Avatar      *string `json:"avatar,omitempty"`
 }
 
 type UpdateUserProfileDTO struct {
-	UserID      uint64  `json:"user_id"`
-	DisplayName string  `json:"display_name"`
+	UserID      uint64  `json:"userId"`
+	DisplayName string  `json:"displayName"`
 	Phone       *string `json:"phone,omitempty"`
 	Telegram    *string `json:"telegram,omitempty"`
 	Avatar      *string `json:"avatar,omitempty"`
