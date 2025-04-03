@@ -139,7 +139,21 @@ func (api *ServerAPI) VerifyEmail(
 	in *sso.VerifyEmailIn,
 ) (*emptypb.Empty, error) {
 	if err := api.useCases.VerifyUserEmail(ctx, in.GetVerifyEmailToken()); err != nil {
-		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			"Error occurred while trying to verify email for User with VerifyEmailToken="+in.GetVerifyEmailToken(),
+			err,
+		)
+
+		switch {
+		case errors.As(err, &emailAlreadyConfirmedError):
+			return nil, &customgrpc.BaseError{Status: codes.FailedPrecondition, Message: err.Error()}
+		case errors.As(err, &userNotFoundError):
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
 	}
 
 	return &emptypb.Empty{}, nil
