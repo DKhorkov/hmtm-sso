@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/DKhorkov/libs/db"
@@ -160,10 +159,7 @@ func (repo *AuthRepository) GetRefreshTokenByUserID(
 		Where(sq.Eq{userIDColumnName: userID}).
 		Where(
 			sq.Expr(
-				fmt.Sprintf(
-					"%s > CURRENT_TIMESTAMP",
-					refreshTokenTTLColumnName,
-				),
+				refreshTokenTTLColumnName + " > CURRENT_TIMESTAMP",
 			),
 		).
 		PlaceholderFormat(sq.Dollar).
@@ -173,6 +169,7 @@ func (repo *AuthRepository) GetRefreshTokenByUserID(
 	}
 
 	refreshToken := &entities.RefreshToken{}
+
 	columns := db.GetEntityColumns(refreshToken)
 	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(columns...); err != nil {
 		return nil, err
@@ -293,10 +290,7 @@ func (repo *AuthRepository) ForgetPassword(
 		Where(sq.Eq{userIDColumnName: userID}).
 		Where(
 			sq.Expr(
-				fmt.Sprintf(
-					"%s > CURRENT_TIMESTAMP",
-					refreshTokenTTLColumnName,
-				),
+				refreshTokenTTLColumnName + " > CURRENT_TIMESTAMP",
 			),
 		).
 		PlaceholderFormat(sq.Dollar).
@@ -308,7 +302,9 @@ func (repo *AuthRepository) ForgetPassword(
 	// Getting refresh token for expiring:
 	refreshToken := &entities.RefreshToken{}
 	columns := db.GetEntityColumns(refreshToken)
+
 	err = transaction.QueryRowContext(ctx, stmt, params...).Scan(columns...)
+
 	switch {
 	case err != nil && !errors.Is(err, sql.ErrNoRows):
 		return err

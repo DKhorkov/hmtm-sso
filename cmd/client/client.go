@@ -58,7 +58,7 @@ func main() {
 	})
 	fmt.Println(logoutErr)
 
-	_, err = client.VerifyEmail(ctx, &sso.VerifyEmailIn{VerifyEmailToken: "MjM="})
+	_, err = client.VerifyEmail(ctx, &sso.VerifyEmailIn{VerifyEmailToken: "MzE"})
 	fmt.Println(err)
 
 	_, err = client.SendVerifyEmailMessage(
@@ -71,13 +71,13 @@ func main() {
 		ctx,
 		&sso.ChangePasswordIn{
 			AccessToken: tokens.GetAccessToken(),
-			OldPassword: "K8NXoxwVE0vCEjJC",
-			NewPassword: "Qwer1234@",
+			OldPassword: "Qwer1234@",
+			NewPassword: "K8#NXoxwVE0vCEjJC",
 		},
 	)
 	fmt.Println(err)
 
-	_, err = client.ForgetPassword(ctx, &sso.ForgetPasswordIn{AccessToken: tokens.GetAccessToken()})
+	_, err = client.ForgetPassword(ctx, &sso.ForgetPasswordIn{ForgetPasswordToken: "MzE", NewPassword: "Qwer1234@"})
 	fmt.Println(err)
 
 	_, err = client.UpdateUserProfile(ctx, &sso.UpdateUserProfileIn{

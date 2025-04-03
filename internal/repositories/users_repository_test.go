@@ -95,7 +95,6 @@ func (s *UsersRepositoryTestSuite) TearDownSuite() {
 }
 
 func (s *UsersRepositoryTestSuite) TestGetExistingUserByID() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -122,7 +121,6 @@ func (s *UsersRepositoryTestSuite) TestGetExistingUserByID() {
 }
 
 func (s *UsersRepositoryTestSuite) TestGetNonExistingUserByID() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -135,7 +133,6 @@ func (s *UsersRepositoryTestSuite) TestGetNonExistingUserByID() {
 }
 
 func (s *UsersRepositoryTestSuite) TestGetExistingUserByEmail() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -162,7 +159,6 @@ func (s *UsersRepositoryTestSuite) TestGetExistingUserByEmail() {
 }
 
 func (s *UsersRepositoryTestSuite) TestGetNonExistingUserByEmail() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -175,7 +171,6 @@ func (s *UsersRepositoryTestSuite) TestGetNonExistingUserByEmail() {
 }
 
 func (s *UsersRepositoryTestSuite) TestGetAllUsersWithExistingUsers() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -202,7 +197,6 @@ func (s *UsersRepositoryTestSuite) TestGetAllUsersWithExistingUsers() {
 }
 
 func (s *UsersRepositoryTestSuite) TestGetAllUsersWithoutExistingUsers() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -215,8 +209,6 @@ func (s *UsersRepositoryTestSuite) TestGetAllUsersWithoutExistingUsers() {
 }
 
 func (s *UsersRepositoryTestSuite) TestUpdateUserProfileSuccess() {
-	ctx := context.Background()
-
 	_, err := s.connection.ExecContext(
 		ctx,
 		`
@@ -250,7 +242,6 @@ func (s *UsersRepositoryTestSuite) TestUpdateUserProfileSuccess() {
 }
 
 func (s *UsersRepositoryTestSuite) TestUpdateUserProfileUserDoesNotExists() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -273,7 +264,6 @@ func (s *UsersRepositoryTestSuite) TestUpdateUserProfileUserDoesNotExists() {
 
 func BenchmarkUsersRepository_GetUserByID(b *testing.B) {
 	spanConfig := tracing.SpanConfig{}
-	ctx := context.Background()
 	ctrl := gomock.NewController(b)
 	logger := loggermock.NewMockLogger(ctrl)
 	dbConnector, err := db.New(dsn, driver, logger)
@@ -303,7 +293,6 @@ func BenchmarkUsersRepository_GetUserByID(b *testing.B) {
 
 func BenchmarkUsersRepository_GetUserByEmail(b *testing.B) {
 	spanConfig := tracing.SpanConfig{}
-	ctx := context.Background()
 	ctrl := gomock.NewController(b)
 	logger := loggermock.NewMockLogger(ctrl)
 	dbConnector, err := db.New(dsn, driver, logger)
@@ -333,7 +322,6 @@ func BenchmarkUsersRepository_GetUserByEmail(b *testing.B) {
 
 func BenchmarkUsersRepository_GetAllUsers(b *testing.B) {
 	spanConfig := tracing.SpanConfig{}
-	ctx := context.Background()
 	ctrl := gomock.NewController(b)
 	logger := loggermock.NewMockLogger(ctrl)
 	dbConnector, err := db.New(dsn, driver, logger)

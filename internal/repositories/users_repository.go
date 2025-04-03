@@ -73,6 +73,7 @@ func (repo *UsersRepository) GetUserByID(ctx context.Context, id uint64) (*entit
 	}
 
 	user := &entities.User{}
+
 	columns := db.GetEntityColumns(user)
 	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(columns...); err != nil {
 		return nil, err
@@ -109,6 +110,7 @@ func (repo *UsersRepository) GetUserByEmail(
 	}
 
 	user := &entities.User{}
+
 	columns := db.GetEntityColumns(user)
 	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(columns...); err != nil {
 		return nil, err
@@ -161,9 +163,11 @@ func (repo *UsersRepository) GetAllUsers(ctx context.Context) ([]entities.User, 
 	}()
 
 	var users []entities.User
+
 	for rows.Next() {
 		user := entities.User{}
 		columns := db.GetEntityColumns(&user) // Only pointer to use rows.Scan() successfully
+
 		err = rows.Scan(columns...)
 		if err != nil {
 			return nil, err

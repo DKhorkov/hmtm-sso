@@ -8,7 +8,6 @@ import (
 
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/security"
-	"github.com/dchest/uniuri"
 	"github.com/golang-jwt/jwt/v5"
 
 	notifications "github.com/DKhorkov/hmtm-notifications/dto"
@@ -72,6 +71,7 @@ func (useCases *UseCases) RegisterUser(
 	}
 
 	userData.Password = hashedPassword
+
 	userID, err := useCases.authService.RegisterUser(ctx, userData)
 	if err != nil {
 		return 0, err
@@ -166,6 +166,7 @@ func (useCases *UseCases) LoginUser(
 
 	// Encoding refresh token for secure usage via internet:
 	encodedRefreshToken := security.RawEncode([]byte(refreshToken))
+
 	return &entities.TokensDTO{
 		AccessToken:  accessToken,
 		RefreshToken: encodedRefreshToken,
@@ -228,6 +229,7 @@ func (useCases *UseCases) UpdateUserProfile(
 	}
 
 	userID := uint64(floatUserID)
+
 	user, err := useCases.GetUserByID(ctx, userID)
 	if err != nil {
 		return err
@@ -256,6 +258,7 @@ func (useCases *UseCases) GetMe(ctx context.Context, accessToken string) (*entit
 	}
 
 	userID := uint64(floatUserID)
+
 	return useCases.usersService.GetUserByID(ctx, userID)
 }
 
@@ -271,6 +274,7 @@ func (useCases *UseCases) RefreshTokens(
 
 	// Retrieving refresh token payload to get access token from refresh token:
 	oldRefreshToken := string(oldRefreshTokenBytes)
+
 	refreshTokenPayload, err := security.ParseJWT(
 		oldRefreshToken,
 		useCases.securityConfig.JWT.SecretKey,
@@ -301,6 +305,7 @@ func (useCases *UseCases) RefreshTokens(
 	}
 
 	userID := uint64(floatUserID)
+
 	dbRefreshToken, err := useCases.authService.GetRefreshTokenByUserID(ctx, userID)
 	if err != nil {
 		return nil, &security.InvalidJWTError{}
@@ -349,6 +354,7 @@ func (useCases *UseCases) RefreshTokens(
 
 	// Encoding refresh token for secure usage via internet:
 	encodedRefreshToken := security.RawEncode([]byte(newRefreshToken))
+
 	return &entities.TokensDTO{
 		AccessToken:  newAccessToken,
 		RefreshToken: encodedRefreshToken,
@@ -367,6 +373,7 @@ func (useCases *UseCases) LogoutUser(ctx context.Context, accessToken string) er
 	}
 
 	userID := uint64(floatUserID)
+
 	refreshToken, _ := useCases.authService.GetRefreshTokenByUserID(ctx, userID)
 	if refreshToken == nil {
 		return nil
@@ -387,67 +394,42 @@ func (useCases *UseCases) VerifyUserEmail(ctx context.Context, verifyEmailToken 
 	}
 
 	userID := uint64(intUserID)
+
 	return useCases.authService.VerifyUserEmail(ctx, userID)
 }
 
-func (useCases *UseCases) ForgetPassword(ctx context.Context, accessToken string) error {
-	accessTokenPayload, err := security.ParseJWT(accessToken, useCases.securityConfig.JWT.SecretKey)
+func (useCases *UseCases) ForgetPassword(ctx context.Context, forgetPasswordToken, newPassword string) error {
+	if !validateValueByRules(newPassword, useCases.validationConfig.PasswordRegExps) {
+		return &customerrors.InvalidPasswordError{}
+	}
+
+	strUserID, err := security.RawDecode(forgetPasswordToken)
 	if err != nil {
-		return &security.InvalidJWTError{}
+		return err
 	}
 
-	floatUserID, ok := accessTokenPayload.(float64)
-	if !ok {
-		return &security.InvalidJWTError{}
+	intUserID, err := strconv.Atoi(string(strUserID))
+	if err != nil {
+		return err
 	}
 
-	userID := uint64(floatUserID)
+	user, err := useCases.GetUserByID(ctx, uint64(intUserID))
+	if err != nil {
+		return err
+	}
 
-	newPassword := uniuri.New()
+	if security.ValidateHash(newPassword, user.Password) {
+		return &customerrors.InvalidPasswordError{
+			Message: "New password can not be equal to old password",
+		}
+	}
+
 	hashedPassword, err := security.Hash(newPassword, useCases.securityConfig.HashCost)
 	if err != nil {
 		return err
 	}
 
-	if err = useCases.authService.ForgetPassword(ctx, userID, hashedPassword); err != nil {
-		return err
-	}
-
-	forgetPasswordDTO := &notifications.ForgetPasswordDTO{
-		UserID:      userID,
-		NewPassword: newPassword,
-	}
-
-	content, err := json.Marshal(forgetPasswordDTO)
-	if err != nil {
-		logging.LogErrorContext(
-			ctx,
-			useCases.logger,
-			fmt.Sprintf(
-				"Error occurred while trying to encode data for forget password email for User with ID=%d",
-				userID,
-			),
-			err,
-		)
-
-		return err
-	}
-
-	if err = useCases.natsPublisher.Publish(useCases.natsConfig.Subjects.ForgetPassword, content); err != nil {
-		logging.LogErrorContext(
-			ctx,
-			useCases.logger,
-			fmt.Sprintf(
-				"Error occurred while trying send Forget Password message to User with ID=%d",
-				userID,
-			),
-			err,
-		)
-
-		return err
-	}
-
-	return nil
+	return useCases.authService.ForgetPassword(ctx, user.ID, hashedPassword)
 }
 
 func (useCases *UseCases) ChangePassword(
@@ -458,8 +440,12 @@ func (useCases *UseCases) ChangePassword(
 ) error {
 	if oldPassword == newPassword {
 		return &customerrors.InvalidPasswordError{
-			Message: "New password can not be equal old password",
+			Message: "New password can not be equal to old password",
 		}
+	}
+
+	if !validateValueByRules(newPassword, useCases.validationConfig.PasswordRegExps) {
+		return &customerrors.InvalidPasswordError{}
 	}
 
 	accessTokenPayload, err := security.ParseJWT(accessToken, useCases.securityConfig.JWT.SecretKey)
@@ -473,10 +459,6 @@ func (useCases *UseCases) ChangePassword(
 	}
 
 	userID := uint64(floatUserID)
-
-	if !validateValueByRules(newPassword, useCases.validationConfig.PasswordRegExps) {
-		return &customerrors.InvalidPasswordError{}
-	}
 
 	user, err := useCases.GetUserByID(ctx, userID)
 	if err != nil {
@@ -529,7 +511,53 @@ func (useCases *UseCases) SendVerifyEmailMessage(ctx context.Context, email stri
 			ctx,
 			useCases.logger,
 			fmt.Sprintf(
-				"Error occurred while trying send Verfiy Email message to User with ID=%d",
+				"Error occurred while trying send verify-email message to User with ID=%d",
+				user.ID,
+			),
+			err,
+		)
+
+		return err
+	}
+
+	return nil
+}
+
+func (useCases *UseCases) SendForgetPasswordMessage(ctx context.Context, email string) error {
+	user, err := useCases.GetUserByEmail(ctx, email)
+	if err != nil {
+		return err
+	}
+
+	if !user.EmailConfirmed {
+		return &customerrors.EmailIsNotConfirmedError{}
+	}
+
+	forgetPasswordDTO := &notifications.ForgetPasswordDTO{
+		UserID: user.ID,
+	}
+
+	content, err := json.Marshal(forgetPasswordDTO)
+	if err != nil {
+		logging.LogErrorContext(
+			ctx,
+			useCases.logger,
+			fmt.Sprintf(
+				"Error occurred while trying to encode data for forget-password message for User with ID=%d",
+				user.ID,
+			),
+			err,
+		)
+
+		return err
+	}
+
+	if err = useCases.natsPublisher.Publish(useCases.natsConfig.Subjects.ForgetPassword, content); err != nil {
+		logging.LogErrorContext(
+			ctx,
+			useCases.logger,
+			fmt.Sprintf(
+				"Error occurred while trying send forget-password message to User with ID=%d",
 				user.ID,
 			),
 			err,

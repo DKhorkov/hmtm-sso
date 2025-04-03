@@ -55,7 +55,7 @@ func (service *UsersService) GetUserByEmail(
 		logging.LogErrorContext(
 			ctx,
 			service.logger,
-			fmt.Sprintf("Error occurred while trying to get User with Email=%s", email),
+			"Error occurred while trying to get User with Email="+email,
 			err,
 		)
 

@@ -26,6 +26,7 @@ type AuthServiceClient interface {
 	VerifyEmail(ctx context.Context, in *VerifyEmailIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ChangePassword(ctx context.Context, in *ChangePasswordIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ForgetPassword(ctx context.Context, in *ForgetPasswordIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendForgetPasswordMessage(ctx context.Context, in *SendForgetPasswordMessageIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SendVerifyEmailMessage(ctx context.Context, in *SendVerifyEmailMessageIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -100,6 +101,15 @@ func (c *authServiceClient) ForgetPassword(ctx context.Context, in *ForgetPasswo
 	return out, nil
 }
 
+func (c *authServiceClient) SendForgetPasswordMessage(ctx context.Context, in *SendForgetPasswordMessageIn, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/auth.AuthService/SendForgetPasswordMessage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *authServiceClient) SendVerifyEmailMessage(ctx context.Context, in *SendVerifyEmailMessageIn, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/auth.AuthService/SendVerifyEmailMessage", in, out, opts...)
@@ -120,6 +130,7 @@ type AuthServiceServer interface {
 	VerifyEmail(context.Context, *VerifyEmailIn) (*emptypb.Empty, error)
 	ChangePassword(context.Context, *ChangePasswordIn) (*emptypb.Empty, error)
 	ForgetPassword(context.Context, *ForgetPasswordIn) (*emptypb.Empty, error)
+	SendForgetPasswordMessage(context.Context, *SendForgetPasswordMessageIn) (*emptypb.Empty, error)
 	SendVerifyEmailMessage(context.Context, *SendVerifyEmailMessageIn) (*emptypb.Empty, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
@@ -148,6 +159,9 @@ func (UnimplementedAuthServiceServer) ChangePassword(context.Context, *ChangePas
 }
 func (UnimplementedAuthServiceServer) ForgetPassword(context.Context, *ForgetPasswordIn) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ForgetPassword not implemented")
+}
+func (UnimplementedAuthServiceServer) SendForgetPasswordMessage(context.Context, *SendForgetPasswordMessageIn) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendForgetPasswordMessage not implemented")
 }
 func (UnimplementedAuthServiceServer) SendVerifyEmailMessage(context.Context, *SendVerifyEmailMessageIn) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendVerifyEmailMessage not implemented")
@@ -291,6 +305,24 @@ func _AuthService_ForgetPassword_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_SendForgetPasswordMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendForgetPasswordMessageIn)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).SendForgetPasswordMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.AuthService/SendForgetPasswordMessage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).SendForgetPasswordMessage(ctx, req.(*SendForgetPasswordMessageIn))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AuthService_SendVerifyEmailMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SendVerifyEmailMessageIn)
 	if err := dec(in); err != nil {
@@ -343,6 +375,10 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ForgetPassword",
 			Handler:    _AuthService_ForgetPassword_Handler,
+		},
+		{
+			MethodName: "SendForgetPasswordMessage",
+			Handler:    _AuthService_SendForgetPasswordMessage_Handler,
 		},
 		{
 			MethodName: "SendVerifyEmailMessage",

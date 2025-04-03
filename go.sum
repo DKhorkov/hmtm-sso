@@ -1,13 +1,11 @@
-github.com/DKhorkov/hmtm-notifications v1.1.0 h1:Ak38DG2KcNwEIauuF98VPYXGKd79B8TwXMyTZldHEws=
-github.com/DKhorkov/hmtm-notifications v1.1.0/go.mod h1:719yeUXA8O/+SYZviQSIVvGkb4m2ULQwO1R/QTB7RtY=
-github.com/DKhorkov/libs v1.5.2 h1:6DbxqSupwta5mG0b5BJJeqsmIvokCErVUmqYeGY//Xs=
-github.com/DKhorkov/libs v1.5.2/go.mod h1:bG7YLEvPSks0MJcGJLtVj1K2PmeQBU++PC9PCt9Ft0U=
+github.com/DKhorkov/hmtm-notifications v1.2.1 h1:+kKNf9QIQbtRcu2gQnBNDuzPI42n5q5UgYN4Fq+NvP0=
+github.com/DKhorkov/hmtm-notifications v1.2.1/go.mod h1:rpzrSRtUJm5e3rvVyxeIv+F29V9Uh5nfCxF3H/VlrDg=
+github.com/DKhorkov/libs v1.7.0 h1:p3XbjQg7LyMLBNiJBYh4f143KWSVsSoeghg7ii1sci8=
+github.com/DKhorkov/libs v1.7.0/go.mod h1:Wk5o7coDSzB4VmuvIXH/9sbGF+jgTrb+C7qjt7V+xbQ=
 github.com/Masterminds/squirrel v1.5.4 h1:uUcX/aBc8O7Fg9kaISIUsHXdKuqehiXAMQTYX8afzqM=
 github.com/Masterminds/squirrel v1.5.4/go.mod h1:NNaOrjSoIDfDA40n7sr2tPNZRfjzjA400rg+riTZj10=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/dchest/uniuri v1.2.0 h1:koIcOUdrTIivZgSLhHQvKgqdWZq5d7KdMEWF1Ud6+5g=
-github.com/dchest/uniuri v1.2.0/go.mod h1:fSzm4SLHzNZvWLvWJew423PhAzkpNQYq+uNLq4kxhkY=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=

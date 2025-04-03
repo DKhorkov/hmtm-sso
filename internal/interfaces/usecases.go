@@ -21,7 +21,8 @@ type UseCases interface {
 	LogoutUser(ctx context.Context, accessToken string) error
 	RefreshTokens(ctx context.Context, refreshToken string) (*entities.TokensDTO, error)
 	VerifyUserEmail(ctx context.Context, verifyEmailToken string) error
-	ForgetPassword(ctx context.Context, accessToken string) error
+	ForgetPassword(ctx context.Context, forgetPasswordToken, newPassword string) error
+	SendForgetPasswordMessage(ctx context.Context, email string) error
 	ChangePassword(ctx context.Context, accessToken, oldPassword, newPassword string) error
 	SendVerifyEmailMessage(ctx context.Context, email string) error
 }

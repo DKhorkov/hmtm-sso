@@ -15,6 +15,7 @@ service AuthService {
   rpc VerifyEmail(VerifyEmailIn) returns (google.protobuf.Empty) {}
   rpc ChangePassword(ChangePasswordIn) returns (google.protobuf.Empty) {}
   rpc ForgetPassword(ForgetPasswordIn) returns (google.protobuf.Empty) {}
+  rpc SendForgetPasswordMessage(SendForgetPasswordMessageIn) returns (google.protobuf.Empty) {}
   rpc SendVerifyEmailMessage(SendVerifyEmailMessageIn) returns (google.protobuf.Empty) {}
 }
 
@@ -57,7 +58,12 @@ message ChangePasswordIn {
 }
 
 message ForgetPasswordIn {
-  string accessToken = 1;
+  string forgetPasswordToken = 1;
+  string newPassword = 2;
+}
+
+message SendForgetPasswordMessageIn {
+  string email = 1;
 }
 
 message SendVerifyEmailMessageIn {

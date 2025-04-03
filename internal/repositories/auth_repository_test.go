@@ -38,6 +38,7 @@ const (
 )
 
 var (
+	ctx         = context.Background()
 	testUserDTO = entities.RegisterUserDTO{
 		DisplayName: "test User",
 		Email:       email,
@@ -131,7 +132,6 @@ func (s *AuthRepositoryTestSuite) TearDownSuite() {
 }
 
 func (s *AuthRepositoryTestSuite) TestRegisterUserSuccess() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -146,7 +146,6 @@ func (s *AuthRepositoryTestSuite) TestRegisterUserSuccess() {
 }
 
 func (s *AuthRepositoryTestSuite) TestRegisterUserFailEmailAlreadyExists() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -173,7 +172,6 @@ func (s *AuthRepositoryTestSuite) TestRegisterUserFailEmailAlreadyExists() {
 }
 
 func (s *AuthRepositoryTestSuite) TestVerifyUserEmailSuccess() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -199,7 +197,6 @@ func (s *AuthRepositoryTestSuite) TestVerifyUserEmailSuccess() {
 }
 
 func (s *AuthRepositoryTestSuite) TestVerifyUserEmailUserDoesNotExist() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -211,7 +208,6 @@ func (s *AuthRepositoryTestSuite) TestVerifyUserEmailUserDoesNotExist() {
 }
 
 func (s *AuthRepositoryTestSuite) TestCreateRefreshTokenSuccess() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -232,7 +228,6 @@ func (s *AuthRepositoryTestSuite) TestCreateRefreshTokenSuccess() {
 }
 
 func (s *AuthRepositoryTestSuite) TestCreateRefreshTokenAlreadyExists() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -265,7 +260,6 @@ func (s *AuthRepositoryTestSuite) TestCreateRefreshTokenAlreadyExists() {
 }
 
 func (s *AuthRepositoryTestSuite) TestGetRefreshTokenByUserIDSuccess() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -292,7 +286,6 @@ func (s *AuthRepositoryTestSuite) TestGetRefreshTokenByUserIDSuccess() {
 }
 
 func (s *AuthRepositoryTestSuite) TestGetRefreshTokenByUserIDNotFound() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -305,7 +298,6 @@ func (s *AuthRepositoryTestSuite) TestGetRefreshTokenByUserIDNotFound() {
 }
 
 func (s *AuthRepositoryTestSuite) TestExpireRefreshTokenSuccess() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -331,7 +323,6 @@ func (s *AuthRepositoryTestSuite) TestExpireRefreshTokenSuccess() {
 }
 
 func (s *AuthRepositoryTestSuite) TestExpireRefreshTokenDoesNotExist() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -343,7 +334,6 @@ func (s *AuthRepositoryTestSuite) TestExpireRefreshTokenDoesNotExist() {
 }
 
 func (s *AuthRepositoryTestSuite) TestChangePasswordSuccess() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -369,7 +359,6 @@ func (s *AuthRepositoryTestSuite) TestChangePasswordSuccess() {
 }
 
 func (s *AuthRepositoryTestSuite) TestChangePasswordUserDoesNotExist() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -381,7 +370,6 @@ func (s *AuthRepositoryTestSuite) TestChangePasswordUserDoesNotExist() {
 }
 
 func (s *AuthRepositoryTestSuite) TestForgetPasswordSuccess() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -426,7 +414,6 @@ func (s *AuthRepositoryTestSuite) TestForgetPasswordSuccess() {
 }
 
 func (s *AuthRepositoryTestSuite) TestForgetPasswordNoActiveRefreshToken() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -457,7 +444,6 @@ func (s *AuthRepositoryTestSuite) TestForgetPasswordNoActiveRefreshToken() {
 }
 
 func (s *AuthRepositoryTestSuite) TestForgetPasswordUserWithProvidedIDDoesNotExist() {
-	ctx := context.Background()
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -475,7 +461,6 @@ func (s *AuthRepositoryTestSuite) TestForgetPasswordUserWithProvidedIDDoesNotExi
 
 func BenchmarkAuthRepository_RegisterUser(b *testing.B) {
 	spanConfig := tracing.SpanConfig{}
-	ctx := context.Background()
 	ctrl := gomock.NewController(b)
 	logger := loggermock.NewMockLogger(ctrl)
 	dbConnector, err := db.New(dsn, driver, logger)

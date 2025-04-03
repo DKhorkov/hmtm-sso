@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/security"
@@ -23,6 +22,7 @@ var (
 	userNotFoundError                           = &customerrors.UserNotFoundError{}
 	userAlreadyExistsError                      = &customerrors.UserAlreadyExistsError{}
 	emailAlreadyConfirmedError                  = &customerrors.EmailAlreadyConfirmedError{}
+	emailIsNotConfirmedError                    = &customerrors.EmailIsNotConfirmedError{}
 	invalidEmailError                           = &customerrors.InvalidEmailError{}
 	invalidPasswordError                        = &customerrors.InvalidPasswordError{}
 	invalidDisplayName                          = &customerrors.InvalidDisplayNameError{}
@@ -43,6 +43,28 @@ type ServerAPI struct {
 	logger   logging.Logger
 }
 
+func (api *ServerAPI) SendForgetPasswordMessage(ctx context.Context, in *sso.SendForgetPasswordMessageIn) (*emptypb.Empty, error) {
+	if err := api.useCases.SendForgetPasswordMessage(ctx, in.GetEmail()); err != nil {
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			"Error occurred while trying to send forget-password message to User with email="+in.GetEmail(),
+			err,
+		)
+
+		switch {
+		case errors.As(err, &userNotFoundError):
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		case errors.As(err, &emailIsNotConfirmedError):
+			return nil, &customgrpc.BaseError{Status: codes.FailedPrecondition, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
 func (api *ServerAPI) SendVerifyEmailMessage(
 	ctx context.Context,
 	in *sso.SendVerifyEmailMessageIn,
@@ -51,7 +73,7 @@ func (api *ServerAPI) SendVerifyEmailMessage(
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf("Error occurred while trying to login User with email=%s", in.GetEmail()),
+			"Error occurred while trying to send verify-email message to User with email="+in.GetEmail(),
 			err,
 		)
 
@@ -91,8 +113,22 @@ func (api *ServerAPI) ForgetPassword(
 	ctx context.Context,
 	in *sso.ForgetPasswordIn,
 ) (*emptypb.Empty, error) {
-	if err := api.useCases.ForgetPassword(ctx, in.GetAccessToken()); err != nil {
-		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+	if err := api.useCases.ForgetPassword(ctx, in.GetForgetPasswordToken(), in.GetNewPassword()); err != nil {
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			"Error occurred while trying to change forgotten password for User with forgetPasswordToken="+in.GetForgetPasswordToken(),
+			err,
+		)
+
+		switch {
+		case errors.As(err, &userNotFoundError):
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		case errors.As(err, &wrongPasswordError):
+			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
 	}
 
 	return &emptypb.Empty{}, nil
@@ -161,7 +197,7 @@ func (api *ServerAPI) Login(ctx context.Context, in *sso.LoginIn) (*sso.LoginOut
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf("Error occurred while trying to login User with email=%s", userData.Email),
+			"Error occurred while trying to login User with email="+userData.Email,
 			err,
 		)
 
@@ -191,10 +227,7 @@ func (api *ServerAPI) RefreshTokens(
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf(
-				"Error occurred while trying to refresh tokens with RefreshToken=%s",
-				in.GetRefreshToken(),
-			),
+			"Error occurred while trying to refresh tokens with RefreshToken="+in.GetRefreshToken(),
 			err,
 		)
 
