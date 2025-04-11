@@ -45,7 +45,7 @@ func (api *ServerAPI) UpdateUserProfile(
 ) (*emptypb.Empty, error) {
 	userProfileData := entities.RawUpdateUserProfileDTO{
 		AccessToken: in.GetAccessToken(),
-		DisplayName: in.GetDisplayName(),
+		DisplayName: in.DisplayName,
 		Phone:       in.Phone,
 		Telegram:    in.Telegram,
 		Avatar:      in.Avatar,

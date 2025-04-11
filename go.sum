@@ -1,7 +1,7 @@
 github.com/DKhorkov/hmtm-notifications v1.2.1 h1:+kKNf9QIQbtRcu2gQnBNDuzPI42n5q5UgYN4Fq+NvP0=
 github.com/DKhorkov/hmtm-notifications v1.2.1/go.mod h1:rpzrSRtUJm5e3rvVyxeIv+F29V9Uh5nfCxF3H/VlrDg=
-github.com/DKhorkov/libs v1.7.0 h1:p3XbjQg7LyMLBNiJBYh4f143KWSVsSoeghg7ii1sci8=
-github.com/DKhorkov/libs v1.7.0/go.mod h1:Wk5o7coDSzB4VmuvIXH/9sbGF+jgTrb+C7qjt7V+xbQ=
+github.com/DKhorkov/libs v1.7.1 h1:GMSaezhlYWahNvMp2D2p4T06vP0n+JYIYXZW163pX88=
+github.com/DKhorkov/libs v1.7.1/go.mod h1:Wk5o7coDSzB4VmuvIXH/9sbGF+jgTrb+C7qjt7V+xbQ=
 github.com/Masterminds/squirrel v1.5.4 h1:uUcX/aBc8O7Fg9kaISIUsHXdKuqehiXAMQTYX8afzqM=
 github.com/Masterminds/squirrel v1.5.4/go.mod h1:NNaOrjSoIDfDA40n7sr2tPNZRfjzjA400rg+riTZj10=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

@@ -192,10 +192,11 @@ func (useCases *UseCases) UpdateUserProfile(
 	ctx context.Context,
 	rawUserProfileData entities.RawUpdateUserProfileDTO,
 ) error {
-	if !validateValueByRules(
-		rawUserProfileData.DisplayName,
-		useCases.validationConfig.DisplayNameRegExps,
-	) {
+	if rawUserProfileData.DisplayName != nil &&
+		!validateValueByRules(
+			*rawUserProfileData.DisplayName,
+			useCases.validationConfig.DisplayNameRegExps,
+		) {
 		return &customerrors.InvalidDisplayNameError{}
 	}
 
