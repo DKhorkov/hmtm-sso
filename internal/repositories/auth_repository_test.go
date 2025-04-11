@@ -18,6 +18,7 @@ import (
 
 	"github.com/DKhorkov/libs/db"
 	loggermock "github.com/DKhorkov/libs/logging/mocks"
+	"github.com/DKhorkov/libs/pointers"
 	"github.com/DKhorkov/libs/tracing"
 	tracingmock "github.com/DKhorkov/libs/tracing/mocks"
 
@@ -50,6 +51,7 @@ var (
 		DisplayName: testUserDTO.DisplayName,
 		Email:       testUserDTO.Email,
 		Password:    testUserDTO.Password,
+		Avatar:      pointers.New("some avatar"),
 	}
 
 	ttl          = 1 * time.Hour

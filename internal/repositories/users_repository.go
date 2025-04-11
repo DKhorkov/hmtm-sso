@@ -200,15 +200,32 @@ func (repo *UsersRepository) UpdateUserProfile(
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
-	stmt, params, err := sq.
+	builder := sq.
 		Update(usersTableName).
 		Where(sq.Eq{idColumnName: userProfileData.UserID}).
-		Set(userDisplayNameColumnName, userProfileData.DisplayName).
-		Set(userPhoneColumnName, userProfileData.Phone).
-		Set(userTelegramColumnName, userProfileData.Telegram).
-		Set(userAvatarColumnName, userProfileData.Avatar).
-		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders:
-		ToSql()
+		Set(userPhoneColumnName, userProfileData.Phone).       // Update every time, because field is nullable
+		Set(userTelegramColumnName, userProfileData.Telegram). // Update every time, because field is nullable
+		PlaceholderFormat(sq.Dollar)                           // pq postgres driver works only with $ placeholders
+
+	if userProfileData.DisplayName != nil {
+		builder = builder.Set(userDisplayNameColumnName, userProfileData.DisplayName)
+	}
+
+	if userProfileData.Avatar != nil {
+		builder = builder.Set(userAvatarColumnName, userProfileData.Avatar)
+	}
+
+	// If user deletes phone - we should update phone-confirmed field:
+	if userProfileData.Phone == nil {
+		builder = builder.Set(userPhoneConfirmedColumnName, false)
+	}
+
+	// If user deletes telegram - we should update telegram-confirmed field:
+	if userProfileData.Telegram == nil {
+		builder = builder.Set(userTelegramConfirmedColumnName, false)
+	}
+
+	stmt, params, err := builder.ToSql()
 	if err != nil {
 		return err
 	}

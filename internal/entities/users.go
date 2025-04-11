@@ -19,7 +19,7 @@ type User struct {
 
 type RawUpdateUserProfileDTO struct {
 	AccessToken string  `json:"accessToken"`
-	DisplayName string  `json:"displayName"`
+	DisplayName *string `json:"displayName,omitempty"`
 	Phone       *string `json:"phone,omitempty"`
 	Telegram    *string `json:"telegram,omitempty"`
 	Avatar      *string `json:"avatar,omitempty"`
@@ -27,7 +27,7 @@ type RawUpdateUserProfileDTO struct {
 
 type UpdateUserProfileDTO struct {
 	UserID      uint64  `json:"userId"`
-	DisplayName string  `json:"displayName"`
+	DisplayName *string `json:"displayName,omitempty"`
 	Phone       *string `json:"phone,omitempty"`
 	Telegram    *string `json:"telegram,omitempty"`
 	Avatar      *string `json:"avatar,omitempty"`

@@ -25,10 +25,10 @@ func New() Config {
 			HashCost: loadenv.GetEnvAsInt("HASH_COST", 8), // Auth speed sensitive if large
 			JWT: security.JWTConfig{
 				RefreshTokenTTL: time.Hour * time.Duration(
-					loadenv.GetEnvAsInt("JWT_TTL", 168),
+					loadenv.GetEnvAsInt("REFRESH_TOKEN_JWT_TTL", 168),
 				),
 				AccessTokenTTL: time.Minute * time.Duration(
-					loadenv.GetEnvAsInt("JWT_TTL", 15),
+					loadenv.GetEnvAsInt("ACCESS_TOKEN_JWT_TTL", 15),
 				),
 				Algorithm: loadenv.GetEnv("JWT_ALGORITHM", "HS256"),
 				SecretKey: loadenv.GetEnv("JWT_SECRET", "defaultSecret"),

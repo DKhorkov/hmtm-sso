@@ -7,6 +7,7 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 )
 
+//go:generate mockgen -source=repositories.go -destination=../../mocks/repositories/users_repository.go -package=mockrepositories -exclude_interfaces=AuthRepository
 type UsersRepository interface {
 	GetUserByID(ctx context.Context, id uint64) (*entities.User, error)
 	GetAllUsers(ctx context.Context) ([]entities.User, error)
@@ -14,6 +15,7 @@ type UsersRepository interface {
 	UpdateUserProfile(ctx context.Context, userProfileData entities.UpdateUserProfileDTO) error
 }
 
+//go:generate mockgen -source=repositories.go -destination=../../mocks/repositories/auth_repository.go -package=mockrepositories -exclude_interfaces=UsersRepository
 type AuthRepository interface {
 	RegisterUser(ctx context.Context, userData entities.RegisterUserDTO) (userID uint64, err error)
 	CreateRefreshToken(

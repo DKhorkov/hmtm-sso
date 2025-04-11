@@ -6,6 +6,7 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 )
 
+//go:generate mockgen -source=usecases.go -destination=../../mocks/usecases/usecases.go -package=mockusecases
 type UseCases interface {
 	GetUserByID(ctx context.Context, id uint64) (*entities.User, error)
 	GetAllUsers(ctx context.Context) ([]entities.User, error)

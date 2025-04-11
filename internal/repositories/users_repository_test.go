@@ -231,7 +231,7 @@ func (s *UsersRepositoryTestSuite) TestUpdateUserProfileSuccess() {
 		ctx,
 		entities.UpdateUserProfileDTO{
 			UserID:      testUser.ID,
-			DisplayName: testUser.DisplayName,
+			DisplayName: &testUser.DisplayName,
 			Phone:       testUser.Phone,
 			Telegram:    testUser.Telegram,
 			Avatar:      testUser.Avatar,
@@ -252,7 +252,7 @@ func (s *UsersRepositoryTestSuite) TestUpdateUserProfileUserDoesNotExists() {
 		ctx,
 		entities.UpdateUserProfileDTO{
 			UserID:      testUser.ID,
-			DisplayName: testUser.DisplayName,
+			DisplayName: &testUser.DisplayName,
 			Phone:       testUser.Phone,
 			Telegram:    testUser.Telegram,
 			Avatar:      testUser.Avatar,
