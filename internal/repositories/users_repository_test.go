@@ -9,6 +9,8 @@ import (
 	"path"
 	"testing"
 
+	_ "github.com/mattn/go-sqlite3"
+
 	"github.com/pressly/goose/v3"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -17,7 +19,7 @@ import (
 	"github.com/DKhorkov/libs/db"
 	loggermock "github.com/DKhorkov/libs/logging/mocks"
 	"github.com/DKhorkov/libs/tracing"
-	tracingmock "github.com/DKhorkov/libs/tracing/mocks"
+	mocktracing "github.com/DKhorkov/libs/tracing/mocks"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
@@ -37,7 +39,7 @@ type UsersRepositoryTestSuite struct {
 	connection      *sql.Conn
 	usersRepository interfaces.UsersRepository
 	logger          *loggermock.MockLogger
-	traceProvider   *tracingmock.MockProvider
+	traceProvider   *mocktracing.MockProvider
 	spanConfig      tracing.SpanConfig
 }
 
@@ -55,7 +57,7 @@ func (s *UsersRepositoryTestSuite) SetupSuite() {
 
 	s.cwd = cwd
 	s.dbConnector = dbConnector
-	s.traceProvider = tracingmock.NewMockProvider(ctrl)
+	s.traceProvider = mocktracing.NewMockProvider(ctrl)
 	s.spanConfig = tracing.SpanConfig{}
 	s.usersRepository = repositories.NewUsersRepository(s.dbConnector, s.logger, s.traceProvider, s.spanConfig)
 }
@@ -98,7 +100,7 @@ func (s *UsersRepositoryTestSuite) TestGetExistingUserByID() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	_, err := s.connection.ExecContext(
@@ -124,7 +126,7 @@ func (s *UsersRepositoryTestSuite) TestGetNonExistingUserByID() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	user, err := s.usersRepository.GetUserByID(ctx, userID)
@@ -136,7 +138,7 @@ func (s *UsersRepositoryTestSuite) TestGetExistingUserByEmail() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	_, err := s.connection.ExecContext(
@@ -162,7 +164,7 @@ func (s *UsersRepositoryTestSuite) TestGetNonExistingUserByEmail() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	user, err := s.usersRepository.GetUserByEmail(ctx, email)
@@ -174,7 +176,7 @@ func (s *UsersRepositoryTestSuite) TestGetAllUsersWithExistingUsers() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	_, err := s.connection.ExecContext(
@@ -200,7 +202,7 @@ func (s *UsersRepositoryTestSuite) TestGetAllUsersWithoutExistingUsers() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	users, err := s.usersRepository.GetAllUsers(ctx)
@@ -224,7 +226,7 @@ func (s *UsersRepositoryTestSuite) TestUpdateUserProfileSuccess() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	err = s.usersRepository.UpdateUserProfile(
@@ -245,7 +247,7 @@ func (s *UsersRepositoryTestSuite) TestUpdateUserProfileUserDoesNotExists() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	err := s.usersRepository.UpdateUserProfile(
@@ -273,11 +275,11 @@ func BenchmarkUsersRepository_GetUserByID(b *testing.B) {
 		require.NoError(b, dbConnector.Close())
 	}()
 
-	traceProvider := tracingmock.NewMockProvider(ctrl)
+	traceProvider := mocktracing.NewMockProvider(ctrl)
 	traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(ctx, tracingmock.NewMockSpan()).
+		Return(ctx, mocktracing.NewMockSpan()).
 		AnyTimes()
 
 	usersRepository := repositories.NewUsersRepository(dbConnector, logger, traceProvider, spanConfig)
@@ -302,11 +304,11 @@ func BenchmarkUsersRepository_GetUserByEmail(b *testing.B) {
 		require.NoError(b, dbConnector.Close())
 	}()
 
-	traceProvider := tracingmock.NewMockProvider(ctrl)
+	traceProvider := mocktracing.NewMockProvider(ctrl)
 	traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(ctx, tracingmock.NewMockSpan()).
+		Return(ctx, mocktracing.NewMockSpan()).
 		AnyTimes()
 
 	usersRepository := repositories.NewUsersRepository(dbConnector, logger, traceProvider, spanConfig)
@@ -331,11 +333,11 @@ func BenchmarkUsersRepository_GetAllUsers(b *testing.B) {
 		require.NoError(b, dbConnector.Close())
 	}()
 
-	traceProvider := tracingmock.NewMockProvider(ctrl)
+	traceProvider := mocktracing.NewMockProvider(ctrl)
 	traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(ctx, tracingmock.NewMockSpan()).
+		Return(ctx, mocktracing.NewMockSpan()).
 		AnyTimes()
 
 	usersRepository := repositories.NewUsersRepository(dbConnector, logger, traceProvider, spanConfig)

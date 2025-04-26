@@ -8,6 +8,7 @@ import (
 
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/security"
+	"github.com/DKhorkov/libs/validation"
 	"github.com/golang-jwt/jwt/v5"
 
 	notifications "github.com/DKhorkov/hmtm-notifications/dto"
@@ -53,15 +54,15 @@ func (useCases *UseCases) RegisterUser(
 	ctx context.Context,
 	userData entities.RegisterUserDTO,
 ) (uint64, error) {
-	if !validateValueByRule(userData.Email, useCases.validationConfig.EmailRegExp) {
+	if !validation.ValidateValueByRule(userData.Email, useCases.validationConfig.EmailRegExp) {
 		return 0, &customerrors.InvalidEmailError{}
 	}
 
-	if !validateValueByRules(userData.Password, useCases.validationConfig.PasswordRegExps) {
+	if !validation.ValidateValueByRules(userData.Password, useCases.validationConfig.PasswordRegExps) {
 		return 0, &customerrors.InvalidPasswordError{}
 	}
 
-	if !validateValueByRules(userData.DisplayName, useCases.validationConfig.DisplayNameRegExps) {
+	if !validation.ValidateValueByRules(userData.DisplayName, useCases.validationConfig.DisplayNameRegExps) {
 		return 0, &customerrors.InvalidDisplayNameError{}
 	}
 
@@ -193,7 +194,7 @@ func (useCases *UseCases) UpdateUserProfile(
 	rawUserProfileData entities.RawUpdateUserProfileDTO,
 ) error {
 	if rawUserProfileData.DisplayName != nil &&
-		!validateValueByRules(
+		!validation.ValidateValueByRules(
 			*rawUserProfileData.DisplayName,
 			useCases.validationConfig.DisplayNameRegExps,
 		) {
@@ -201,7 +202,7 @@ func (useCases *UseCases) UpdateUserProfile(
 	}
 
 	if rawUserProfileData.Phone != nil &&
-		!validateValueByRules(
+		!validation.ValidateValueByRules(
 			*rawUserProfileData.Phone,
 			useCases.validationConfig.PhoneRegExps,
 		) {
@@ -209,7 +210,7 @@ func (useCases *UseCases) UpdateUserProfile(
 	}
 
 	if rawUserProfileData.Telegram != nil &&
-		!validateValueByRules(
+		!validation.ValidateValueByRules(
 			*rawUserProfileData.Telegram,
 			useCases.validationConfig.TelegramRegExps,
 		) {
@@ -407,7 +408,7 @@ func (useCases *UseCases) VerifyUserEmail(ctx context.Context, verifyEmailToken 
 }
 
 func (useCases *UseCases) ForgetPassword(ctx context.Context, forgetPasswordToken, newPassword string) error {
-	if !validateValueByRules(newPassword, useCases.validationConfig.PasswordRegExps) {
+	if !validation.ValidateValueByRules(newPassword, useCases.validationConfig.PasswordRegExps) {
 		return &customerrors.InvalidPasswordError{}
 	}
 
@@ -452,7 +453,7 @@ func (useCases *UseCases) ChangePassword(
 		}
 	}
 
-	if !validateValueByRules(newPassword, useCases.validationConfig.PasswordRegExps) {
+	if !validation.ValidateValueByRules(newPassword, useCases.validationConfig.PasswordRegExps) {
 		return &customerrors.InvalidPasswordError{}
 	}
 

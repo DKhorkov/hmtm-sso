@@ -27,6 +27,13 @@ const (
 	userAvatarColumnName            = "avatar"
 )
 
+type UsersRepository struct {
+	dbConnector   db.Connector
+	logger        logging.Logger
+	traceProvider tracing.Provider
+	spanConfig    tracing.SpanConfig
+}
+
 func NewUsersRepository(
 	dbConnector db.Connector,
 	logger logging.Logger,
@@ -39,13 +46,6 @@ func NewUsersRepository(
 		traceProvider: traceProvider,
 		spanConfig:    spanConfig,
 	}
-}
-
-type UsersRepository struct {
-	dbConnector   db.Connector
-	logger        logging.Logger
-	traceProvider tracing.Provider
-	spanConfig    tracing.SpanConfig
 }
 
 func (repo *UsersRepository) GetUserByID(ctx context.Context, id uint64) (*entities.User, error) {

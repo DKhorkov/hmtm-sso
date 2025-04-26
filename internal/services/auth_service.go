@@ -11,6 +11,12 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 )
 
+type AuthService struct {
+	authRepository  interfaces.AuthRepository
+	usersRepository interfaces.UsersRepository
+	logger          logging.Logger
+}
+
 func NewAuthService(
 	authRepository interfaces.AuthRepository,
 	usersRepository interfaces.UsersRepository,
@@ -21,12 +27,6 @@ func NewAuthService(
 		usersRepository: usersRepository,
 		logger:          logger,
 	}
-}
-
-type AuthService struct {
-	authRepository  interfaces.AuthRepository
-	usersRepository interfaces.UsersRepository
-	logger          logging.Logger
 }
 
 func (service *AuthService) RegisterUser(
