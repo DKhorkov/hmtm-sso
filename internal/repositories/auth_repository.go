@@ -25,6 +25,13 @@ const (
 	userIDColumnName            = "user_id"
 )
 
+type AuthRepository struct {
+	dbConnector   db.Connector
+	logger        logging.Logger
+	traceProvider tracing.Provider
+	spanConfig    tracing.SpanConfig
+}
+
 func NewAuthRepository(
 	dbConnector db.Connector,
 	logger logging.Logger,
@@ -37,13 +44,6 @@ func NewAuthRepository(
 		traceProvider: traceProvider,
 		spanConfig:    spanConfig,
 	}
-}
-
-type AuthRepository struct {
-	dbConnector   db.Connector
-	logger        logging.Logger
-	traceProvider tracing.Provider
-	spanConfig    tracing.SpanConfig
 }
 
 func (repo *AuthRepository) RegisterUser(

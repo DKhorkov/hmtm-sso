@@ -20,7 +20,7 @@ import (
 	loggermock "github.com/DKhorkov/libs/logging/mocks"
 	"github.com/DKhorkov/libs/pointers"
 	"github.com/DKhorkov/libs/tracing"
-	tracingmock "github.com/DKhorkov/libs/tracing/mocks"
+	mocktracing "github.com/DKhorkov/libs/tracing/mocks"
 
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
@@ -76,7 +76,7 @@ type AuthRepositoryTestSuite struct {
 	connection     *sql.Conn
 	authRepository interfaces.AuthRepository
 	logger         *loggermock.MockLogger
-	traceProvider  *tracingmock.MockProvider
+	traceProvider  *mocktracing.MockProvider
 	spanConfig     tracing.SpanConfig
 }
 
@@ -94,7 +94,7 @@ func (s *AuthRepositoryTestSuite) SetupSuite() {
 
 	s.cwd = cwd
 	s.dbConnector = dbConnector
-	s.traceProvider = tracingmock.NewMockProvider(ctrl)
+	s.traceProvider = mocktracing.NewMockProvider(ctrl)
 	s.spanConfig = tracing.SpanConfig{}
 	s.authRepository = repositories.NewAuthRepository(s.dbConnector, s.logger, s.traceProvider, s.spanConfig)
 }
@@ -137,21 +137,21 @@ func (s *AuthRepositoryTestSuite) TestRegisterUserSuccess() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	// Error and zero userID due to returning nil ID after register.
 	// SQLite inner realization without AUTO_INCREMENT for SERIAL PRIMARY KEY
 	userID, err := s.authRepository.RegisterUser(ctx, testUserDTO)
 	s.Error(err)
-	s.Equal(uint64(0), userID)
+	s.Zero(userID)
 }
 
 func (s *AuthRepositoryTestSuite) TestRegisterUserFailEmailAlreadyExists() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	_, err := s.connection.ExecContext(
@@ -177,7 +177,7 @@ func (s *AuthRepositoryTestSuite) TestVerifyUserEmailSuccess() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	_, err := s.connection.ExecContext(
@@ -202,7 +202,7 @@ func (s *AuthRepositoryTestSuite) TestVerifyUserEmailUserDoesNotExist() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	err := s.authRepository.VerifyUserEmail(ctx, uint64(1))
@@ -213,7 +213,7 @@ func (s *AuthRepositoryTestSuite) TestCreateRefreshTokenSuccess() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	// Error and zero userID due to returning nil ID after register.
@@ -233,7 +233,7 @@ func (s *AuthRepositoryTestSuite) TestCreateRefreshTokenAlreadyExists() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	_, err := s.connection.ExecContext(
@@ -265,7 +265,7 @@ func (s *AuthRepositoryTestSuite) TestGetRefreshTokenByUserIDSuccess() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	_, err := s.connection.ExecContext(
@@ -291,7 +291,7 @@ func (s *AuthRepositoryTestSuite) TestGetRefreshTokenByUserIDNotFound() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	refreshToken, err := s.authRepository.GetRefreshTokenByUserID(ctx, userID)
@@ -303,7 +303,7 @@ func (s *AuthRepositoryTestSuite) TestExpireRefreshTokenSuccess() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	_, err := s.connection.ExecContext(
@@ -328,7 +328,7 @@ func (s *AuthRepositoryTestSuite) TestExpireRefreshTokenDoesNotExist() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	err := s.authRepository.ExpireRefreshToken(ctx, refreshToken.Value)
@@ -339,7 +339,7 @@ func (s *AuthRepositoryTestSuite) TestChangePasswordSuccess() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	_, err := s.connection.ExecContext(
@@ -364,7 +364,7 @@ func (s *AuthRepositoryTestSuite) TestChangePasswordUserDoesNotExist() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	err := s.authRepository.ChangePassword(ctx, userID, "new password")
@@ -375,7 +375,7 @@ func (s *AuthRepositoryTestSuite) TestForgetPasswordSuccess() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	s.logger.
@@ -419,7 +419,7 @@ func (s *AuthRepositoryTestSuite) TestForgetPasswordNoActiveRefreshToken() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	s.logger.
@@ -449,7 +449,7 @@ func (s *AuthRepositoryTestSuite) TestForgetPasswordUserWithProvidedIDDoesNotExi
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(context.Background(), tracingmock.NewMockSpan()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
 	s.logger.
@@ -472,11 +472,11 @@ func BenchmarkAuthRepository_RegisterUser(b *testing.B) {
 		require.NoError(b, dbConnector.Close())
 	}()
 
-	traceProvider := tracingmock.NewMockProvider(ctrl)
+	traceProvider := mocktracing.NewMockProvider(ctrl)
 	traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
-		Return(ctx, tracingmock.NewMockSpan()).
+		Return(ctx, mocktracing.NewMockSpan()).
 		AnyTimes()
 
 	authRepository := repositories.NewAuthRepository(dbConnector, logger, traceProvider, spanConfig)

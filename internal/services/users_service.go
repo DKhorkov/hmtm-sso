@@ -11,6 +11,11 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 )
 
+type UsersService struct {
+	usersRepository interfaces.UsersRepository
+	logger          logging.Logger
+}
+
 func NewUsersService(
 	usersRepository interfaces.UsersRepository,
 	logger logging.Logger,
@@ -19,11 +24,6 @@ func NewUsersService(
 		usersRepository: usersRepository,
 		logger:          logger,
 	}
-}
-
-type UsersService struct {
-	usersRepository interfaces.UsersRepository
-	logger          logging.Logger
 }
 
 func (service *UsersService) GetAllUsers(ctx context.Context) ([]entities.User, error) {
