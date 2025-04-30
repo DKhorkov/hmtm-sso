@@ -383,6 +383,7 @@ func TestServerAPI_GetUsers(t *testing.T) {
 
 	testCases := []struct {
 		name          string
+		in            *sso.GetUsersIn
 		setupMocks    func(useCases *mockusecases.MockUseCases, logger *mocklogging.MockLogger)
 		expectedOut   *sso.GetUsersOut
 		expectedErr   error
@@ -390,6 +391,12 @@ func TestServerAPI_GetUsers(t *testing.T) {
 	}{
 		{
 			name: "success",
+			in: &sso.GetUsersIn{
+				Pagination: &sso.Pagination{
+					Limit:  pointers.New[uint64](1),
+					Offset: pointers.New[uint64](1),
+				},
+			},
 			setupMocks: func(useCases *mockusecases.MockUseCases, logger *mocklogging.MockLogger) {
 				users := []entities.User{
 					{
@@ -407,9 +414,16 @@ func TestServerAPI_GetUsers(t *testing.T) {
 						UpdatedAt:   time.Date(2023, 2, 2, 0, 0, 0, 0, time.UTC),
 					},
 				}
+
 				useCases.
 					EXPECT().
-					GetAllUsers(gomock.Any()).
+					GetUsers(
+						gomock.Any(),
+						&entities.Pagination{
+							Limit:  pointers.New[uint64](1),
+							Offset: pointers.New[uint64](1),
+						},
+					).
 					Return(users, nil).
 					Times(1)
 			},
@@ -436,10 +450,22 @@ func TestServerAPI_GetUsers(t *testing.T) {
 		},
 		{
 			name: "internal error",
+			in: &sso.GetUsersIn{
+				Pagination: &sso.Pagination{
+					Limit:  pointers.New[uint64](1),
+					Offset: pointers.New[uint64](1),
+				},
+			},
 			setupMocks: func(useCases *mockusecases.MockUseCases, logger *mocklogging.MockLogger) {
 				useCases.
 					EXPECT().
-					GetAllUsers(gomock.Any()).
+					GetUsers(
+						gomock.Any(),
+						&entities.Pagination{
+							Limit:  pointers.New[uint64](1),
+							Offset: pointers.New[uint64](1),
+						},
+					).
 					Return(nil, errors.New("internal error")).
 					Times(1)
 
@@ -459,7 +485,7 @@ func TestServerAPI_GetUsers(t *testing.T) {
 				tc.setupMocks(useCases, logger)
 			}
 
-			resp, err := api.GetUsers(context.Background(), &emptypb.Empty{})
+			resp, err := api.GetUsers(context.Background(), tc.in)
 			if tc.errorExpected {
 				require.Error(t, err)
 				require.IsType(t, tc.expectedErr, err)

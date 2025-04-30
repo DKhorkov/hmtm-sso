@@ -11,7 +11,7 @@ option go_package = "github.com/DKhorkov/hmtm-sso/api/protobuf/sso;sso";
 service UsersService {
   rpc GetUser(GetUserIn) returns (GetUserOut) {}
   rpc GetUserByEmail(GetUserByEmailIn) returns (GetUserOut) {}
-  rpc GetUsers(google.protobuf.Empty) returns (GetUsersOut) {}
+  rpc GetUsers(GetUsersIn) returns (GetUsersOut) {}
   rpc GetMe(GetMeIn) returns (GetUserOut) {}
   rpc UpdateUserProfile(UpdateUserProfileIn) returns (google.protobuf.Empty) {}
 }
@@ -36,6 +36,15 @@ message GetUserOut {
   optional string avatar = 9;
   google.protobuf.Timestamp createdAt = 10;
   google.protobuf.Timestamp updatedAt = 11;
+}
+
+message GetUsersIn {
+  optional Pagination pagination = 1;
+}
+
+message Pagination {
+  optional uint64 limit = 1;
+  optional uint64 offset = 2;
 }
 
 message GetUsersOut {

@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
 )
@@ -37,7 +36,7 @@ func main() {
 
 	ctx := metadata.AppendToOutgoingContext(context.Background(), requestid.Key, requestid.New())
 
-	users, err := client.GetUsers(ctx, &emptypb.Empty{})
+	users, err := client.GetUsers(ctx, &sso.GetUsersIn{})
 	fmt.Println(users, err)
 
 	userID, err := client.Register(ctx, &sso.RegisterIn{

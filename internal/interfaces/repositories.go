@@ -10,7 +10,7 @@ import (
 //go:generate mockgen -source=repositories.go -destination=../../mocks/repositories/users_repository.go -package=mockrepositories -exclude_interfaces=AuthRepository
 type UsersRepository interface {
 	GetUserByID(ctx context.Context, id uint64) (*entities.User, error)
-	GetAllUsers(ctx context.Context) ([]entities.User, error)
+	GetUsers(ctx context.Context, pagination *entities.Pagination) ([]entities.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*entities.User, error)
 	UpdateUserProfile(ctx context.Context, userProfileData entities.UpdateUserProfileDTO) error
 }

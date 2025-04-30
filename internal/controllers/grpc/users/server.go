@@ -123,8 +123,16 @@ func (api *ServerAPI) GetUser(ctx context.Context, in *sso.GetUserIn) (*sso.GetU
 }
 
 // GetUsers handler returns all Users.
-func (api *ServerAPI) GetUsers(ctx context.Context, _ *emptypb.Empty) (*sso.GetUsersOut, error) {
-	users, err := api.useCases.GetAllUsers(ctx)
+func (api *ServerAPI) GetUsers(ctx context.Context, in *sso.GetUsersIn) (*sso.GetUsersOut, error) {
+	var pagination *entities.Pagination
+	if in.Pagination != nil {
+		pagination = &entities.Pagination{
+			Limit:  in.Pagination.Limit,
+			Offset: in.Pagination.Offset,
+		}
+	}
+
+	users, err := api.useCases.GetUsers(ctx, pagination)
 	if err != nil {
 		logging.LogErrorContext(
 			ctx,

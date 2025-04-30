@@ -5,6 +5,7 @@ package repositories_test
 import (
 	"context"
 	"database/sql"
+	"github.com/DKhorkov/libs/pointers"
 	"os"
 	"path"
 	"testing"
@@ -172,7 +173,7 @@ func (s *UsersRepositoryTestSuite) TestGetNonExistingUserByEmail() {
 	s.Nil(user)
 }
 
-func (s *UsersRepositoryTestSuite) TestGetAllUsersWithExistingUsers() {
+func (s *UsersRepositoryTestSuite) TestGetUsersWithExistingUsers() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -193,19 +194,50 @@ func (s *UsersRepositoryTestSuite) TestGetAllUsersWithExistingUsers() {
 
 	s.NoError(err)
 
-	users, err := s.usersRepository.GetAllUsers(ctx)
+	users, err := s.usersRepository.GetUsers(ctx, nil)
 	s.NoError(err)
 	s.NotEmpty(users)
 }
 
-func (s *UsersRepositoryTestSuite) TestGetAllUsersWithoutExistingUsers() {
+func (s *UsersRepositoryTestSuite) TestGetUsersWithExistingUsersAndPagination() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
 		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
-	users, err := s.usersRepository.GetAllUsers(ctx)
+	_, err := s.connection.ExecContext(
+		ctx,
+		`
+				INSERT INTO users (id, display_name, email, password) 
+				VALUES ($1, $2, $3, $4)
+			`,
+		userID,
+		testUserDTO.DisplayName,
+		testUserDTO.Email,
+		testUserDTO.Password,
+	)
+
+	s.NoError(err)
+
+	pagination := &entities.Pagination{
+		Limit:  pointers.New[uint64](1),
+		Offset: pointers.New[uint64](1),
+	}
+
+	users, err := s.usersRepository.GetUsers(ctx, pagination)
+	s.NoError(err)
+	s.Empty(users)
+}
+
+func (s *UsersRepositoryTestSuite) TestGetUsersWithoutExistingUsers() {
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
+		Times(1)
+
+	users, err := s.usersRepository.GetUsers(ctx, nil)
 	s.NoError(err)
 	s.Empty(users)
 }
@@ -322,7 +354,7 @@ func BenchmarkUsersRepository_GetUserByEmail(b *testing.B) {
 	}
 }
 
-func BenchmarkUsersRepository_GetAllUsers(b *testing.B) {
+func BenchmarkUsersRepository_GetUsers(b *testing.B) {
 	spanConfig := tracing.SpanConfig{}
 	ctrl := gomock.NewController(b)
 	logger := loggermock.NewMockLogger(ctrl)
@@ -342,8 +374,13 @@ func BenchmarkUsersRepository_GetAllUsers(b *testing.B) {
 
 	usersRepository := repositories.NewUsersRepository(dbConnector, logger, traceProvider, spanConfig)
 
+	pagination := &entities.Pagination{
+		Limit:  pointers.New[uint64](1),
+		Offset: pointers.New[uint64](1),
+	}
+
 	b.ResetTimer()
 	for range b.N {
-		_, _ = usersRepository.GetAllUsers(ctx)
+		_, _ = usersRepository.GetUsers(ctx, pagination)
 	}
 }
