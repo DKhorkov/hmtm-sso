@@ -41,21 +41,6 @@ func (m *MockUsersService) EXPECT() *MockUsersServiceMockRecorder {
 	return m.recorder
 }
 
-// GetAllUsers mocks base method.
-func (m *MockUsersService) GetAllUsers(ctx context.Context) ([]entities.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllUsers", ctx)
-	ret0, _ := ret[0].([]entities.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllUsers indicates an expected call of GetAllUsers.
-func (mr *MockUsersServiceMockRecorder) GetAllUsers(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUsers", reflect.TypeOf((*MockUsersService)(nil).GetAllUsers), ctx)
-}
-
 // GetUserByEmail mocks base method.
 func (m *MockUsersService) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
 	m.ctrl.T.Helper()
@@ -84,6 +69,21 @@ func (m *MockUsersService) GetUserByID(ctx context.Context, id uint64) (*entitie
 func (mr *MockUsersServiceMockRecorder) GetUserByID(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByID", reflect.TypeOf((*MockUsersService)(nil).GetUserByID), ctx, id)
+}
+
+// GetUsers mocks base method.
+func (m *MockUsersService) GetUsers(ctx context.Context, pagination *entities.Pagination) ([]entities.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsers", ctx, pagination)
+	ret0, _ := ret[0].([]entities.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUsers indicates an expected call of GetUsers.
+func (mr *MockUsersServiceMockRecorder) GetUsers(ctx, pagination any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsers", reflect.TypeOf((*MockUsersService)(nil).GetUsers), ctx, pagination)
 }
 
 // UpdateUserProfile mocks base method.

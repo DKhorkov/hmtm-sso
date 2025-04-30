@@ -26,8 +26,8 @@ func NewUsersService(
 	}
 }
 
-func (service *UsersService) GetAllUsers(ctx context.Context) ([]entities.User, error) {
-	return service.usersRepository.GetAllUsers(ctx)
+func (service *UsersService) GetUsers(ctx context.Context, pagination *entities.Pagination) ([]entities.User, error) {
+	return service.usersRepository.GetUsers(ctx, pagination)
 }
 
 func (service *UsersService) GetUserByID(ctx context.Context, id uint64) (*entities.User, error) {

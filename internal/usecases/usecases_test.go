@@ -562,7 +562,7 @@ func TestUseCases_GetUserByEmail(t *testing.T) {
 	}
 }
 
-func TestUseCases_GetAllUsers(t *testing.T) {
+func TestUseCases_GetUsers(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authService := mockservices.NewMockAuthService(ctrl)
 	usersService := mockservices.NewMockUsersService(ctrl)
@@ -585,16 +585,27 @@ func TestUseCases_GetAllUsers(t *testing.T) {
 
 	testCases := []struct {
 		name          string
+		pagination    *entities.Pagination
 		setupMocks    func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger)
 		expectedUsers []entities.User
 		expectedErr   error
 	}{
 		{
 			name: "success",
+			pagination: &entities.Pagination{
+				Limit:  pointers.New[uint64](1),
+				Offset: pointers.New[uint64](1),
+			},
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 				usersService.
 					EXPECT().
-					GetAllUsers(gomock.Any()).
+					GetUsers(
+						gomock.Any(),
+						&entities.Pagination{
+							Limit:  pointers.New[uint64](1),
+							Offset: pointers.New[uint64](1),
+						},
+					).
 					Return([]entities.User{{ID: 1}, {ID: 2}}, nil).
 					Times(1)
 			},
@@ -603,10 +614,20 @@ func TestUseCases_GetAllUsers(t *testing.T) {
 		},
 		{
 			name: "error",
+			pagination: &entities.Pagination{
+				Limit:  pointers.New[uint64](1),
+				Offset: pointers.New[uint64](1),
+			},
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 				usersService.
 					EXPECT().
-					GetAllUsers(gomock.Any()).
+					GetUsers(
+						gomock.Any(),
+						&entities.Pagination{
+							Limit:  pointers.New[uint64](1),
+							Offset: pointers.New[uint64](1),
+						},
+					).
 					Return(nil, errors.New("fetch failed")).
 					Times(1)
 			},
@@ -618,7 +639,7 @@ func TestUseCases_GetAllUsers(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.setupMocks(authService, usersService, natsPublisher, logger)
-			users, err := useCases.GetAllUsers(context.Background())
+			users, err := useCases.GetUsers(context.Background(), tc.pagination)
 			if tc.expectedErr != nil {
 				require.Error(t, err)
 				require.Equal(t, tc.expectedErr.Error(), err.Error())

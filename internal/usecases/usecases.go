@@ -185,8 +185,8 @@ func (useCases *UseCases) GetUserByEmail(
 	return useCases.usersService.GetUserByEmail(ctx, email)
 }
 
-func (useCases *UseCases) GetAllUsers(ctx context.Context) ([]entities.User, error) {
-	return useCases.usersService.GetAllUsers(ctx)
+func (useCases *UseCases) GetUsers(ctx context.Context, pagination *entities.Pagination) ([]entities.User, error) {
+	return useCases.usersService.GetUsers(ctx, pagination)
 }
 
 func (useCases *UseCases) UpdateUserProfile(

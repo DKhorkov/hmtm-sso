@@ -21,7 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 type UsersServiceClient interface {
 	GetUser(ctx context.Context, in *GetUserIn, opts ...grpc.CallOption) (*GetUserOut, error)
 	GetUserByEmail(ctx context.Context, in *GetUserByEmailIn, opts ...grpc.CallOption) (*GetUserOut, error)
-	GetUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetUsersOut, error)
+	GetUsers(ctx context.Context, in *GetUsersIn, opts ...grpc.CallOption) (*GetUsersOut, error)
 	GetMe(ctx context.Context, in *GetMeIn, opts ...grpc.CallOption) (*GetUserOut, error)
 	UpdateUserProfile(ctx context.Context, in *UpdateUserProfileIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -52,7 +52,7 @@ func (c *usersServiceClient) GetUserByEmail(ctx context.Context, in *GetUserByEm
 	return out, nil
 }
 
-func (c *usersServiceClient) GetUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetUsersOut, error) {
+func (c *usersServiceClient) GetUsers(ctx context.Context, in *GetUsersIn, opts ...grpc.CallOption) (*GetUsersOut, error) {
 	out := new(GetUsersOut)
 	err := c.cc.Invoke(ctx, "/users.UsersService/GetUsers", in, out, opts...)
 	if err != nil {
@@ -85,7 +85,7 @@ func (c *usersServiceClient) UpdateUserProfile(ctx context.Context, in *UpdateUs
 type UsersServiceServer interface {
 	GetUser(context.Context, *GetUserIn) (*GetUserOut, error)
 	GetUserByEmail(context.Context, *GetUserByEmailIn) (*GetUserOut, error)
-	GetUsers(context.Context, *emptypb.Empty) (*GetUsersOut, error)
+	GetUsers(context.Context, *GetUsersIn) (*GetUsersOut, error)
 	GetMe(context.Context, *GetMeIn) (*GetUserOut, error)
 	UpdateUserProfile(context.Context, *UpdateUserProfileIn) (*emptypb.Empty, error)
 	mustEmbedUnimplementedUsersServiceServer()
@@ -101,7 +101,7 @@ func (UnimplementedUsersServiceServer) GetUser(context.Context, *GetUserIn) (*Ge
 func (UnimplementedUsersServiceServer) GetUserByEmail(context.Context, *GetUserByEmailIn) (*GetUserOut, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserByEmail not implemented")
 }
-func (UnimplementedUsersServiceServer) GetUsers(context.Context, *emptypb.Empty) (*GetUsersOut, error) {
+func (UnimplementedUsersServiceServer) GetUsers(context.Context, *GetUsersIn) (*GetUsersOut, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUsers not implemented")
 }
 func (UnimplementedUsersServiceServer) GetMe(context.Context, *GetMeIn) (*GetUserOut, error) {
@@ -160,7 +160,7 @@ func _UsersService_GetUserByEmail_Handler(srv interface{}, ctx context.Context, 
 }
 
 func _UsersService_GetUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(GetUsersIn)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func _UsersService_GetUsers_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: "/users.UsersService/GetUsers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UsersServiceServer).GetUsers(ctx, req.(*emptypb.Empty))
+		return srv.(UsersServiceServer).GetUsers(ctx, req.(*GetUsersIn))
 	}
 	return interceptor(ctx, in, info, handler)
 }
