@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
@@ -25,6 +26,8 @@ const (
 	userTelegramColumnName          = "telegram"
 	userTelegramConfirmedColumnName = "telegram_confirmed"
 	userAvatarColumnName            = "avatar"
+	DESC                            = "DESC"
+	ASC                             = "ASC"
 )
 
 type UsersRepository struct {
@@ -136,7 +139,7 @@ func (repo *UsersRepository) GetUsers(ctx context.Context, pagination *entities.
 	builder := sq.
 		Select(selectAllColumns).
 		From(usersTableName).
-		OrderBy(idColumnName).
+		OrderBy(fmt.Sprintf("%s %s", idColumnName, DESC)).
 		PlaceholderFormat(sq.Dollar)
 
 	if pagination != nil && pagination.Limit != nil {
