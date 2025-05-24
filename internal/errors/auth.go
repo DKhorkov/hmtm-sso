@@ -90,72 +90,6 @@ func (e RefreshTokenNotFoundError) Unwrap() error {
 	return e.BaseErr
 }
 
-type InvalidEmailError struct {
-	Message string
-	BaseErr error
-}
-
-func (e InvalidEmailError) Error() string {
-	template := "email does not meet the requirements"
-	if e.Message != "" {
-		template = e.Message
-	}
-
-	if e.BaseErr != nil {
-		return fmt.Sprintf(template+". Base error: %v", e.BaseErr)
-	}
-
-	return template
-}
-
-func (e InvalidEmailError) Unwrap() error {
-	return e.BaseErr
-}
-
-type InvalidPasswordError struct {
-	Message string
-	BaseErr error
-}
-
-func (e InvalidPasswordError) Error() string {
-	template := "password does not meet the requirements"
-	if e.Message != "" {
-		template = e.Message
-	}
-
-	if e.BaseErr != nil {
-		return fmt.Sprintf(template+". Base error: %v", e.BaseErr)
-	}
-
-	return template
-}
-
-func (e InvalidPasswordError) Unwrap() error {
-	return e.BaseErr
-}
-
-type InvalidDisplayNameError struct {
-	Message string
-	BaseErr error
-}
-
-func (e InvalidDisplayNameError) Error() string {
-	template := "display name not meet the requirements"
-	if e.Message != "" {
-		template = e.Message
-	}
-
-	if e.BaseErr != nil {
-		return fmt.Sprintf(template+". Base error: %v", e.BaseErr)
-	}
-
-	return template
-}
-
-func (e InvalidDisplayNameError) Unwrap() error {
-	return e.BaseErr
-}
-
 type EmailAlreadyConfirmedError struct {
 	Message string
 	BaseErr error
@@ -197,49 +131,5 @@ func (e EmailIsNotConfirmedError) Error() string {
 }
 
 func (e EmailIsNotConfirmedError) Unwrap() error {
-	return e.BaseErr
-}
-
-type InvalidPhoneError struct {
-	Message string
-	BaseErr error
-}
-
-func (e InvalidPhoneError) Error() string {
-	template := "phone not meet the requirements"
-	if e.Message != "" {
-		template = e.Message
-	}
-
-	if e.BaseErr != nil {
-		return fmt.Sprintf(template+". Base error: %v", e.BaseErr)
-	}
-
-	return template
-}
-
-func (e InvalidPhoneError) Unwrap() error {
-	return e.BaseErr
-}
-
-type InvalidTelegramError struct {
-	Message string
-	BaseErr error
-}
-
-func (e InvalidTelegramError) Error() string {
-	template := "telegram not meet the requirements"
-	if e.Message != "" {
-		template = e.Message
-	}
-
-	if e.BaseErr != nil {
-		return fmt.Sprintf(template+". Base error: %v", e.BaseErr)
-	}
-
-	return template
-}
-
-func (e InvalidTelegramError) Unwrap() error {
 	return e.BaseErr
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/security"
+	"github.com/DKhorkov/libs/validation"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -20,11 +21,9 @@ import (
 )
 
 var (
-	userNotFoundError  = &customerrors.UserNotFoundError{}
-	invalidJWTError    = &security.InvalidJWTError{}
-	invalidDisplayName = &customerrors.InvalidDisplayNameError{}
-	invalidPhone       = &customerrors.InvalidPhoneError{}
-	invalidTelegramErr = &customerrors.InvalidTelegramError{}
+	userNotFoundError = &customerrors.UserNotFoundError{}
+	invalidJWTError   = &security.InvalidJWTError{}
+	validationError   = &validation.Error{}
 )
 
 // RegisterServer handler (serverAPI) for UsersServer to gRPC server:.
@@ -60,9 +59,7 @@ func (api *ServerAPI) UpdateUserProfile(
 		)
 
 		switch {
-		case errors.As(err, &invalidPhone),
-			errors.As(err, &invalidTelegramErr),
-			errors.As(err, &invalidDisplayName):
+		case errors.As(err, &validationError):
 			return nil, &customgrpc.BaseError{Status: codes.FailedPrecondition, Message: err.Error()}
 		case errors.As(err, &invalidJWTError):
 			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}

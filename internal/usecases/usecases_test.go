@@ -16,11 +16,17 @@ import (
 	mocknats "github.com/DKhorkov/libs/nats/mocks"
 	"github.com/DKhorkov/libs/pointers"
 	"github.com/DKhorkov/libs/security"
+	"github.com/DKhorkov/libs/validation"
 
 	"github.com/DKhorkov/hmtm-sso/internal/config"
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
 	customerrors "github.com/DKhorkov/hmtm-sso/internal/errors"
 	mockservices "github.com/DKhorkov/hmtm-sso/mocks/services"
+)
+
+var (
+	cfg              = config.New()
+	validationConfig = cfg.Validation
 )
 
 func TestUseCases_RegisterUser(t *testing.T) {
@@ -36,11 +42,7 @@ func TestUseCases_RegisterUser(t *testing.T) {
 			SecretKey: "secret",
 		},
 	}
-	validationConfig := config.ValidationConfig{
-		EmailRegExp:        ".*@.*",
-		PasswordRegExps:    []string{".{8,}"},
-		DisplayNameRegExps: []string{".+"},
-	}
+
 	natsConfig := config.NATSConfig{
 		Subjects: config.NATSSubjects{
 			VerifyEmail: "verify-email",
@@ -68,8 +70,8 @@ func TestUseCases_RegisterUser(t *testing.T) {
 			name: "success",
 			userData: entities.RegisterUserDTO{
 				Email:       "test@example.com",
-				Password:    "password123",
-				DisplayName: "Test User",
+				Password:    "Password123@",
+				DisplayName: "Иван",
 			},
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 				authService.
@@ -93,44 +95,44 @@ func TestUseCases_RegisterUser(t *testing.T) {
 			name: "invalid email",
 			userData: entities.RegisterUserDTO{
 				Email:       "invalid",
-				Password:    "password123",
-				DisplayName: "Test User",
+				Password:    "Password123@",
+				DisplayName: "Иван",
 			},
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 			},
 			expectedID:  0,
-			expectedErr: &customerrors.InvalidEmailError{},
+			expectedErr: &validation.Error{},
 		},
 		{
 			name: "invalid password",
 			userData: entities.RegisterUserDTO{
 				Email:       "test@example.com",
 				Password:    "short",
-				DisplayName: "Test User",
+				DisplayName: "Иван",
 			},
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 			},
 			expectedID:  0,
-			expectedErr: &customerrors.InvalidPasswordError{},
+			expectedErr: &validation.Error{},
 		},
 		{
 			name: "invalid display name",
 			userData: entities.RegisterUserDTO{
 				Email:       "test@example.com",
-				Password:    "password123",
+				Password:    "Password123@",
 				DisplayName: "",
 			},
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 			},
 			expectedID:  0,
-			expectedErr: &customerrors.InvalidDisplayNameError{},
+			expectedErr: &validation.Error{},
 		},
 		{
 			name: "publish error",
 			userData: entities.RegisterUserDTO{
 				Email:       "test@example.com",
-				Password:    "password123",
-				DisplayName: "Test User",
+				Password:    "Password123@",
+				DisplayName: "Иван",
 			},
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 				authService.
@@ -156,11 +158,11 @@ func TestUseCases_RegisterUser(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name: "success",
+			name: "error",
 			userData: entities.RegisterUserDTO{
 				Email:       "test@example.com",
-				Password:    "password123",
-				DisplayName: "Test User",
+				Password:    "Password123@",
+				DisplayName: "Иван",
 			},
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 				authService.
@@ -170,6 +172,15 @@ func TestUseCases_RegisterUser(t *testing.T) {
 					Times(1)
 			},
 			expectedErr: errors.New("test"),
+		},
+		{
+			name: "forbidden word in display name",
+			userData: entities.RegisterUserDTO{
+				Email:       "test@example.com",
+				Password:    "Password123@",
+				DisplayName: "сука",
+			},
+			expectedErr: &validation.Error{},
 		},
 	}
 
@@ -206,9 +217,6 @@ func TestUseCases_LoginUser(t *testing.T) {
 			RefreshTokenTTL: time.Hour,
 		},
 		HashCost: 10,
-	}
-	validationConfig := config.ValidationConfig{
-		PasswordRegExps: []string{".{8,}"},
 	}
 	natsConfig := config.NATSConfig{}
 
@@ -422,7 +430,6 @@ func TestUseCases_GetUserByID(t *testing.T) {
 	logger := mocklogging.NewMockLogger(ctrl)
 
 	securityConfig := security.Config{}
-	validationConfig := config.ValidationConfig{}
 	natsConfig := config.NATSConfig{}
 
 	useCases := New(
@@ -496,7 +503,6 @@ func TestUseCases_GetUserByEmail(t *testing.T) {
 	logger := mocklogging.NewMockLogger(ctrl)
 
 	securityConfig := security.Config{}
-	validationConfig := config.ValidationConfig{}
 	natsConfig := config.NATSConfig{}
 
 	useCases := New(
@@ -570,7 +576,6 @@ func TestUseCases_GetUsers(t *testing.T) {
 	logger := mocklogging.NewMockLogger(ctrl)
 
 	securityConfig := security.Config{}
-	validationConfig := config.ValidationConfig{}
 	natsConfig := config.NATSConfig{}
 
 	useCases := New(
@@ -668,12 +673,6 @@ func TestUseCases_UpdateUserProfile(t *testing.T) {
 		HashCost: 10,
 	}
 
-	validationConfig := config.ValidationConfig{
-		DisplayNameRegExps: []string{".{3,}"},
-		PhoneRegExps:       []string{".{3,}"},
-		TelegramRegExps:    []string{".{3,}"},
-	}
-
 	natsConfig := config.NATSConfig{}
 
 	accessToken, err := security.GenerateJWT(
@@ -712,9 +711,9 @@ func TestUseCases_UpdateUserProfile(t *testing.T) {
 			name: "success",
 			userData: entities.RawUpdateUserProfileDTO{
 				AccessToken: accessToken,
-				DisplayName: pointers.New("name"),
+				DisplayName: pointers.New("Иван"),
 				Phone:       pointers.New("89112580162"),
-				Telegram:    pointers.New("@test"),
+				Telegram:    pointers.New("@tests"),
 				Avatar:      pointers.New("http://someurl"),
 			},
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
@@ -728,9 +727,9 @@ func TestUseCases_UpdateUserProfile(t *testing.T) {
 					EXPECT().
 					UpdateUserProfile(gomock.Any(), entities.UpdateUserProfileDTO{
 						UserID:      1,
-						DisplayName: pointers.New("name"),
+						DisplayName: pointers.New("Иван"),
 						Phone:       pointers.New("89112580162"),
-						Telegram:    pointers.New("@test"),
+						Telegram:    pointers.New("@tests"),
 						Avatar:      pointers.New("http://someurl"),
 					}).
 					Return(nil).
@@ -744,31 +743,31 @@ func TestUseCases_UpdateUserProfile(t *testing.T) {
 				AccessToken: "valid_token",
 				DisplayName: pointers.New(""),
 			},
-			expectedErr: &customerrors.InvalidDisplayNameError{},
+			expectedErr: &validation.Error{},
 		},
 		{
 			name: "invalid phone",
 			userData: entities.RawUpdateUserProfileDTO{
 				AccessToken: "valid_token",
-				DisplayName: pointers.New("name"),
+				DisplayName: pointers.New("Иван"),
 				Phone:       pointers.New("t"),
 			},
-			expectedErr: &customerrors.InvalidPhoneError{},
+			expectedErr: &validation.Error{},
 		},
 		{
 			name: "invalid telegram",
 			userData: entities.RawUpdateUserProfileDTO{
 				AccessToken: "valid_token",
-				DisplayName: pointers.New("name"),
+				DisplayName: pointers.New("Иван"),
 				Telegram:    pointers.New("t"),
 			},
-			expectedErr: &customerrors.InvalidTelegramError{},
+			expectedErr: &validation.Error{},
 		},
 		{
 			name: "invalid access token",
 			userData: entities.RawUpdateUserProfileDTO{
 				AccessToken: "invalid_token",
-				DisplayName: pointers.New("name"),
+				DisplayName: pointers.New("Иван"),
 			},
 			expectedErr: &security.InvalidJWTError{},
 		},
@@ -776,7 +775,7 @@ func TestUseCases_UpdateUserProfile(t *testing.T) {
 			name: "invalid access token payload",
 			userData: entities.RawUpdateUserProfileDTO{
 				AccessToken: invalidAccessToken,
-				DisplayName: pointers.New("name"),
+				DisplayName: pointers.New("Иван"),
 			},
 			expectedErr: &security.InvalidJWTError{},
 		},
@@ -784,9 +783,9 @@ func TestUseCases_UpdateUserProfile(t *testing.T) {
 			name: "get user by id error",
 			userData: entities.RawUpdateUserProfileDTO{
 				AccessToken: accessToken,
-				DisplayName: pointers.New("name"),
+				DisplayName: pointers.New("Иван"),
 				Phone:       pointers.New("89112580162"),
-				Telegram:    pointers.New("@test"),
+				Telegram:    pointers.New("@tests"),
 				Avatar:      pointers.New("http://someurl"),
 			},
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
@@ -797,6 +796,17 @@ func TestUseCases_UpdateUserProfile(t *testing.T) {
 					Times(1)
 			},
 			expectedErr: &customerrors.UserNotFoundError{},
+		},
+		{
+			name: "forbidden word in display name",
+			userData: entities.RawUpdateUserProfileDTO{
+				AccessToken: accessToken,
+				DisplayName: pointers.New("Сука"),
+				Phone:       pointers.New("89112580162"),
+				Telegram:    pointers.New("@tests"),
+				Avatar:      pointers.New("http://someurl"),
+			},
+			expectedErr: &validation.Error{},
 		},
 	}
 
@@ -832,9 +842,6 @@ func TestUseCases_GetMe(t *testing.T) {
 			RefreshTokenTTL: time.Hour,
 		},
 		HashCost: 10,
-	}
-	validationConfig := config.ValidationConfig{
-		PasswordRegExps: []string{".{8,}"},
 	}
 	natsConfig := config.NATSConfig{}
 
@@ -932,9 +939,6 @@ func TestUseCases_RefreshTokens(t *testing.T) {
 			RefreshTokenTTL: time.Hour,
 		},
 		HashCost: 10,
-	}
-	validationConfig := config.ValidationConfig{
-		PasswordRegExps: []string{".{8,}"},
 	}
 	natsConfig := config.NATSConfig{}
 
@@ -1165,9 +1169,6 @@ func TestUseCases_LogoutUser(t *testing.T) {
 		},
 		HashCost: 10,
 	}
-	validationConfig := config.ValidationConfig{
-		PasswordRegExps: []string{".{8,}"},
-	}
 	natsConfig := config.NATSConfig{}
 
 	accessToken, err := security.GenerateJWT(
@@ -1269,7 +1270,6 @@ func TestUseCases_VerifyUserEmail(t *testing.T) {
 	logger := mocklogging.NewMockLogger(ctrl)
 
 	securityConfig := security.Config{}
-	validationConfig := config.ValidationConfig{}
 	natsConfig := config.NATSConfig{}
 
 	useCases := New(
@@ -1369,9 +1369,6 @@ func TestUseCases_ForgetPassword(t *testing.T) {
 		},
 		HashCost: 10,
 	}
-	validationConfig := config.ValidationConfig{
-		PasswordRegExps: []string{".{8,}"},
-	}
 	natsConfig := config.NATSConfig{}
 
 	forgetPasswordToken := security.RawEncode([]byte("1"))
@@ -1396,7 +1393,7 @@ func TestUseCases_ForgetPassword(t *testing.T) {
 		{
 			name:        "success",
 			token:       forgetPasswordToken,
-			newPassword: "newpassword123",
+			newPassword: "Password123@",
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 				oldHashedPassword, _ := security.Hash("oldpassword123", 10)
 				usersService.
@@ -1419,18 +1416,18 @@ func TestUseCases_ForgetPassword(t *testing.T) {
 			newPassword: "short",
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 			},
-			expectedErr: &customerrors.InvalidPasswordError{},
+			expectedErr: &validation.Error{},
 		},
 		{
 			name:        "invalid token conversion to int",
 			token:       security.RawEncode([]byte("s")),
-			newPassword: "shortdfsfsd",
+			newPassword: "Password123@",
 			expectedErr: &strconv.NumError{},
 		},
 		{
 			name:        "get user by id error",
 			token:       forgetPasswordToken,
-			newPassword: "newpassword123",
+			newPassword: "Password123@",
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 				usersService.
 					EXPECT().
@@ -1443,16 +1440,16 @@ func TestUseCases_ForgetPassword(t *testing.T) {
 		{
 			name:        "new password is equal to old password",
 			token:       forgetPasswordToken,
-			newPassword: "oldpassword123",
+			newPassword: "Password123@",
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
-				oldHashedPassword, _ := security.Hash("oldpassword123", 10)
+				oldHashedPassword, _ := security.Hash("Password123@", 10)
 				usersService.
 					EXPECT().
 					GetUserByID(gomock.Any(), uint64(1)).
 					Return(&entities.User{ID: 1, Password: oldHashedPassword}, nil).
 					Times(1)
 			},
-			expectedErr: &customerrors.InvalidPasswordError{},
+			expectedErr: &validation.Error{},
 		},
 	}
 
@@ -1487,9 +1484,6 @@ func TestUseCases_ChangePassword(t *testing.T) {
 			AccessTokenTTL: time.Hour,
 		},
 		HashCost: 10,
-	}
-	validationConfig := config.ValidationConfig{
-		PasswordRegExps: []string{".{8,}"},
 	}
 	natsConfig := config.NATSConfig{}
 
@@ -1531,7 +1525,7 @@ func TestUseCases_ChangePassword(t *testing.T) {
 			name:        "success",
 			accessToken: accessToken,
 			oldPassword: "oldpassword123",
-			newPassword: "newpassword123",
+			newPassword: "Password123@",
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 				hashedPassword, _ := security.Hash("oldpassword123", 10)
 				usersService.
@@ -1551,17 +1545,17 @@ func TestUseCases_ChangePassword(t *testing.T) {
 		{
 			name:        "same password",
 			accessToken: accessToken,
-			oldPassword: "password123",
-			newPassword: "password123",
+			oldPassword: "Password123@",
+			newPassword: "Password123@",
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 			},
-			expectedErr: &customerrors.InvalidPasswordError{},
+			expectedErr: &validation.Error{},
 		},
 		{
 			name:        "wrong old password",
 			accessToken: accessToken,
 			oldPassword: "wrongpassword",
-			newPassword: "newpassword123",
+			newPassword: "Password123@",
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 				hashedPassword, _ := security.Hash("oldpassword123", 10)
 				usersService.
@@ -1579,13 +1573,13 @@ func TestUseCases_ChangePassword(t *testing.T) {
 			newPassword: "safa",
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 			},
-			expectedErr: &customerrors.InvalidPasswordError{},
+			expectedErr: &validation.Error{},
 		},
 		{
 			name:        "invalid accessToken",
 			accessToken: "invalid",
-			oldPassword: "password123",
-			newPassword: "safaasdfa1",
+			oldPassword: "oldpassword123",
+			newPassword: "Password123@",
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 			},
 			expectedErr: &security.InvalidJWTError{},
@@ -1593,8 +1587,8 @@ func TestUseCases_ChangePassword(t *testing.T) {
 		{
 			name:        "failed to parse accessToken",
 			accessToken: invalidAccessToken,
-			oldPassword: "password123",
-			newPassword: "safaasdfa1",
+			oldPassword: "oldpassword123",
+			newPassword: "Password123@",
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 			},
 			expectedErr: &security.InvalidJWTError{},
@@ -1602,8 +1596,8 @@ func TestUseCases_ChangePassword(t *testing.T) {
 		{
 			name:        "get user by id error",
 			accessToken: accessToken,
-			oldPassword: "wrongpassword",
-			newPassword: "newpassword123",
+			oldPassword: "oldpassword123",
+			newPassword: "Password123@",
 			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 				usersService.
 					EXPECT().
@@ -1640,7 +1634,6 @@ func TestUseCases_SendVerifyEmailMessage(t *testing.T) {
 	logger := mocklogging.NewMockLogger(ctrl)
 
 	securityConfig := security.Config{}
-	validationConfig := config.ValidationConfig{}
 	natsConfig := config.NATSConfig{
 		Subjects: config.NATSSubjects{
 			VerifyEmail: "verify-email",
@@ -1763,7 +1756,6 @@ func TestUseCases_SendForgetPasswordMessage(t *testing.T) {
 	logger := mocklogging.NewMockLogger(ctrl)
 
 	securityConfig := security.Config{}
-	validationConfig := config.ValidationConfig{}
 	natsConfig := config.NATSConfig{
 		Subjects: config.NATSSubjects{
 			ForgetPassword: "forget-password",

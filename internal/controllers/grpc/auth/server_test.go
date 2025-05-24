@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"github.com/DKhorkov/libs/validation"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -356,7 +357,7 @@ func TestServerAPI_ForgetPassword(t *testing.T) {
 				useCases.
 					EXPECT().
 					ForgetPassword(gomock.Any(), "valid-token", "weak").
-					Return(&customerrors.InvalidPasswordError{Message: "password too weak"}).
+					Return(&validation.Error{Message: "password too weak"}).
 					Times(1)
 
 				logger.
@@ -656,7 +657,7 @@ func TestServerAPI_Register(t *testing.T) {
 						Email:       "invalid",
 						Password:    "password123",
 					}).
-					Return(uint64(0), &customerrors.InvalidEmailError{Message: "invalid email"}).
+					Return(uint64(0), &validation.Error{Message: "invalid email"}).
 					Times(1)
 
 				logger.
