@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"errors"
+	"github.com/DKhorkov/libs/validation"
 	"testing"
 	"time"
 
@@ -77,7 +78,7 @@ func TestServerAPI_UpdateUserProfile(t *testing.T) {
 						AccessToken: "valid-token",
 						Phone:       pointers.New("invalid"),
 					}).
-					Return(&customerrors.InvalidPhoneError{Message: "phone format invalid"}).
+					Return(&validation.Error{Message: "phone format invalid"}).
 					Times(1)
 
 				logger.

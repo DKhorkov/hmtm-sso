@@ -55,15 +55,20 @@ func (useCases *UseCases) RegisterUser(
 	userData entities.RegisterUserDTO,
 ) (uint64, error) {
 	if !validation.ValidateValueByRule(userData.Email, useCases.validationConfig.EmailRegExp) {
-		return 0, &customerrors.InvalidEmailError{}
+		return 0, &validation.Error{Message: "invalid email address"}
 	}
 
 	if !validation.ValidateValueByRules(userData.Password, useCases.validationConfig.PasswordRegExps) {
-		return 0, &customerrors.InvalidPasswordError{}
+		return 0, &validation.Error{Message: "invalid password"}
 	}
 
-	if !validation.ValidateValueByRules(userData.DisplayName, useCases.validationConfig.DisplayNameRegExps) {
-		return 0, &customerrors.InvalidDisplayNameError{}
+	if !validation.ValidateValueByRules(
+		userData.DisplayName,
+		useCases.validationConfig.DisplayNameRegExps,
+	) || validation.ContainsForbiddenWords(
+		userData.DisplayName,
+	) {
+		return 0, &validation.Error{Message: "invalid display name"}
 	}
 
 	hashedPassword, err := security.Hash(userData.Password, useCases.securityConfig.HashCost)
@@ -194,11 +199,13 @@ func (useCases *UseCases) UpdateUserProfile(
 	rawUserProfileData entities.RawUpdateUserProfileDTO,
 ) error {
 	if rawUserProfileData.DisplayName != nil &&
-		!validation.ValidateValueByRules(
+		(!validation.ValidateValueByRules(
 			*rawUserProfileData.DisplayName,
 			useCases.validationConfig.DisplayNameRegExps,
-		) {
-		return &customerrors.InvalidDisplayNameError{}
+		) || validation.ContainsForbiddenWords(
+			*rawUserProfileData.DisplayName,
+		)) {
+		return &validation.Error{Message: "invalid display name"}
 	}
 
 	if rawUserProfileData.Phone != nil &&
@@ -206,7 +213,7 @@ func (useCases *UseCases) UpdateUserProfile(
 			*rawUserProfileData.Phone,
 			useCases.validationConfig.PhoneRegExps,
 		) {
-		return &customerrors.InvalidPhoneError{}
+		return &validation.Error{Message: "invalid phone"}
 	}
 
 	if rawUserProfileData.Telegram != nil &&
@@ -214,7 +221,7 @@ func (useCases *UseCases) UpdateUserProfile(
 			*rawUserProfileData.Telegram,
 			useCases.validationConfig.TelegramRegExps,
 		) {
-		return &customerrors.InvalidTelegramError{}
+		return &validation.Error{Message: "invalid telegram"}
 	}
 
 	accessTokenPayload, err := security.ParseJWT(
@@ -409,7 +416,7 @@ func (useCases *UseCases) VerifyUserEmail(ctx context.Context, verifyEmailToken 
 
 func (useCases *UseCases) ForgetPassword(ctx context.Context, forgetPasswordToken, newPassword string) error {
 	if !validation.ValidateValueByRules(newPassword, useCases.validationConfig.PasswordRegExps) {
-		return &customerrors.InvalidPasswordError{}
+		return &validation.Error{Message: "invalid password"}
 	}
 
 	strUserID, err := security.RawDecode(forgetPasswordToken)
@@ -428,9 +435,7 @@ func (useCases *UseCases) ForgetPassword(ctx context.Context, forgetPasswordToke
 	}
 
 	if security.ValidateHash(newPassword, user.Password) {
-		return &customerrors.InvalidPasswordError{
-			Message: "New password can not be equal to old password",
-		}
+		return &validation.Error{Message: "new password can not be equal to old password"}
 	}
 
 	hashedPassword, err := security.Hash(newPassword, useCases.securityConfig.HashCost)
@@ -448,13 +453,11 @@ func (useCases *UseCases) ChangePassword(
 	newPassword string,
 ) error {
 	if oldPassword == newPassword {
-		return &customerrors.InvalidPasswordError{
-			Message: "New password can not be equal to old password",
-		}
+		return &validation.Error{Message: "new password can not be equal to old password"}
 	}
 
 	if !validation.ValidateValueByRules(newPassword, useCases.validationConfig.PasswordRegExps) {
-		return &customerrors.InvalidPasswordError{}
+		return &validation.Error{Message: "invalid password"}
 	}
 
 	accessTokenPayload, err := security.ParseJWT(accessToken, useCases.securityConfig.JWT.SecretKey)

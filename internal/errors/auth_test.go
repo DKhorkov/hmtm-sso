@@ -23,21 +23,12 @@ func testError(t *testing.T, err interface {
 			*v = RefreshTokenAlreadyExistsError{}
 		case *RefreshTokenNotFoundError:
 			*v = RefreshTokenNotFoundError{}
-		case *InvalidEmailError:
-			*v = InvalidEmailError{}
-		case *InvalidPasswordError:
-			*v = InvalidPasswordError{}
-		case *InvalidDisplayNameError:
-			*v = InvalidDisplayNameError{}
 		case *EmailAlreadyConfirmedError:
 			*v = EmailAlreadyConfirmedError{}
 		case *EmailIsNotConfirmedError:
 			*v = EmailIsNotConfirmedError{}
-		case *InvalidPhoneError:
-			*v = InvalidPhoneError{}
-		case *InvalidTelegramError:
-			*v = InvalidTelegramError{}
 		}
+
 		require.Equal(t, defaultMessage, e.Error())
 		require.Nil(t, e.Unwrap())
 	})
@@ -53,21 +44,12 @@ func testError(t *testing.T, err interface {
 			*v = RefreshTokenAlreadyExistsError{Message: customMessage}
 		case *RefreshTokenNotFoundError:
 			*v = RefreshTokenNotFoundError{Message: customMessage}
-		case *InvalidEmailError:
-			*v = InvalidEmailError{Message: customMessage}
-		case *InvalidPasswordError:
-			*v = InvalidPasswordError{Message: customMessage}
-		case *InvalidDisplayNameError:
-			*v = InvalidDisplayNameError{Message: customMessage}
 		case *EmailAlreadyConfirmedError:
 			*v = EmailAlreadyConfirmedError{Message: customMessage}
 		case *EmailIsNotConfirmedError:
 			*v = EmailIsNotConfirmedError{Message: customMessage}
-		case *InvalidPhoneError:
-			*v = InvalidPhoneError{Message: customMessage}
-		case *InvalidTelegramError:
-			*v = InvalidTelegramError{Message: customMessage}
 		}
+
 		require.Equal(t, customMessage, e.Error())
 		require.Nil(t, e.Unwrap())
 	})
@@ -83,21 +65,12 @@ func testError(t *testing.T, err interface {
 			*v = RefreshTokenAlreadyExistsError{BaseErr: baseErr}
 		case *RefreshTokenNotFoundError:
 			*v = RefreshTokenNotFoundError{BaseErr: baseErr}
-		case *InvalidEmailError:
-			*v = InvalidEmailError{BaseErr: baseErr}
-		case *InvalidPasswordError:
-			*v = InvalidPasswordError{BaseErr: baseErr}
-		case *InvalidDisplayNameError:
-			*v = InvalidDisplayNameError{BaseErr: baseErr}
 		case *EmailAlreadyConfirmedError:
 			*v = EmailAlreadyConfirmedError{BaseErr: baseErr}
 		case *EmailIsNotConfirmedError:
 			*v = EmailIsNotConfirmedError{BaseErr: baseErr}
-		case *InvalidPhoneError:
-			*v = InvalidPhoneError{BaseErr: baseErr}
-		case *InvalidTelegramError:
-			*v = InvalidTelegramError{BaseErr: baseErr}
 		}
+
 		expected := defaultMessage + ". Base error: " + baseErr.Error()
 		require.Equal(t, expected, e.Error())
 		require.Equal(t, baseErr, e.Unwrap())
@@ -141,24 +114,6 @@ func TestErrors(t *testing.T) {
 			customMessage:  "token for user ID=1 not found",
 		},
 		{
-			name:           "InvalidEmailError",
-			err:            &InvalidEmailError{},
-			defaultMessage: "email does not meet the requirements",
-			customMessage:  "email format invalid",
-		},
-		{
-			name:           "InvalidPasswordError",
-			err:            &InvalidPasswordError{},
-			defaultMessage: "password does not meet the requirements",
-			customMessage:  "password too weak",
-		},
-		{
-			name:           "InvalidDisplayNameError",
-			err:            &InvalidDisplayNameError{},
-			defaultMessage: "display name not meet the requirements",
-			customMessage:  "display name too short",
-		},
-		{
 			name:           "EmailAlreadyConfirmedError",
 			err:            &EmailAlreadyConfirmedError{},
 			defaultMessage: "provided email has been already confirmed",
@@ -169,18 +124,6 @@ func TestErrors(t *testing.T) {
 			err:            &EmailIsNotConfirmedError{},
 			defaultMessage: "provided email is not confirmed",
 			customMessage:  "email test@example.com not verified",
-		},
-		{
-			name:           "InvalidPhoneError",
-			err:            &InvalidPhoneError{},
-			defaultMessage: "phone not meet the requirements",
-			customMessage:  "phone number format invalid",
-		},
-		{
-			name:           "InvalidTelegramError",
-			err:            &InvalidTelegramError{},
-			defaultMessage: "telegram not meet the requirements",
-			customMessage:  "telegram handle invalid",
 		},
 	}
 

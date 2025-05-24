@@ -6,6 +6,7 @@ import (
 
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/security"
+	"github.com/DKhorkov/libs/validation"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -23,12 +24,10 @@ var (
 	userAlreadyExistsError                      = &customerrors.UserAlreadyExistsError{}
 	emailAlreadyConfirmedError                  = &customerrors.EmailAlreadyConfirmedError{}
 	emailIsNotConfirmedError                    = &customerrors.EmailIsNotConfirmedError{}
-	invalidEmailError                           = &customerrors.InvalidEmailError{}
-	invalidPasswordError                        = &customerrors.InvalidPasswordError{}
-	invalidDisplayName                          = &customerrors.InvalidDisplayNameError{}
 	invalidJWTError                             = &security.InvalidJWTError{}
 	wrongPasswordError                          = &customerrors.WrongPasswordError{}
 	accessTokenDoesNotBelongToRefreshTokenError = &customerrors.AccessTokenDoesNotBelongToRefreshTokenError{}
+	validationError                             = &validation.Error{}
 )
 
 // RegisterServer handler (serverAPI) for AuthServer to gRPC server:.
@@ -103,7 +102,13 @@ func (api *ServerAPI) ChangePassword(
 		in.GetOldPassword(),
 		in.GetNewPassword(),
 	); err != nil {
-		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		switch {
+		case errors.As(err, &validationError),
+			errors.As(err, &wrongPasswordError):
+			return nil, &customgrpc.BaseError{Status: codes.FailedPrecondition, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
 	}
 
 	return &emptypb.Empty{}, nil
@@ -124,7 +129,7 @@ func (api *ServerAPI) ForgetPassword(
 		switch {
 		case errors.As(err, &userNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
-		case errors.As(err, &invalidPasswordError):
+		case errors.As(err, &validationError):
 			return nil, &customgrpc.BaseError{Status: codes.FailedPrecondition, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
@@ -185,9 +190,7 @@ func (api *ServerAPI) Register(ctx context.Context, in *sso.RegisterIn) (*sso.Re
 		)
 
 		switch {
-		case errors.As(err, &invalidEmailError),
-			errors.As(err, &invalidPasswordError),
-			errors.As(err, &invalidDisplayName):
+		case errors.As(err, &validationError):
 			return nil, &customgrpc.BaseError{Status: codes.FailedPrecondition, Message: err.Error()}
 		case errors.As(err, &userAlreadyExistsError):
 			return nil, &customgrpc.BaseError{Status: codes.AlreadyExists, Message: err.Error()}

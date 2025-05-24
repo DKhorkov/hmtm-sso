@@ -9,3 +9,8 @@ grpcurl -proto api/protobuf/protofiles/sso/auth.proto -plaintext -d '{"forgetPas
 ###
 
 grpcurl -proto api/protobuf/protofiles/sso/users.proto -plaintext -d '{"pagination": {"limit": 2,"offset": 0}}' localhost:8070 users.UsersService.GetUsers
+
+###
+
+grpcurl -proto api/protobuf/protofiles/sso/auth.proto -plaintext -d '{"displayName": "Сука крашенная","email": "john.doe@example.com","password": "securePassword123!"}' localhost:8070 auth.AuthService.Register
+

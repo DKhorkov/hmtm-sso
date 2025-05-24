@@ -76,7 +76,8 @@ func New() Config {
 			DisplayNameRegExps: loadenv.GetEnvAsSlice(
 				"DISPLAY_NAME_REGEXPS",
 				[]string{
-					"^.{4,70}$",
+					`^.{2,70}$`,       // длина 2-70 символов
+					`^[А-Яа-яЁё\s]+$`, // только кириллица и пробелы
 				},
 				";",
 			),
