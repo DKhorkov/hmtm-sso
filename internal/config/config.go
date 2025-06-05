@@ -224,6 +224,13 @@ func New() Config {
 				Name: loadenv.GetEnv("NATS_PUBLISHER_NAME", "hmtm-sso-publisher"),
 			},
 		},
+		Cache: CacheConfig{
+			Password: loadenv.GetEnv("REDIS_PASSWORD", ""),
+			Host:     loadenv.GetEnv("REDIS_HOST", "0.0.0.0"),
+
+			// Use value from HMTM_SSO_CACHE_OUTER_PORT for local launch:
+			Port: loadenv.GetEnvAsInt("REDIS_PORT", 6379),
+		},
 	}
 }
 
@@ -270,6 +277,12 @@ type NATSPublisher struct {
 	Name string
 }
 
+type CacheConfig struct {
+	Host     string
+	Port     int
+	Password string
+}
+
 type Config struct {
 	HTTP        HTTPConfig
 	Security    security.Config
@@ -280,4 +293,5 @@ type Config struct {
 	Environment string
 	Version     string
 	NATS        NATSConfig
+	Cache       CacheConfig
 }

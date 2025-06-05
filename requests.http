@@ -14,3 +14,6 @@ grpcurl -proto api/protobuf/protofiles/sso/users.proto -plaintext -d '{"paginati
 
 grpcurl -proto api/protobuf/protofiles/sso/auth.proto -plaintext -d '{"displayName": "Сука крашенная","email": "john.doe@example.com","password": "securePassword123!"}' localhost:8070 auth.AuthService.Register
 
+###
+
+grpcurl -proto api/protobuf/protofiles/sso/auth.proto -plaintext -d '{"email": "alexqwerty35@yandex.ru"}' localhost:8070 auth.AuthService.SendVerifyEmailMessage

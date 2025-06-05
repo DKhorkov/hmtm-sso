@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
+	"github.com/DKhorkov/libs/cache"
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/security"
 	"github.com/DKhorkov/libs/validation"
@@ -20,6 +22,15 @@ import (
 	"github.com/DKhorkov/hmtm-sso/internal/interfaces"
 )
 
+const (
+	verifyEmailCachePrefix    = "email-verification"
+	verifyEmailLimit          = 3
+	verifyEmailTTL            = time.Minute
+	forgetPasswordCachePrefix = "forget-password"
+	forgetPasswordLimit       = 3
+	forgetPasswordTTL         = time.Minute
+)
+
 func New(
 	authService interfaces.AuthService,
 	usersService interfaces.UsersService,
@@ -28,6 +39,7 @@ func New(
 	natsPublisher customnats.Publisher,
 	natsConfig config.NATSConfig,
 	logger logging.Logger,
+	cacheProvider cache.Provider,
 ) *UseCases {
 	return &UseCases{
 		authService:      authService,
@@ -37,6 +49,7 @@ func New(
 		natsPublisher:    natsPublisher,
 		natsConfig:       natsConfig,
 		logger:           logger,
+		cacheProvider:    cacheProvider,
 	}
 }
 
@@ -48,6 +61,7 @@ type UseCases struct {
 	natsPublisher    customnats.Publisher
 	natsConfig       config.NATSConfig
 	logger           logging.Logger
+	cacheProvider    cache.Provider
 }
 
 func (useCases *UseCases) RegisterUser(
@@ -490,6 +504,38 @@ func (useCases *UseCases) ChangePassword(
 }
 
 func (useCases *UseCases) SendVerifyEmailMessage(ctx context.Context, email string) error {
+	var counter int64
+
+	cacheKey := fmt.Sprintf("%s-%s", verifyEmailCachePrefix, email)
+
+	if _, err := useCases.cacheProvider.Ping(ctx); err == nil {
+		var strCounter string
+
+		if strCounter, err = useCases.cacheProvider.Get(ctx, cacheKey); err != nil {
+			logging.LogErrorContext(
+				ctx,
+				useCases.logger,
+				fmt.Sprintf("Failed to get cache for %s key", cacheKey),
+				err,
+			)
+		}
+
+		if counter, err = strconv.ParseInt(strCounter, 10, 64); err != nil && strCounter != "" {
+			logging.LogErrorContext(
+				ctx,
+				useCases.logger,
+				fmt.Sprintf("Invalid value=%s for %s cache key", strCounter, cacheKey),
+				err,
+			)
+		}
+
+		if counter >= verifyEmailLimit {
+			return &customerrors.LimitExceededError{
+				Message: fmt.Sprintf("Too many tries to send message. Limit per minute is %d", verifyEmailLimit),
+			}
+		}
+	}
+
 	user, err := useCases.GetUserByEmail(ctx, email)
 	if err != nil {
 		return err
@@ -532,10 +578,62 @@ func (useCases *UseCases) SendVerifyEmailMessage(ctx context.Context, email stri
 		return err
 	}
 
+	if counter == 0 {
+		if err = useCases.cacheProvider.Set(ctx, cacheKey, 1, verifyEmailTTL); err != nil {
+			logging.LogErrorContext(
+				ctx,
+				useCases.logger,
+				fmt.Sprintf("Failed to set cache for %s key", cacheKey),
+				err,
+			)
+		}
+	} else {
+		if _, err = useCases.cacheProvider.Incr(ctx, cacheKey); err != nil {
+			logging.LogErrorContext(
+				ctx,
+				useCases.logger,
+				fmt.Sprintf("Failed to increment cache for %s key", cacheKey),
+				err,
+			)
+		}
+	}
+
 	return nil
 }
 
 func (useCases *UseCases) SendForgetPasswordMessage(ctx context.Context, email string) error {
+	var counter int64
+
+	cacheKey := fmt.Sprintf("%s-%s", forgetPasswordCachePrefix, email)
+
+	if _, err := useCases.cacheProvider.Ping(ctx); err == nil {
+		var strCounter string
+
+		if strCounter, err = useCases.cacheProvider.Get(ctx, cacheKey); err != nil {
+			logging.LogErrorContext(
+				ctx,
+				useCases.logger,
+				fmt.Sprintf("Failed to get cache for %s key", cacheKey),
+				err,
+			)
+		}
+
+		if counter, err = strconv.ParseInt(strCounter, 10, 64); err != nil && strCounter != "" {
+			logging.LogErrorContext(
+				ctx,
+				useCases.logger,
+				fmt.Sprintf("Invalid value=%s for %s cache key", strCounter, cacheKey),
+				err,
+			)
+		}
+
+		if counter >= forgetPasswordLimit {
+			return &customerrors.LimitExceededError{
+				Message: fmt.Sprintf("Too many tries to send message. Limit per minute is %d", forgetPasswordLimit),
+			}
+		}
+	}
+
 	user, err := useCases.GetUserByEmail(ctx, email)
 	if err != nil {
 		return err
@@ -576,6 +674,26 @@ func (useCases *UseCases) SendForgetPasswordMessage(ctx context.Context, email s
 		)
 
 		return err
+	}
+
+	if counter == 0 {
+		if err = useCases.cacheProvider.Set(ctx, cacheKey, 1, forgetPasswordTTL); err != nil {
+			logging.LogErrorContext(
+				ctx,
+				useCases.logger,
+				fmt.Sprintf("Failed to set cache for %s key", cacheKey),
+				err,
+			)
+		}
+	} else {
+		if _, err = useCases.cacheProvider.Incr(ctx, cacheKey); err != nil {
+			logging.LogErrorContext(
+				ctx,
+				useCases.logger,
+				fmt.Sprintf("Failed to increment cache for %s key", cacheKey),
+				err,
+			)
+		}
 	}
 
 	return nil

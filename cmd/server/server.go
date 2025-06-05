@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/DKhorkov/libs/cache"
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/tracing"
@@ -55,6 +56,21 @@ func main() {
 		}
 	}()
 
+	cacheProvider, err := cache.New(
+		cache.WithHost(settings.Cache.Host),
+		cache.WithPort(settings.Cache.Port),
+		cache.WithPassword(settings.Cache.Password),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		if err = cacheProvider.Close(); err != nil {
+			logging.LogError(logger, "Error shutting down cache", err)
+		}
+	}()
+
 	natsPublisher, err := customnats.NewPublisher(
 		settings.NATS.ClientURL,
 		nats.Name(settings.NATS.Publisher.Name),
@@ -102,6 +118,7 @@ func main() {
 		natsPublisher,
 		settings.NATS,
 		logger,
+		cacheProvider,
 	)
 
 	controller := grpccontroller.New(
