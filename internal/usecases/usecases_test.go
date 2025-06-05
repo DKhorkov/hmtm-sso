@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	notifications "github.com/DKhorkov/hmtm-notifications/dto"
+	mockcache "github.com/DKhorkov/libs/cache/mocks"
 	mocklogging "github.com/DKhorkov/libs/logging/mocks"
 	mocknats "github.com/DKhorkov/libs/nats/mocks"
 	"github.com/DKhorkov/libs/pointers"
@@ -35,6 +37,7 @@ func TestUseCases_RegisterUser(t *testing.T) {
 	usersService := mockservices.NewMockUsersService(ctrl)
 	natsPublisher := mocknats.NewMockPublisher(ctrl)
 	logger := mocklogging.NewMockLogger(ctrl)
+	cacheProvider := mockcache.NewMockProvider(ctrl)
 
 	securityConfig := security.Config{
 		HashCost: 10,
@@ -57,12 +60,19 @@ func TestUseCases_RegisterUser(t *testing.T) {
 		natsPublisher,
 		natsConfig,
 		logger,
+		cacheProvider,
 	)
 
 	testCases := []struct {
-		name        string
-		userData    entities.RegisterUserDTO
-		setupMocks  func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger)
+		name       string
+		userData   entities.RegisterUserDTO
+		setupMocks func(
+			authService *mockservices.MockAuthService,
+			usersService *mockservices.MockUsersService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+			cacheProvider *mockcache.MockProvider,
+		)
 		expectedID  uint64
 		expectedErr error
 	}{
@@ -73,7 +83,13 @@ func TestUseCases_RegisterUser(t *testing.T) {
 				Password:    "Password123@",
 				DisplayName: "Иван",
 			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				authService.
 					EXPECT().
 					RegisterUser(gomock.Any(), gomock.Any()).
@@ -98,8 +114,6 @@ func TestUseCases_RegisterUser(t *testing.T) {
 				Password:    "Password123@",
 				DisplayName: "Иван",
 			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
-			},
 			expectedID:  0,
 			expectedErr: &validation.Error{},
 		},
@@ -109,8 +123,6 @@ func TestUseCases_RegisterUser(t *testing.T) {
 				Email:       "test@example.com",
 				Password:    "short",
 				DisplayName: "Иван",
-			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
 			},
 			expectedID:  0,
 			expectedErr: &validation.Error{},
@@ -122,8 +134,6 @@ func TestUseCases_RegisterUser(t *testing.T) {
 				Password:    "Password123@",
 				DisplayName: "",
 			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
-			},
 			expectedID:  0,
 			expectedErr: &validation.Error{},
 		},
@@ -134,7 +144,13 @@ func TestUseCases_RegisterUser(t *testing.T) {
 				Password:    "Password123@",
 				DisplayName: "Иван",
 			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				authService.
 					EXPECT().
 					RegisterUser(gomock.Any(), gomock.Any()).
@@ -164,7 +180,13 @@ func TestUseCases_RegisterUser(t *testing.T) {
 				Password:    "Password123@",
 				DisplayName: "Иван",
 			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				authService.
 					EXPECT().
 					RegisterUser(gomock.Any(), gomock.Any()).
@@ -187,7 +209,13 @@ func TestUseCases_RegisterUser(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(authService, usersService, natsPublisher, logger)
+				tc.setupMocks(
+					authService,
+					usersService,
+					natsPublisher,
+					logger,
+					cacheProvider,
+				)
 			}
 
 			userID, err := useCases.RegisterUser(context.Background(), tc.userData)
@@ -208,6 +236,7 @@ func TestUseCases_LoginUser(t *testing.T) {
 	usersService := mockservices.NewMockUsersService(ctrl)
 	natsPublisher := mocknats.NewMockPublisher(ctrl)
 	logger := mocklogging.NewMockLogger(ctrl)
+	cacheProvider := mockcache.NewMockProvider(ctrl)
 
 	securityConfig := security.Config{
 		JWT: security.JWTConfig{
@@ -228,12 +257,19 @@ func TestUseCases_LoginUser(t *testing.T) {
 		natsPublisher,
 		natsConfig,
 		logger,
+		cacheProvider,
 	)
 
 	testCases := []struct {
-		name        string
-		userData    entities.LoginUserDTO
-		setupMocks  func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger)
+		name       string
+		userData   entities.LoginUserDTO
+		setupMocks func(
+			authService *mockservices.MockAuthService,
+			usersService *mockservices.MockUsersService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+			cacheProvider *mockcache.MockProvider,
+		)
 		expectedErr error
 	}{
 		{
@@ -242,7 +278,13 @@ func TestUseCases_LoginUser(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "password123",
 			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				hashedPassword, _ := security.Hash("password123", 10)
 				usersService.
 					EXPECT().
@@ -280,7 +322,13 @@ func TestUseCases_LoginUser(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "password123",
 			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUserByEmail(gomock.Any(), "test@example.com").
@@ -300,7 +348,13 @@ func TestUseCases_LoginUser(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "wrong_password",
 			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				hashedPassword, _ := security.Hash("password123", 10)
 				usersService.
 					EXPECT().
@@ -321,7 +375,13 @@ func TestUseCases_LoginUser(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "wrong_password",
 			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUserByEmail(gomock.Any(), "test@example.com").
@@ -336,7 +396,13 @@ func TestUseCases_LoginUser(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "password123",
 			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				hashedPassword, _ := security.Hash("password123", 10)
 				usersService.
 					EXPECT().
@@ -369,7 +435,13 @@ func TestUseCases_LoginUser(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "password123",
 			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				hashedPassword, _ := security.Hash("password123", 10)
 				usersService.
 					EXPECT().
@@ -406,7 +478,13 @@ func TestUseCases_LoginUser(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(authService, usersService, natsPublisher, logger)
+				tc.setupMocks(
+					authService,
+					usersService,
+					natsPublisher,
+					logger,
+					cacheProvider,
+				)
 			}
 
 			tokens, err := useCases.LoginUser(context.Background(), tc.userData)
@@ -428,6 +506,7 @@ func TestUseCases_GetUserByID(t *testing.T) {
 	usersService := mockservices.NewMockUsersService(ctrl)
 	natsPublisher := mocknats.NewMockPublisher(ctrl)
 	logger := mocklogging.NewMockLogger(ctrl)
+	cacheProvider := mockcache.NewMockProvider(ctrl)
 
 	securityConfig := security.Config{}
 	natsConfig := config.NATSConfig{}
@@ -440,19 +519,32 @@ func TestUseCases_GetUserByID(t *testing.T) {
 		natsPublisher,
 		natsConfig,
 		logger,
+		cacheProvider,
 	)
 
 	testCases := []struct {
-		name         string
-		id           uint64
-		setupMocks   func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger)
+		name       string
+		id         uint64
+		setupMocks func(
+			authService *mockservices.MockAuthService,
+			usersService *mockservices.MockUsersService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+			cacheProvider *mockcache.MockProvider,
+		)
 		expectedUser *entities.User
 		expectedErr  error
 	}{
 		{
 			name: "success",
 			id:   1,
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUserByID(gomock.Any(), uint64(1)).
@@ -465,7 +557,13 @@ func TestUseCases_GetUserByID(t *testing.T) {
 		{
 			name: "error",
 			id:   1,
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUserByID(gomock.Any(), uint64(1)).
@@ -480,7 +578,13 @@ func TestUseCases_GetUserByID(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(authService, usersService, natsPublisher, logger)
+				tc.setupMocks(
+					authService,
+					usersService,
+					natsPublisher,
+					logger,
+					cacheProvider,
+				)
 			}
 
 			user, err := useCases.GetUserByID(context.Background(), tc.id)
@@ -501,6 +605,7 @@ func TestUseCases_GetUserByEmail(t *testing.T) {
 	usersService := mockservices.NewMockUsersService(ctrl)
 	natsPublisher := mocknats.NewMockPublisher(ctrl)
 	logger := mocklogging.NewMockLogger(ctrl)
+	cacheProvider := mockcache.NewMockProvider(ctrl)
 
 	securityConfig := security.Config{}
 	natsConfig := config.NATSConfig{}
@@ -513,19 +618,32 @@ func TestUseCases_GetUserByEmail(t *testing.T) {
 		natsPublisher,
 		natsConfig,
 		logger,
+		cacheProvider,
 	)
 
 	testCases := []struct {
-		name         string
-		email        string
-		setupMocks   func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger)
+		name       string
+		email      string
+		setupMocks func(
+			authService *mockservices.MockAuthService,
+			usersService *mockservices.MockUsersService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+			cacheProvider *mockcache.MockProvider,
+		)
 		expectedUser *entities.User
 		expectedErr  error
 	}{
 		{
 			name:  "success",
 			email: "test@example.com",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUserByEmail(gomock.Any(), "test@example.com").
@@ -538,7 +656,13 @@ func TestUseCases_GetUserByEmail(t *testing.T) {
 		{
 			name:  "error",
 			email: "test@example.com",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUserByEmail(gomock.Any(), "test@example.com").
@@ -553,7 +677,13 @@ func TestUseCases_GetUserByEmail(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(authService, usersService, natsPublisher, logger)
+				tc.setupMocks(
+					authService,
+					usersService,
+					natsPublisher,
+					logger,
+					cacheProvider,
+				)
 			}
 
 			user, err := useCases.GetUserByEmail(context.Background(), tc.email)
@@ -574,6 +704,7 @@ func TestUseCases_GetUsers(t *testing.T) {
 	usersService := mockservices.NewMockUsersService(ctrl)
 	natsPublisher := mocknats.NewMockPublisher(ctrl)
 	logger := mocklogging.NewMockLogger(ctrl)
+	cacheProvider := mockcache.NewMockProvider(ctrl)
 
 	securityConfig := security.Config{}
 	natsConfig := config.NATSConfig{}
@@ -586,12 +717,19 @@ func TestUseCases_GetUsers(t *testing.T) {
 		natsPublisher,
 		natsConfig,
 		logger,
+		cacheProvider,
 	)
 
 	testCases := []struct {
-		name          string
-		pagination    *entities.Pagination
-		setupMocks    func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger)
+		name       string
+		pagination *entities.Pagination
+		setupMocks func(
+			authService *mockservices.MockAuthService,
+			usersService *mockservices.MockUsersService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+			cacheProvider *mockcache.MockProvider,
+		)
 		expectedUsers []entities.User
 		expectedErr   error
 	}{
@@ -601,7 +739,13 @@ func TestUseCases_GetUsers(t *testing.T) {
 				Limit:  pointers.New[uint64](1),
 				Offset: pointers.New[uint64](1),
 			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUsers(
@@ -623,7 +767,13 @@ func TestUseCases_GetUsers(t *testing.T) {
 				Limit:  pointers.New[uint64](1),
 				Offset: pointers.New[uint64](1),
 			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUsers(
@@ -643,7 +793,16 @@ func TestUseCases_GetUsers(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setupMocks(authService, usersService, natsPublisher, logger)
+			if tc.setupMocks != nil {
+				tc.setupMocks(
+					authService,
+					usersService,
+					natsPublisher,
+					logger,
+					cacheProvider,
+				)
+			}
+
 			users, err := useCases.GetUsers(context.Background(), tc.pagination)
 			if tc.expectedErr != nil {
 				require.Error(t, err)
@@ -662,6 +821,7 @@ func TestUseCases_UpdateUserProfile(t *testing.T) {
 	usersService := mockservices.NewMockUsersService(ctrl)
 	natsPublisher := mocknats.NewMockPublisher(ctrl)
 	logger := mocklogging.NewMockLogger(ctrl)
+	cacheProvider := mockcache.NewMockProvider(ctrl)
 
 	securityConfig := security.Config{
 		JWT: security.JWTConfig{
@@ -699,12 +859,19 @@ func TestUseCases_UpdateUserProfile(t *testing.T) {
 		natsPublisher,
 		natsConfig,
 		logger,
+		cacheProvider,
 	)
 
 	testCases := []struct {
-		name        string
-		userData    entities.RawUpdateUserProfileDTO
-		setupMocks  func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger)
+		name       string
+		userData   entities.RawUpdateUserProfileDTO
+		setupMocks func(
+			authService *mockservices.MockAuthService,
+			usersService *mockservices.MockUsersService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+			cacheProvider *mockcache.MockProvider,
+		)
 		expectedErr error
 	}{
 		{
@@ -716,7 +883,13 @@ func TestUseCases_UpdateUserProfile(t *testing.T) {
 				Telegram:    pointers.New("@tests"),
 				Avatar:      pointers.New("http://someurl"),
 			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUserByID(gomock.Any(), uint64(1)).
@@ -788,7 +961,13 @@ func TestUseCases_UpdateUserProfile(t *testing.T) {
 				Telegram:    pointers.New("@tests"),
 				Avatar:      pointers.New("http://someurl"),
 			},
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUserByID(gomock.Any(), uint64(1)).
@@ -813,7 +992,13 @@ func TestUseCases_UpdateUserProfile(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(authService, usersService, natsPublisher, logger)
+				tc.setupMocks(
+					authService,
+					usersService,
+					natsPublisher,
+					logger,
+					cacheProvider,
+				)
 			}
 
 			err = useCases.UpdateUserProfile(context.Background(), tc.userData)
@@ -833,6 +1018,7 @@ func TestUseCases_GetMe(t *testing.T) {
 	usersService := mockservices.NewMockUsersService(ctrl)
 	natsPublisher := mocknats.NewMockPublisher(ctrl)
 	logger := mocklogging.NewMockLogger(ctrl)
+	cacheProvider := mockcache.NewMockProvider(ctrl)
 
 	securityConfig := security.Config{
 		JWT: security.JWTConfig{
@@ -869,19 +1055,32 @@ func TestUseCases_GetMe(t *testing.T) {
 		natsPublisher,
 		natsConfig,
 		logger,
+		cacheProvider,
 	)
 
 	testCases := []struct {
-		name         string
-		accessToken  string
-		setupMocks   func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger)
+		name        string
+		accessToken string
+		setupMocks  func(
+			authService *mockservices.MockAuthService,
+			usersService *mockservices.MockUsersService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+			cacheProvider *mockcache.MockProvider,
+		)
 		expectedUser *entities.User
 		expectedErr  error
 	}{
 		{
 			name:        "success",
 			accessToken: accessToken,
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUserByID(gomock.Any(), uint64(1)).
@@ -892,10 +1091,8 @@ func TestUseCases_GetMe(t *testing.T) {
 			expectedErr:  nil,
 		},
 		{
-			name:        "invalid token",
-			accessToken: "invalid_token",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
-			},
+			name:         "invalid token",
+			accessToken:  "invalid_token",
 			expectedUser: nil,
 			expectedErr:  &security.InvalidJWTError{},
 		},
@@ -909,7 +1106,13 @@ func TestUseCases_GetMe(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(authService, usersService, natsPublisher, logger)
+				tc.setupMocks(
+					authService,
+					usersService,
+					natsPublisher,
+					logger,
+					cacheProvider,
+				)
 			}
 
 			user, err := useCases.GetMe(context.Background(), tc.accessToken)
@@ -930,6 +1133,7 @@ func TestUseCases_RefreshTokens(t *testing.T) {
 	usersService := mockservices.NewMockUsersService(ctrl)
 	natsPublisher := mocknats.NewMockPublisher(ctrl)
 	logger := mocklogging.NewMockLogger(ctrl)
+	cacheProvider := mockcache.NewMockProvider(ctrl)
 
 	securityConfig := security.Config{
 		JWT: security.JWTConfig{
@@ -1000,18 +1204,31 @@ func TestUseCases_RefreshTokens(t *testing.T) {
 		natsPublisher,
 		natsConfig,
 		logger,
+		cacheProvider,
 	)
 
 	testCases := []struct {
 		name         string
 		refreshToken string
-		setupMocks   func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger)
-		expectedErr  error
+		setupMocks   func(
+			authService *mockservices.MockAuthService,
+			usersService *mockservices.MockUsersService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+			cacheProvider *mockcache.MockProvider,
+		)
+		expectedErr error
 	}{
 		{
 			name:         "success",
 			refreshToken: encodedRefreshToken,
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				authService.
 					EXPECT().
 					GetRefreshTokenByUserID(gomock.Any(), uint64(1)).
@@ -1065,7 +1282,13 @@ func TestUseCases_RefreshTokens(t *testing.T) {
 		{
 			name:         "get db refresh token by id error",
 			refreshToken: encodedRefreshToken,
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				authService.
 					EXPECT().
 					GetRefreshTokenByUserID(gomock.Any(), uint64(1)).
@@ -1077,7 +1300,13 @@ func TestUseCases_RefreshTokens(t *testing.T) {
 		{
 			name:         "expire db refresh token error",
 			refreshToken: encodedRefreshToken,
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				authService.
 					EXPECT().
 					GetRefreshTokenByUserID(gomock.Any(), uint64(1)).
@@ -1095,7 +1324,13 @@ func TestUseCases_RefreshTokens(t *testing.T) {
 		{
 			name:         "create db refresh token error",
 			refreshToken: encodedRefreshToken,
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				authService.
 					EXPECT().
 					GetRefreshTokenByUserID(gomock.Any(), uint64(1)).
@@ -1124,7 +1359,13 @@ func TestUseCases_RefreshTokens(t *testing.T) {
 		{
 			name:         "access token does not belong to refresh token",
 			refreshToken: encodedRefreshToken,
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				authService.
 					EXPECT().
 					GetRefreshTokenByUserID(gomock.Any(), uint64(1)).
@@ -1138,7 +1379,13 @@ func TestUseCases_RefreshTokens(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(authService, usersService, natsPublisher, logger)
+				tc.setupMocks(
+					authService,
+					usersService,
+					natsPublisher,
+					logger,
+					cacheProvider,
+				)
 			}
 
 			tokens, err := useCases.RefreshTokens(context.Background(), tc.refreshToken)
@@ -1160,6 +1407,7 @@ func TestUseCases_LogoutUser(t *testing.T) {
 	usersService := mockservices.NewMockUsersService(ctrl)
 	natsPublisher := mocknats.NewMockPublisher(ctrl)
 	logger := mocklogging.NewMockLogger(ctrl)
+	cacheProvider := mockcache.NewMockProvider(ctrl)
 
 	securityConfig := security.Config{
 		JWT: security.JWTConfig{
@@ -1195,18 +1443,31 @@ func TestUseCases_LogoutUser(t *testing.T) {
 		natsPublisher,
 		natsConfig,
 		logger,
+		cacheProvider,
 	)
 
 	testCases := []struct {
 		name        string
 		accessToken string
-		setupMocks  func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger)
+		setupMocks  func(
+			authService *mockservices.MockAuthService,
+			usersService *mockservices.MockUsersService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+			cacheProvider *mockcache.MockProvider,
+		)
 		expectedErr error
 	}{
 		{
 			name:        "success",
 			accessToken: accessToken,
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				authService.
 					EXPECT().
 					GetRefreshTokenByUserID(gomock.Any(), uint64(1)).
@@ -1224,7 +1485,13 @@ func TestUseCases_LogoutUser(t *testing.T) {
 		{
 			name:        "no refresh token",
 			accessToken: accessToken,
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				authService.
 					EXPECT().
 					GetRefreshTokenByUserID(gomock.Any(), uint64(1)).
@@ -1248,7 +1515,13 @@ func TestUseCases_LogoutUser(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(authService, usersService, natsPublisher, logger)
+				tc.setupMocks(
+					authService,
+					usersService,
+					natsPublisher,
+					logger,
+					cacheProvider,
+				)
 			}
 
 			err = useCases.LogoutUser(context.Background(), tc.accessToken)
@@ -1268,6 +1541,7 @@ func TestUseCases_VerifyUserEmail(t *testing.T) {
 	usersService := mockservices.NewMockUsersService(ctrl)
 	natsPublisher := mocknats.NewMockPublisher(ctrl)
 	logger := mocklogging.NewMockLogger(ctrl)
+	cacheProvider := mockcache.NewMockProvider(ctrl)
 
 	securityConfig := security.Config{}
 	natsConfig := config.NATSConfig{}
@@ -1280,18 +1554,31 @@ func TestUseCases_VerifyUserEmail(t *testing.T) {
 		natsPublisher,
 		natsConfig,
 		logger,
+		cacheProvider,
 	)
 
 	testCases := []struct {
 		name             string
 		verifyEmailToken string
-		setupMocks       func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger)
-		expectedErr      error
+		setupMocks       func(
+			authService *mockservices.MockAuthService,
+			usersService *mockservices.MockUsersService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+			cacheProvider *mockcache.MockProvider,
+		)
+		expectedErr error
 	}{
 		{
 			name:             "success",
 			verifyEmailToken: security.RawEncode([]byte("1")),
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUserByID(gomock.Any(), uint64(1)).
@@ -1309,7 +1596,13 @@ func TestUseCases_VerifyUserEmail(t *testing.T) {
 		{
 			name:             "email already confirmed",
 			verifyEmailToken: security.RawEncode([]byte("1")),
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUserByID(gomock.Any(), uint64(1)).
@@ -1326,7 +1619,13 @@ func TestUseCases_VerifyUserEmail(t *testing.T) {
 		{
 			name:             "user not found",
 			verifyEmailToken: security.RawEncode([]byte("1")),
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUserByID(gomock.Any(), uint64(1)).
@@ -1340,7 +1639,13 @@ func TestUseCases_VerifyUserEmail(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(authService, usersService, natsPublisher, logger)
+				tc.setupMocks(
+					authService,
+					usersService,
+					natsPublisher,
+					logger,
+					cacheProvider,
+				)
 			}
 
 			err := useCases.VerifyUserEmail(context.Background(), tc.verifyEmailToken)
@@ -1360,6 +1665,7 @@ func TestUseCases_ForgetPassword(t *testing.T) {
 	usersService := mockservices.NewMockUsersService(ctrl)
 	natsPublisher := mocknats.NewMockPublisher(ctrl)
 	logger := mocklogging.NewMockLogger(ctrl)
+	cacheProvider := mockcache.NewMockProvider(ctrl)
 
 	securityConfig := security.Config{
 		JWT: security.JWTConfig{
@@ -1381,20 +1687,33 @@ func TestUseCases_ForgetPassword(t *testing.T) {
 		natsPublisher,
 		natsConfig,
 		logger,
+		cacheProvider,
 	)
 
 	testCases := []struct {
 		name        string
 		token       string
 		newPassword string
-		setupMocks  func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger)
+		setupMocks  func(
+			authService *mockservices.MockAuthService,
+			usersService *mockservices.MockUsersService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+			cacheProvider *mockcache.MockProvider,
+		)
 		expectedErr error
 	}{
 		{
 			name:        "success",
 			token:       forgetPasswordToken,
 			newPassword: "Password123@",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				oldHashedPassword, _ := security.Hash("oldpassword123", 10)
 				usersService.
 					EXPECT().
@@ -1414,8 +1733,6 @@ func TestUseCases_ForgetPassword(t *testing.T) {
 			name:        "invalid password",
 			token:       forgetPasswordToken,
 			newPassword: "short",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
-			},
 			expectedErr: &validation.Error{},
 		},
 		{
@@ -1428,7 +1745,13 @@ func TestUseCases_ForgetPassword(t *testing.T) {
 			name:        "get user by id error",
 			token:       forgetPasswordToken,
 			newPassword: "Password123@",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUserByID(gomock.Any(), uint64(1)).
@@ -1441,7 +1764,13 @@ func TestUseCases_ForgetPassword(t *testing.T) {
 			name:        "new password is equal to old password",
 			token:       forgetPasswordToken,
 			newPassword: "Password123@",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				oldHashedPassword, _ := security.Hash("Password123@", 10)
 				usersService.
 					EXPECT().
@@ -1456,7 +1785,13 @@ func TestUseCases_ForgetPassword(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(authService, usersService, natsPublisher, logger)
+				tc.setupMocks(
+					authService,
+					usersService,
+					natsPublisher,
+					logger,
+					cacheProvider,
+				)
 			}
 
 			err := useCases.ForgetPassword(context.Background(), tc.token, tc.newPassword)
@@ -1476,6 +1811,7 @@ func TestUseCases_ChangePassword(t *testing.T) {
 	usersService := mockservices.NewMockUsersService(ctrl)
 	natsPublisher := mocknats.NewMockPublisher(ctrl)
 	logger := mocklogging.NewMockLogger(ctrl)
+	cacheProvider := mockcache.NewMockProvider(ctrl)
 
 	securityConfig := security.Config{
 		JWT: security.JWTConfig{
@@ -1511,6 +1847,7 @@ func TestUseCases_ChangePassword(t *testing.T) {
 		natsPublisher,
 		natsConfig,
 		logger,
+		cacheProvider,
 	)
 
 	testCases := []struct {
@@ -1518,7 +1855,13 @@ func TestUseCases_ChangePassword(t *testing.T) {
 		accessToken string
 		oldPassword string
 		newPassword string
-		setupMocks  func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger)
+		setupMocks  func(
+			authService *mockservices.MockAuthService,
+			usersService *mockservices.MockUsersService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+			cacheProvider *mockcache.MockProvider,
+		)
 		expectedErr error
 	}{
 		{
@@ -1526,7 +1869,13 @@ func TestUseCases_ChangePassword(t *testing.T) {
 			accessToken: accessToken,
 			oldPassword: "oldpassword123",
 			newPassword: "Password123@",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				hashedPassword, _ := security.Hash("oldpassword123", 10)
 				usersService.
 					EXPECT().
@@ -1547,8 +1896,6 @@ func TestUseCases_ChangePassword(t *testing.T) {
 			accessToken: accessToken,
 			oldPassword: "Password123@",
 			newPassword: "Password123@",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
-			},
 			expectedErr: &validation.Error{},
 		},
 		{
@@ -1556,7 +1903,13 @@ func TestUseCases_ChangePassword(t *testing.T) {
 			accessToken: accessToken,
 			oldPassword: "wrongpassword",
 			newPassword: "Password123@",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				hashedPassword, _ := security.Hash("oldpassword123", 10)
 				usersService.
 					EXPECT().
@@ -1571,8 +1924,6 @@ func TestUseCases_ChangePassword(t *testing.T) {
 			accessToken: accessToken,
 			oldPassword: "password123",
 			newPassword: "safa",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
-			},
 			expectedErr: &validation.Error{},
 		},
 		{
@@ -1580,8 +1931,6 @@ func TestUseCases_ChangePassword(t *testing.T) {
 			accessToken: "invalid",
 			oldPassword: "oldpassword123",
 			newPassword: "Password123@",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
-			},
 			expectedErr: &security.InvalidJWTError{},
 		},
 		{
@@ -1589,8 +1938,6 @@ func TestUseCases_ChangePassword(t *testing.T) {
 			accessToken: invalidAccessToken,
 			oldPassword: "oldpassword123",
 			newPassword: "Password123@",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
-			},
 			expectedErr: &security.InvalidJWTError{},
 		},
 		{
@@ -1598,7 +1945,13 @@ func TestUseCases_ChangePassword(t *testing.T) {
 			accessToken: accessToken,
 			oldPassword: "oldpassword123",
 			newPassword: "Password123@",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
 				usersService.
 					EXPECT().
 					GetUserByID(gomock.Any(), uint64(1)).
@@ -1612,7 +1965,13 @@ func TestUseCases_ChangePassword(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(authService, usersService, natsPublisher, logger)
+				tc.setupMocks(
+					authService,
+					usersService,
+					natsPublisher,
+					logger,
+					cacheProvider,
+				)
 			}
 
 			err = useCases.ChangePassword(context.Background(), tc.accessToken, tc.oldPassword, tc.newPassword)
@@ -1632,6 +1991,7 @@ func TestUseCases_SendVerifyEmailMessage(t *testing.T) {
 	usersService := mockservices.NewMockUsersService(ctrl)
 	natsPublisher := mocknats.NewMockPublisher(ctrl)
 	logger := mocklogging.NewMockLogger(ctrl)
+	cacheProvider := mockcache.NewMockProvider(ctrl)
 
 	securityConfig := security.Config{}
 	natsConfig := config.NATSConfig{
@@ -1648,18 +2008,43 @@ func TestUseCases_SendVerifyEmailMessage(t *testing.T) {
 		natsPublisher,
 		natsConfig,
 		logger,
+		cacheProvider,
 	)
 
 	testCases := []struct {
-		name        string
-		email       string
-		setupMocks  func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger)
+		name       string
+		email      string
+		setupMocks func(
+			authService *mockservices.MockAuthService,
+			usersService *mockservices.MockUsersService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+			cacheProvider *mockcache.MockProvider,
+		)
 		expectedErr error
 	}{
 		{
 			name:  "success",
 			email: "test@example.com",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", verifyEmailCachePrefix, "test@example.com")).
+					Return("1", nil).
+					Times(1)
+
 				usersService.
 					EXPECT().
 					GetUserByEmail(gomock.Any(), "test@example.com").
@@ -1673,13 +2058,37 @@ func TestUseCases_SendVerifyEmailMessage(t *testing.T) {
 					Publish("verify-email", content).
 					Return(nil).
 					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Incr(gomock.Any(), gomock.Any()).
+					Return(int64(1), nil).
+					Times(1)
 			},
 			expectedErr: nil,
 		},
 		{
 			name:  "email already confirmed",
 			email: "test@example.com",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", verifyEmailCachePrefix, "test@example.com")).
+					Return("1", nil).
+					Times(1)
+
 				usersService.
 					EXPECT().
 					GetUserByEmail(gomock.Any(), "test@example.com").
@@ -1691,7 +2100,25 @@ func TestUseCases_SendVerifyEmailMessage(t *testing.T) {
 		{
 			name:  "publish error",
 			email: "test@example.com",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", verifyEmailCachePrefix, "test@example.com")).
+					Return("1", nil).
+					Times(1)
+
 				usersService.
 					EXPECT().
 					GetUserByEmail(gomock.Any(), "test@example.com").
@@ -1716,33 +2143,252 @@ func TestUseCases_SendVerifyEmailMessage(t *testing.T) {
 		{
 			name:  "user not found",
 			email: "test@example.com",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", verifyEmailCachePrefix, "test@example.com")).
+					Return("1", nil).
+					Times(1)
+
 				usersService.
 					EXPECT().
 					GetUserByEmail(gomock.Any(), "test@example.com").
-					Return(nil, errors.New("user not found")).
+					Return(nil, &customerrors.UserNotFoundError{}).
 					Times(1)
 			},
 			expectedErr: &customerrors.UserNotFoundError{},
+		},
+		{
+			name:  "cache incr error",
+			email: "test@example.com",
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", verifyEmailCachePrefix, "test@example.com")).
+					Return("1", nil).
+					Times(1)
+
+				usersService.
+					EXPECT().
+					GetUserByEmail(gomock.Any(), "test@example.com").
+					Return(&entities.User{ID: 1, EmailConfirmed: false}, nil).
+					Times(1)
+
+				forgetPasswordDTO := notifications.ForgetPasswordDTO{UserID: uint64(1)}
+				content, _ := json.Marshal(forgetPasswordDTO)
+				natsPublisher.
+					EXPECT().
+					Publish("verify-email", content).
+					Return(nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Incr(gomock.Any(), gomock.Any()).
+					Return(int64(0), errors.New("cache incr error")).
+					Times(1)
+
+				logger.
+					EXPECT().
+					ErrorContext(gomock.Any(), gomock.Any(), gomock.Any()).
+					Times(1)
+			},
+		},
+		{
+			name:  "get cache error",
+			email: "test@example.com",
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", verifyEmailCachePrefix, "test@example.com")).
+					Return("", errors.New("")).
+					Times(1)
+
+				logger.
+					EXPECT().
+					ErrorContext(gomock.Any(), gomock.Any(), gomock.Any()).
+					Times(1)
+
+				usersService.
+					EXPECT().
+					GetUserByEmail(gomock.Any(), "test@example.com").
+					Return(nil, &customerrors.UserNotFoundError{}).
+					Times(1)
+			},
+			expectedErr: &customerrors.UserNotFoundError{},
+		},
+		{
+			name:  "invalid cache error",
+			email: "test@example.com",
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", verifyEmailCachePrefix, "test@example.com")).
+					Return("invalid", nil).
+					Times(1)
+
+				logger.
+					EXPECT().
+					ErrorContext(gomock.Any(), gomock.Any(), gomock.Any()).
+					Times(1)
+
+				usersService.
+					EXPECT().
+					GetUserByEmail(gomock.Any(), "test@example.com").
+					Return(nil, &customerrors.UserNotFoundError{}).
+					Times(1)
+			},
+			expectedErr: &customerrors.UserNotFoundError{},
+		},
+		{
+			name:  "limit exceeded error",
+			email: "test@example.com",
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", verifyEmailCachePrefix, "test@example.com")).
+					Return("4", nil).
+					Times(1)
+
+			},
+			expectedErr: &customerrors.LimitExceededError{},
+		},
+		{
+			name:  "cache set error",
+			email: "test@example.com",
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", verifyEmailCachePrefix, "test@example.com")).
+					Return("0", nil).
+					Times(1)
+
+				usersService.
+					EXPECT().
+					GetUserByEmail(gomock.Any(), "test@example.com").
+					Return(&entities.User{ID: 1, EmailConfirmed: false}, nil).
+					Times(1)
+
+				forgetPasswordDTO := notifications.ForgetPasswordDTO{UserID: uint64(1)}
+				content, _ := json.Marshal(forgetPasswordDTO)
+				natsPublisher.
+					EXPECT().
+					Publish("verify-email", content).
+					Return(nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Set(
+						gomock.Any(),
+						fmt.Sprintf("%s-%s", verifyEmailCachePrefix, "test@example.com"),
+						1,
+						verifyEmailTTL,
+					).
+					Return(errors.New("cache incr error")).
+					Times(1)
+
+				logger.
+					EXPECT().
+					ErrorContext(gomock.Any(), gomock.Any(), gomock.Any()).
+					Times(1)
+			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(authService, usersService, natsPublisher, logger)
+				tc.setupMocks(
+					authService,
+					usersService,
+					natsPublisher,
+					logger,
+					cacheProvider,
+				)
 			}
 
 			err := useCases.SendVerifyEmailMessage(context.Background(), tc.email)
 			if tc.expectedErr != nil {
 				require.Error(t, err)
-				if customErr, ok := tc.expectedErr.(*customerrors.EmailAlreadyConfirmedError); ok {
-					require.IsType(t, customErr, err)
+				if tc.expectedErr != nil {
+					require.Error(t, err)
+					require.IsType(t, tc.expectedErr, err)
 				} else {
-					require.Equal(t, tc.expectedErr.Error(), err.Error())
+					require.NoError(t, err)
 				}
-			} else {
-				require.NoError(t, err)
 			}
 		})
 	}
@@ -1754,6 +2400,7 @@ func TestUseCases_SendForgetPasswordMessage(t *testing.T) {
 	usersService := mockservices.NewMockUsersService(ctrl)
 	natsPublisher := mocknats.NewMockPublisher(ctrl)
 	logger := mocklogging.NewMockLogger(ctrl)
+	cacheProvider := mockcache.NewMockProvider(ctrl)
 
 	securityConfig := security.Config{}
 	natsConfig := config.NATSConfig{
@@ -1770,18 +2417,43 @@ func TestUseCases_SendForgetPasswordMessage(t *testing.T) {
 		natsPublisher,
 		natsConfig,
 		logger,
+		cacheProvider,
 	)
 
 	testCases := []struct {
-		name        string
-		email       string
-		setupMocks  func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger)
+		name       string
+		email      string
+		setupMocks func(
+			authService *mockservices.MockAuthService,
+			usersService *mockservices.MockUsersService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+			cacheProvider *mockcache.MockProvider,
+		)
 		expectedErr error
 	}{
 		{
 			name:  "success",
 			email: "test@example.com",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", forgetPasswordCachePrefix, "test@example.com")).
+					Return("1", nil).
+					Times(1)
+
 				usersService.
 					EXPECT().
 					GetUserByEmail(gomock.Any(), "test@example.com").
@@ -1795,13 +2467,37 @@ func TestUseCases_SendForgetPasswordMessage(t *testing.T) {
 					Publish("forget-password", content).
 					Return(nil).
 					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Incr(gomock.Any(), gomock.Any()).
+					Return(int64(1), nil).
+					Times(1)
 			},
 			expectedErr: nil,
 		},
 		{
 			name:  "email not confirmed",
 			email: "test@example.com",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", forgetPasswordCachePrefix, "test@example.com")).
+					Return("1", nil).
+					Times(1)
+
 				usersService.
 					EXPECT().
 					GetUserByEmail(gomock.Any(), "test@example.com").
@@ -1813,11 +2509,29 @@ func TestUseCases_SendForgetPasswordMessage(t *testing.T) {
 		{
 			name:  "user not found",
 			email: "test@example.com",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", forgetPasswordCachePrefix, "test@example.com")).
+					Return("1", nil).
+					Times(1)
+
 				usersService.
 					EXPECT().
 					GetUserByEmail(gomock.Any(), "test@example.com").
-					Return(nil, errors.New("user not found")).
+					Return(nil, &customerrors.UserNotFoundError{}).
 					Times(1)
 			},
 			expectedErr: &customerrors.UserNotFoundError{},
@@ -1825,7 +2539,25 @@ func TestUseCases_SendForgetPasswordMessage(t *testing.T) {
 		{
 			name:  "publish error",
 			email: "test@example.com",
-			setupMocks: func(authService *mockservices.MockAuthService, usersService *mockservices.MockUsersService, natsPublisher *mocknats.MockPublisher, logger *mocklogging.MockLogger) {
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", forgetPasswordCachePrefix, "test@example.com")).
+					Return("1", nil).
+					Times(1)
+
 				usersService.
 					EXPECT().
 					GetUserByEmail(gomock.Any(), "test@example.com").
@@ -1847,21 +2579,220 @@ func TestUseCases_SendForgetPasswordMessage(t *testing.T) {
 			},
 			expectedErr: errors.New("publish failed"),
 		},
+		{
+			name:  "cache incr error",
+			email: "test@example.com",
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", forgetPasswordCachePrefix, "test@example.com")).
+					Return("1", nil).
+					Times(1)
+
+				usersService.
+					EXPECT().
+					GetUserByEmail(gomock.Any(), "test@example.com").
+					Return(&entities.User{ID: 1, EmailConfirmed: true}, nil).
+					Times(1)
+
+				forgetPasswordDTO := notifications.ForgetPasswordDTO{UserID: uint64(1)}
+				content, _ := json.Marshal(forgetPasswordDTO)
+				natsPublisher.
+					EXPECT().
+					Publish("forget-password", content).
+					Return(nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Incr(gomock.Any(), gomock.Any()).
+					Return(int64(0), errors.New("cache incr error")).
+					Times(1)
+
+				logger.
+					EXPECT().
+					ErrorContext(gomock.Any(), gomock.Any(), gomock.Any()).
+					Times(1)
+			},
+		},
+		{
+			name:  "get cache error",
+			email: "test@example.com",
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", forgetPasswordCachePrefix, "test@example.com")).
+					Return("", errors.New("")).
+					Times(1)
+
+				logger.
+					EXPECT().
+					ErrorContext(gomock.Any(), gomock.Any(), gomock.Any()).
+					Times(1)
+
+				usersService.
+					EXPECT().
+					GetUserByEmail(gomock.Any(), "test@example.com").
+					Return(nil, &customerrors.UserNotFoundError{}).
+					Times(1)
+			},
+			expectedErr: &customerrors.UserNotFoundError{},
+		},
+		{
+			name:  "invalid cache error",
+			email: "test@example.com",
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", forgetPasswordCachePrefix, "test@example.com")).
+					Return("invalid", nil).
+					Times(1)
+
+				logger.
+					EXPECT().
+					ErrorContext(gomock.Any(), gomock.Any(), gomock.Any()).
+					Times(1)
+
+				usersService.
+					EXPECT().
+					GetUserByEmail(gomock.Any(), "test@example.com").
+					Return(nil, &customerrors.UserNotFoundError{}).
+					Times(1)
+			},
+			expectedErr: &customerrors.UserNotFoundError{},
+		},
+		{
+			name:  "limit exceeded error",
+			email: "test@example.com",
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", forgetPasswordCachePrefix, "test@example.com")).
+					Return("4", nil).
+					Times(1)
+
+			},
+			expectedErr: &customerrors.LimitExceededError{},
+		},
+		{
+			name:  "cache set error",
+			email: "test@example.com",
+			setupMocks: func(
+				authService *mockservices.MockAuthService,
+				usersService *mockservices.MockUsersService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+				cacheProvider *mockcache.MockProvider,
+			) {
+				cacheProvider.
+					EXPECT().
+					Ping(gomock.Any()).
+					Return("", nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Get(gomock.Any(), fmt.Sprintf("%s-%s", forgetPasswordCachePrefix, "test@example.com")).
+					Return("0", nil).
+					Times(1)
+
+				usersService.
+					EXPECT().
+					GetUserByEmail(gomock.Any(), "test@example.com").
+					Return(&entities.User{ID: 1, EmailConfirmed: true}, nil).
+					Times(1)
+
+				forgetPasswordDTO := notifications.ForgetPasswordDTO{UserID: uint64(1)}
+				content, _ := json.Marshal(forgetPasswordDTO)
+				natsPublisher.
+					EXPECT().
+					Publish("forget-password", content).
+					Return(nil).
+					Times(1)
+
+				cacheProvider.
+					EXPECT().
+					Set(
+						gomock.Any(),
+						fmt.Sprintf("%s-%s", forgetPasswordCachePrefix, "test@example.com"),
+						1,
+						forgetPasswordTTL,
+					).
+					Return(errors.New("cache incr error")).
+					Times(1)
+
+				logger.
+					EXPECT().
+					ErrorContext(gomock.Any(), gomock.Any(), gomock.Any()).
+					Times(1)
+			},
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(authService, usersService, natsPublisher, logger)
+				tc.setupMocks(
+					authService,
+					usersService,
+					natsPublisher,
+					logger,
+					cacheProvider,
+				)
 			}
 
 			err := useCases.SendForgetPasswordMessage(context.Background(), tc.email)
 			if tc.expectedErr != nil {
 				require.Error(t, err)
-				var customErr *customerrors.EmailIsNotConfirmedError
-				if errors.As(tc.expectedErr, &customErr) {
-					require.IsType(t, customErr, err)
-				}
+				require.IsType(t, tc.expectedErr, err)
 			} else {
 				require.NoError(t, err)
 			}

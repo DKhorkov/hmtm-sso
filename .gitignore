@@ -46,3 +46,4 @@ venv.bak/
 # Backups:
 postgres_backups
 postgres_data
+redis_data
