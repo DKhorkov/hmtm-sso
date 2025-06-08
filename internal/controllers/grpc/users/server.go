@@ -5,14 +5,14 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/DKhorkov/libs/logging"
-	"github.com/DKhorkov/libs/security"
-	"github.com/DKhorkov/libs/validation"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	customgrpc "github.com/DKhorkov/libs/grpc"
+	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/security"
+	"github.com/DKhorkov/libs/validation"
 
 	"github.com/DKhorkov/hmtm-sso/api/protobuf/generated/go/sso"
 	"github.com/DKhorkov/hmtm-sso/internal/entities"
@@ -44,10 +44,13 @@ func (api *ServerAPI) UpdateUserProfile(
 ) (*emptypb.Empty, error) {
 	userProfileData := entities.RawUpdateUserProfileDTO{
 		AccessToken: in.GetAccessToken(),
-		DisplayName: in.DisplayName,
-		Phone:       in.Phone,
-		Telegram:    in.Telegram,
-		Avatar:      in.Avatar,
+	}
+
+	if in != nil {
+		userProfileData.DisplayName = in.DisplayName
+		userProfileData.Phone = in.Phone
+		userProfileData.Telegram = in.Telegram
+		userProfileData.Avatar = in.Avatar
 	}
 
 	if err := api.useCases.UpdateUserProfile(ctx, userProfileData); err != nil {
@@ -122,7 +125,7 @@ func (api *ServerAPI) GetUser(ctx context.Context, in *sso.GetUserIn) (*sso.GetU
 // GetUsers handler returns all Users.
 func (api *ServerAPI) GetUsers(ctx context.Context, in *sso.GetUsersIn) (*sso.GetUsersOut, error) {
 	var pagination *entities.Pagination
-	if in.Pagination != nil {
+	if in.GetPagination() != nil {
 		pagination = &entities.Pagination{
 			Limit:  in.Pagination.Limit,
 			Offset: in.Pagination.Offset,
